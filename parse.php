@@ -1,8 +1,14 @@
 <?php
 
-//fwrite(STDERR, "something");
+    ini_set('display_errors', 'stderr'); //Erross on stderr 
+    
+    /** ERRORS
+     * 10 - BAD params. combination
+     * 11 - input files errors
+     * 12 - output files errors 
+     * 21 - missing headear  
+     */
 
-ini_set('display_errors', 'stderr'); //Erross on stderr 
 
     define("HELP", " \nProgram read IPP_code22 from stdin and represent it in xml
     --help        // Display help cannot be combinated with anything 
@@ -12,6 +18,9 @@ ini_set('display_errors', 'stderr'); //Erross on stderr
     --labels      // statistic - number of labels in code     
     --jumps       // statistic - number or returns and jumps instruction\n");
 
+    /** REGEX */
+    //Match all the commands 
+    $r_comm = "/\bMOVE\b|\bCREATEFRAME\b|\bPUSHFRAME\b|\bPOPFRAME\b|\bDEFVAR\b|\bCALL\b|\bRETURN\b|\bPUSHS\b|\bPOPS\b|\bADD\b|\bSUB\b|\bMUL\b|\bIDIV\b|\bLT\b|\bGT\b|\bEQ\b|\bAND\b|\bOR\b|\bNOT\b|\bINT2CHAR\b|\bSTRI2INT\b|\bREAD\b|\bWRITE\b|\bCONCAT\b|\bSTRLEN\b|\bGETCHAR\b|\bSETCHAR\b|\bTYPE\b|\bLABEL\b|\bJUMP\b|\bJUMPIFEQ\b|\bJUMPIFNEQ\b|\bEXIT\b|\bEXIT\b|\bDPRINT\b|\bBREAK\b /";
 
     $loc     = 0;   // Number of lines, that has instruction in code 
     $coments = 0;   // Number of lines that has a comment 
@@ -27,7 +36,11 @@ ini_set('display_errors', 'stderr'); //Erross on stderr
     if ($stats_files != NULL)
         file_open_check($stats_files);
     
-    parse();
+    if (check_header() == FALSE){
+        fwrite(STDERR, "ERROR missing header .IPPcode22");
+        exit(21);
+    }
+    #parse();
 
     
     /*      INSTRUCTION 
@@ -37,21 +50,72 @@ ini_set('display_errors', 'stderr'); //Erross on stderr
         NOT       INT2CHAR      STRI2INT    READ       WRITE    CONCAT
         STRLEN    GETCHAR       SETCHAR     TYPE       LABEL    JUMP
         JUMPIFEQ  JUMPIFNEQ     EXIT        DPRINT     BREAK
+
+        #comentary
     */
     /**
      * Parse input program in ipp_code22 to array
      * 
      */
     function parse(){
-        
-
+        $line_num = 0 ;   
         while($line = fgets(STDIN)){
+            // Check for 
             // todo wait for stdin input
-            // Remove whitespace 
-            echo($line);
+            // Remove whitespace
+            //syntax_line_con($line); 
             $splitted = preg_split('/\s+/', trim($line, "\n"));
             foreach ($splitted as $terminal){
                 echo($terminal . "\n");
+            }
+        }
+    }
+    
+    /**
+     * Check if there is a headear ". IPPcode22"
+     * return TRUE  if yes 
+     * return FALSE if not 
+     */
+    function check_header(){
+        $r_come = "/^\#/";  // comentary 
+        $r_ipp  = "/\bIPPCODE22\b/";
+        $r_ipp_com = "/\bIPPCODE22\b#/";
+        
+        while($line = fgets(STDIN)){
+            $splitted = preg_split('/\s+/', trim($line, "\n"));
+            if(sizeof($splitted) == 1) //empty line 
+                continue;
+            for ($i = 0; $i < sizeof($splitted); $i++){
+                //to upper
+                $splitted[$i] = strtoupper($splitted[$i]);
+                //if it is commentary
+                if (preg_match($r_come, $splitted[$i])){
+                    $coments++;
+                    break; // whole line is commentary
+                }
+                // todo check . IPPcode22#comment 
+                else if ($splitted[$i] == '.'){
+                    if ($i +1 < sizeof($splitted)){
+                        if (preg_match($r_ipp_com, $splitted[$i+1])){ //IPPcode22#comm
+                            $coments++;
+                            return TRUE;
+                        }
+                        else if(preg_match($r_ipp, $splitted[$i+1])) //IPPcode22{
+                            // check for comments after 
+                            for ($i = $i; $i < sizeof($splitted); $i++){
+                                if (preg_match($r_come, $splitted[$i]))
+                                    $coments++;
+                                else
+                                    return FALSE; //IPPcode add 
+                            }
+                            return TRUE;
+                        } 
+                        else
+                            return FALSE;
+                    }
+                else
+                    return FALSE;
+                echo($splitted[$i] . "\n");
             }
         }
     }
@@ -63,9 +127,9 @@ ini_set('display_errors', 'stderr'); //Erross on stderr
      * return 0 if line has no instruction 
      * 
      */
-    
-    function syntax_line_con(){
+    function syntax_line_con($line){
 
+        echo($line);
     }
 
     /*
@@ -144,10 +208,8 @@ ini_set('display_errors', 'stderr'); //Erross on stderr
             if ($argv[0] == $ar) //Skip script name  
                 continue;
             else if ($ar == '--help') {
-                if ($argc == 2){
-                    echo("chuj");
+                if ($argc == 2)
                     echo HELP;
-                }
                 else {
                     fwrite(STDERR, "Cannot combine --help with other parameters.");
                     exit(10);
@@ -239,6 +301,8 @@ ini_set('display_errors', 'stderr'); //Erross on stderr
      * for error 12  
      */
     function array_duplicity($arr){
+        if($arr == NULL)
+            return FALSE;
         for ($i = 0; $i < sizeof($arr); $i++){
             for ($j = 0; $j < sizeof($arr); $j++){
                 if ($j == $i)
