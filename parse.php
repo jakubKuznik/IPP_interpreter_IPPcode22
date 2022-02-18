@@ -20,11 +20,17 @@ ini_set('display_errors', 'stderr'); //Erross on stderr
     $stats_files;   // All files for statistic 
     $stats_params;  // all params for all files
 
-    $h = parse_args($argc, $argv);
+    // return type of parse_args is array($stats_filse, $stats_params)
+    $h = parse_args($argc, $argv); 
     $stats_files  = $h[0];
     $stats_params = $h[1];
-    print_r($stats_files);
-    print_r($stats_params);
+
+    file_open_check($stats_files);
+    echo("gud");
+    
+
+
+
 
 
     /**
@@ -52,7 +58,7 @@ ini_set('display_errors', 'stderr'); //Erross on stderr
      * -- 
      * 
      * 
-     * return array($stats_filse, $stats_param)
+     * return array($stats_files, $stats_param)
      * 
      *  */    
     function parse_args(int $argc, array $argv){
@@ -62,7 +68,7 @@ ini_set('display_errors', 'stderr'); //Erross on stderr
         $s_f;                      // stats_file File where statisic will be writen 
         $s_p;                      //  statas_param Parameters for eas statas 
         $patern = "/^--stats=/";   // regex for --stats=filename
-
+        
         foreach ($argv as $ar){
             if ($argv[0] == $ar) //Skip script name  
                 continue;
@@ -80,7 +86,7 @@ ini_set('display_errors', 'stderr'); //Erross on stderr
             else if (preg_match($patern, $ar)){ // if == --stats
                 // explode return string after --stats= in array   
                 // imlode convert that array to single string 
-                $s_f[$stats_sum] = implode( " ", explode("--stats=", $ar)); 
+                $s_f[$stats_sum] = trim(implode( " ", explode("--stats=", $ar))); 
                 $stats_sum++;
                 $stats = true;
             }
@@ -128,16 +134,28 @@ ini_set('display_errors', 'stderr'); //Erross on stderr
 
     /**
      * Check if stats file exist. 
+     * 
+     * error -12 --ouptu files cannot be open 
+     * //todo check absolute vs relative 
+     * //todo filepath can contain unicode in UTF-8 
      */
-    function stats_file_check(){
-        //todo
+    function file_open_check($files){
+        foreach($files as $f){
+            if (!file_exists($f)){
+                echo ($f);
+                fwrite(STDERR, "File does not exist\n");
+                exit(12);
+            }
+            $o_f = fopen($f, "w");
+            if ($o_f == false){
+                fwrite(STDERR, "Cannot open or Cannot write to output file. \n");
+                exit(12);
+            }
+            fclose($o_f);
+        }
         exit(0);
     }
 
-    /**
-     *   
-     *
-     */
 
     
 
