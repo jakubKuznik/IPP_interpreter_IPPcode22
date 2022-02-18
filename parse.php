@@ -22,6 +22,7 @@
     //Match all the commands 
     $r_comm = "/\bMOVE\b|\bCREATEFRAME\b|\bPUSHFRAME\b|\bPOPFRAME\b|\bDEFVAR\b|\bCALL\b|\bRETURN\b|\bPUSHS\b|\bPOPS\b|\bADD\b|\bSUB\b|\bMUL\b|\bIDIV\b|\bLT\b|\bGT\b|\bEQ\b|\bAND\b|\bOR\b|\bNOT\b|\bINT2CHAR\b|\bSTRI2INT\b|\bREAD\b|\bWRITE\b|\bCONCAT\b|\bSTRLEN\b|\bGETCHAR\b|\bSETCHAR\b|\bTYPE\b|\bLABEL\b|\bJUMP\b|\bJUMPIFEQ\b|\bJUMPIFNEQ\b|\bEXIT\b|\bEXIT\b|\bDPRINT\b|\bBREAK\b /";
 
+
     $loc     = 0;   // Number of lines, that has instruction in code 
     $coments = 0;   // Number of lines that has a comment 
     $labels  = 0;   // Number of labels in code 
@@ -36,10 +37,12 @@
     if ($stats_files != NULL)
         file_open_check($stats_files);
     
+    echo($coments);
     if (check_header() == FALSE){
         fwrite(STDERR, "ERROR missing header .IPPcode22");
         exit(21);
     }
+    echo($coments);
     #parse();
 
     
@@ -70,52 +73,47 @@
             }
         }
     }
-    
+   
+
     /**
      * Check if there is a headear ". IPPcode22"
      * return TRUE  if yes 
      * return FALSE if not 
      */
     function check_header(){
+        global $coments;
         $r_come = "/^\#/";  // comentary 
-        $r_ipp  = "/\bIPPCODE22\b/";
-        $r_ipp_com = "/\bIPPCODE22\b#/";
+        $r_ipp  = "/\.IPPCODE22\b/";
+        $r_ipp_com = "/\.IPPCODE22\b#/";
         
         while($line = fgets(STDIN)){
             $splitted = preg_split('/\s+/', trim($line, "\n"));
-            if(sizeof($splitted) == 1) //empty line 
-                continue;
-            for ($i = 0; $i < sizeof($splitted); $i++){
-                //to upper
-                $splitted[$i] = strtoupper($splitted[$i]);
+            $splitted = array_filter($splitted); //remove empty
+            $splitted = array_change_key_case($splitted, CASE_UPPER);
+            if (empty($splitted) == TRUE)
+                continue; 
+            foreach ($splitted as $key=>$sp){
                 //if it is commentary
-                if (preg_match($r_come, $splitted[$i])){
+                if (preg_match($r_come, $sp)){
                     $coments++;
                     break; // whole line is commentary
                 }
-                // todo check . IPPcode22#comment 
-                else if ($splitted[$i] == '.'){
-                    if ($i +1 < sizeof($splitted)){
-                        if (preg_match($r_ipp_com, $splitted[$i+1])){ //IPPcode22#comm
-                            $coments++;
-                            return TRUE;
-                        }
-                        else if(preg_match($r_ipp, $splitted[$i+1])) //IPPcode22{
-                            // check for comments after 
-                            for ($i = $i; $i < sizeof($splitted); $i++){
-                                if (preg_match($r_come, $splitted[$i]))
-                                    $coments++;
-                                else
-                                    return FALSE; //IPPcode add 
-                            }
-                            return TRUE;
-                        } 
-                        else
-                            return FALSE;
+                else if (preg_match($r_ipp_com, $sp)){  //.IPPcode22#coment
+                    $coments++;
+                    return TRUE;
+                }
+                else if (preg_match($r_ipp, $sp)){ //.Ippcode22
+                    if (array_key_exists($key+1, $splitted) == FALSE)
+                        return TRUE;
+                    if (preg_match($r_come, $splitted[$key+1]) == TRUE){ //comentary
+                        $coments++;
+                        return TRUE;
                     }
+                    else
+                        return FALSE;
+                }
                 else
                     return FALSE;
-                echo($splitted[$i] . "\n");
             }
         }
     }
