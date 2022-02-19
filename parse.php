@@ -18,17 +18,19 @@
     --labels      // statistic - number of labels in code     
     --jumps       // statistic - number or returns and jumps instruction\n");
 
-    /** REGEX */
-    //Match all the commands 
-    $r_comm = "/\bMOVE\b|\bCREATEFRAME\b|\bPUSHFRAME\b|\bPOPFRAME\b|\bDEFVAR\b|\bCALL\b|\bRETURN\b|\bPUSHS\b|\bPOPS\b|\bADD\b|\bSUB\b|\bMUL\b|\bIDIV\b|\bLT\b|\bGT\b|\bEQ\b|\bAND\b|\bOR\b|\bNOT\b|\bINT2CHAR\b|\bSTRI2INT\b|\bREAD\b|\bWRITE\b|\bCONCAT\b|\bSTRLEN\b|\bGETCHAR\b|\bSETCHAR\b|\bTYPE\b|\bLABEL\b|\bJUMP\b|\bJUMPIFEQ\b|\bJUMPIFNEQ\b|\bEXIT\b|\bEXIT\b|\bDPRINT\b|\bBREAK\b /";
 
-
-    $loc     = 0;   // Number of lines, that has instruction in code 
-    $coments = 0;   // Number of lines that has a comment 
-    $labels  = 0;   // Number of labels in code 
-    $jumps   = 0;   // Number of retuns and jumps in code 
+    $loc      = 0;   // Number of lines, that has instruction in code, Same as instruction order 
+    $coments  = 0;   // Number of lines that has a comment 
+    $labels   = 0;   // Number of labels in code 
+    $jump     = 0;   // Number of retuns and jumps in code
+    $jump_fw  = 0;   // Number of forward jumps 
+    $jump_bac = 0;   // Back jumps
+    $jump_bad = 0;   // Bad jumps 
+    
     $stats_files;   // All files for statistic 
     $stats_params;  // all params for all files
+
+
 
     // return type of parse_args is array($stats_filse, $stats_params)
     $h = parse_args($argc, $argv); 
@@ -37,13 +39,11 @@
     if ($stats_files != NULL)
         file_open_check($stats_files);
     
-    echo($coments);
     if (check_header() == FALSE){
         fwrite(STDERR, "ERROR missing header .IPPcode22");
         exit(21);
     }
-    echo($coments);
-    #parse();
+    parse();
 
     
     /*      INSTRUCTION 
@@ -63,17 +63,68 @@
     function parse(){
         $line_num = 0 ;   
         while($line = fgets(STDIN)){
-            // Check for 
-            // todo wait for stdin input
-            // Remove whitespace
-            //syntax_line_con($line); 
+            
             $splitted = preg_split('/\s+/', trim($line, "\n"));
-            foreach ($splitted as $terminal){
-                echo($terminal . "\n");
-            }
+            $splitted = array_values(array_filter($splitted)); //remove empty
+            if(empty($splitted) == TRUE)
+                continue;
+            $splitted = remove_comm($splitted);
+            print_r($splitted);
+            syntax_validation($splitted);
         }
     }
-   
+    /**
+     * Store given instruction to xml
+     * 
+     * calculate loc and use that value as instruction_order  
+     * 
+     */
+    function store_to_xml($instruction){
+        return 0;
+    }
+
+    /** 
+     * 
+     * Remove commentary from line 
+     * 
+     * calculate coments 
+     * 
+     * Return new array without comments 
+     * 
+    */
+    function remove_comm($one_line){
+        global $coments;
+        $r_come = "/^\#/";  // comentary 
+        $is_coment = FALSE;
+        $new_array = [];
+        //Match all the commands 
+        foreach($one_line as $tok){
+            if (preg_match($r_come, $tok)){
+                $coments++;
+                return $new_array;
+            }
+            array_push($new_array, $tok);
+        }
+        return $new_array;
+    }
+
+    /**
+     * Get splited array of strings that represent one line of code from parse();
+     * 
+     * calculate:
+     *  - lables
+     *  - 
+     * 
+     * If succesfull send line to store_to_xml 
+     * 
+     * return TRUE 
+     * Exit program if there is error  
+     * 
+     */
+    function syntax_validation($one_line){
+        // echo($splitted[0] . "\n");
+        return TRUE;
+    }
 
     /**
      * Check if there is a headear ". IPPcode22"
@@ -88,7 +139,7 @@
         
         while($line = fgets(STDIN)){
             $splitted = preg_split('/\s+/', trim($line, "\n"));
-            $splitted = array_filter($splitted); //remove empty
+            $splitted = array_values(array_filter($splitted)); //remove empty
             $splitted = array_change_key_case($splitted, CASE_UPPER);
             if (empty($splitted) == TRUE)
                 continue; 
@@ -117,47 +168,6 @@
             }
         }
     }
-
-    /**
-     * control if each instruction is on new line;
-     * 
-     * return 1 if line has instruction 
-     * return 0 if line has no instruction 
-     * 
-     */
-    function syntax_line_con($line){
-
-        echo($line);
-    }
-
-    /*
-
-    while($line = fgets(STDIN)) {
-
-        // oddelene mista mezerami 
-        // split rozdeli podle mezer 
-        // trim da pryc newline  
-        $splitted = explode(' ', trim($line, "\n"));
-        foreach ($splitted as $terminal){
-            echo($terminal . "\n");
-        }
-    
-    }
-
-    //strto upper 
-    switch($splitted[0]){
-        case 'MOVE':
-            echo("dd");
-    }
-    
-    //strto upper 
-    switch($splitted[1]){
-        case 'MOVE':
-            echo("dd");
-    }
-
-*/
-
 
 
     /**
@@ -335,8 +345,4 @@
         }
         exit(0);
     }
-
-
-    
-
 ?>
