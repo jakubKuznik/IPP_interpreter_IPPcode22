@@ -34,8 +34,6 @@
     $stats_files;              // All files for statistic 
     $stats_params;             // all params for all files
 
-
-
     // return type of parse_args is array($stats_filse, $stats_params)
     $h = parse_args($argc, $argv); 
     $stats_files  = $h[0];
@@ -661,7 +659,12 @@
      * 
      */
     function file_open_check($files){
-        foreach($files as $f){
+        $relative = substr(dirname(__FILE__), strlen($_SERVER['DOCUMENT_ROOT']));
+        
+        foreach($files as $f){ 
+            if (substr($f, 0, 1 ) != '/')
+                $f = $relative . '/' . $f;
+        
             if (!file_exists($f)){
                 echo ($f);
                 fwrite(STDERR, "File does not exist\n");
