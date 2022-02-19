@@ -128,62 +128,54 @@
         switch(strtoupper($one_line[0])){
             /******* <var> <symb> **************/
             case "MOVE":      // <var> <symb> 
-                expe_size($one_line, 3);
+                expe_size($one_line, 3); expe_var($one_line[1]); expe_sym($one_line[2]);
                 echo "MOVE";
                 break;
             case "INT2CHAR":  // <var> <symb>
-                expe_size($one_line, 3);
+                expe_size($one_line, 3); expe_var($one_line[1]); expe_sym($one_line[2]);
                 echo "CALL";
                 break;
             case "STRLEN":    // <var> <symb>
-                expe_size($one_line, 3);
+                expe_size($one_line, 3); expe_var($one_line[1]); expe_sym($one_line[2]);
                 echo "STRLEN";
                 break;
             case "TYPE":      // <var> <symb>
-                expe_size($one_line, 3);
+                expe_size($one_line, 3); expe_var($one_line[1]); expe_sym($one_line[2]);
                 echo "TYPE";
                 break;
             /******* <var> *********************/
             case "DEFVAR":    // <var>
-                expe_size($one_line, 2);
-                expe_var($one_line[1]);
+                expe_size($one_line, 2); expe_var($one_line[1]);
                 echo "DEFVAR";
                 break;
             case "POPS":      // <var>
-                expe_size($one_line, 2);
-                expe_var($one_line[1]);
+                expe_size($one_line, 2); expe_var($one_line[1]);
                 echo "POPS";
                 break;
             /******* <label> *********************/
             case "CALL":      // <label>
-                expe_size($one_line, 2);
-                expe_lable($one_line[1], JUMP);
+                expe_size($one_line, 2); expe_lable($one_line[1], JUMP);
                 echo "CALL";
                 break;
             case "LABEL":     // <label>
-                expe_size($one_line, 2);
-                expe_lable($one_line[1], DECLARATION);
+                expe_size($one_line, 2); expe_lable($one_line[1], DECLARATION);
                 echo "LABEL";
                 break;
             case "JUMP":      // <label>
-                expe_size($one_line, 2);
-                expe_lable($one_line[1], JUMP);
+                expe_size($one_line, 2); expe_lable($one_line[1], JUMP);
                 echo "JUMP";
                 break;
             /******* <symb> ********************/
             case "PUSHS":     // <symb>
-                expe_size($one_line, 2);
-                expe_sym($one_line[1]);
+                expe_size($one_line, 2); expe_sym($one_line[1]);
                 echo "PUSHS";
                 break;
             case "WRITE":     // <symb>
-                expe_size($one_line, 2);
-                expe_sym($one_line[1]);
+                expe_size($one_line, 2); expe_sym($one_line[1]);
                 echo "WRITE";
                 break;
             case "EXIT":      // <symb>
-                expe_size($one_line, 2);
-                expe_sym($one_line[1]);
+                expe_size($one_line, 2); expe_sym($one_line[1]);
                 echo "EXIT";
                 break;
             case "DPRINT":    // <symb>
@@ -192,73 +184,73 @@
                 break;
             /******* <var> <symb1> <symb2> ****/
             case "ADD":       // <var> <symb1> <sybm2> 
-                expe_size($one_line, 4);
+                expe_size($one_line, 4); expe_var($one_line[1]); expe_sym($one_line[2]); expe_sym($one_line[3]);
                 echo "ADD";
                 break;
             case "SUB":       // <var> <symb1> <sybm2> 
-                expe_size($one_line, 4);
+                expe_size($one_line, 4); expe_var($one_line[1]); expe_sym($one_line[2]); expe_sym($one_line[3]);
                 echo "SUB";
                 break;
             case "MUL":       // <var> <symb1> <sybm2> 
-                expe_size($one_line, 4);
+                expe_size($one_line, 4); expe_var($one_line[1]); expe_sym($one_line[2]); expe_sym($one_line[3]);
                 echo "MUL";
                 break;
             case "IDIV":      // <var> <symb1> <sybm2> 
-                expe_size($one_line, 4);
+                expe_size($one_line, 4); expe_var($one_line[1]); expe_sym($one_line[2]); expe_sym($one_line[3]);
                 echo "IDIV";
                 break;
             case "LT":        // <var> <symb1> <sybm2> 
-                expe_size($one_line, 4);
+                expe_size($one_line, 4); expe_var($one_line[1]); expe_sym($one_line[2]); expe_sym($one_line[3]);
                 echo "LT";
                 break;
             case "GT":        // <var> <symb1> <sybm2> 
-                expe_size($one_line, 4);
+                expe_size($one_line, 4); expe_var($one_line[1]); expe_sym($one_line[2]); expe_sym($one_line[3]);
                 echo "GT";
                 break;
             case "EQ":        // <var> <symb1> <sybm2> 
-                expe_size($one_line, 4);
+                expe_size($one_line, 4); expe_var($one_line[1]); expe_sym($one_line[2]); expe_sym($one_line[3]);
                 echo "EQ";
                 break;
             case "\AND":      // <var> <symb1> <sybm2> 
-                expe_size($one_line, 4);
+                expe_size($one_line, 4); expe_var($one_line[1]); expe_sym($one_line[2]); expe_sym($one_line[3]);
                 echo "\AND";
                 break;
             case "OR":        // <var> <symb1> <sybm2> 
-                expe_size($one_line, 4);
+                expe_size($one_line, 4); expe_var($one_line[1]); expe_sym($one_line[2]); expe_sym($one_line[3]);
                 echo "OR";
                 break;
             case "NOT":       // <var> <symb1> <sybm2> 
-                expe_size($one_line, 4);
+                expe_size($one_line, 4); expe_var($one_line[1]); expe_sym($one_line[2]); expe_sym($one_line[3]);
                 echo "NOT";
                 break;
             case "STRI2INT":  // <var> <symb1> <symb2>
-                expe_size($one_line, 4);
+                expe_size($one_line, 4); expe_var($one_line[1]); expe_sym($one_line[2]); expe_sym($one_line[3]);
                 echo "STRI2INT";
                 break;
             case "CONCAT":    // <var> <symb1> <symb2>
-                expe_size($one_line, 4);
+                expe_size($one_line, 4); expe_var($one_line[1]); expe_sym($one_line[2]); expe_sym($one_line[3]);
                 echo "CONCAT";
                 break;
             case "GETCHAR":   // <var> <symb1> <symb2>
-                expe_size($one_line, 4);
+                expe_size($one_line, 4); expe_var($one_line[1]); expe_sym($one_line[2]); expe_sym($one_line[3]);
                 echo "GETCHAR";
                 break;
             case "SETCHAR":   // <var> <symb1> <symb2>
-                expe_size($one_line, 4);
+                expe_size($one_line, 4); expe_var($one_line[1]); expe_sym($one_line[2]); expe_sym($one_line[3]);
                 echo "SETCHAR";
                 break;
             /****** <label> <symb1> <symb2> ***/
             case "JUMPIFEQ":  // <label> <symb1> <symb2>
-                expe_size($one_line, 4);
+                expe_size($one_line, 4); expe_lable($one_line[1], JUMP); expe_sym($one_line[2]); expe_sym($one_line[3]);
                 echo "LABEL";
                 break;
             case "JUMPIFNEQ": // <label> <symb1> <symb2>
-                expe_size($one_line, 4);
+                expe_size($one_line, 4); expe_lable($one_line[1], JUMP); expe_sym($one_line[2]); expe_sym($one_line[3]);
                 echo "LABEL";
                 break;
             /******* <var> <type> *************/
             case "READ":      // <var> <type>
-                expe_size($one_line, 3);
+                expe_size($one_line, 3); expe_var($one_line[1]); expe_typ($one_line[2]);
                 echo "READ";
                 break;
             /******* NONE *********************/
