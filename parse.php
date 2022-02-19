@@ -19,13 +19,11 @@
     --jumps       // statistic - number or returns and jumps instruction\n");
 
 
-    $loc      = 0;   // Number of lines, that has instruction in code, Same as instruction order 
-    $coments  = 0;   // Number of lines that has a comment 
-    $labels   = 0;   // Number of labels in code 
-    $jump     = 0;   // Number of retuns and jumps in code
-    $jump_fw  = 0;   // Number of forward jumps 
-    $jump_bac = 0;   // Back jumps
-    $jump_bad = 0;   // Bad jumps 
+    $loc      = 0;     // Number of lines, that has instruction in code, Same as instruction order 
+    $coments  = 0;     // Number of lines that has a comment 
+    $labels   = 0;     // Number of labels in code 
+    $jumps[0][0]  = 0; // jump on lables       $jumps[0]  - has labels names  $jumps[1]  - has lines number 
+    $lables[0][0] = 0; // labels declarations  $labels[0] - has labels names  $labels[1] - has lines number 
     
     $stats_files;   // All files for statistic 
     $stats_params;  // all params for all files
@@ -44,6 +42,7 @@
         exit(21);
     }
     parse();
+    exit(0);
 
     
     /**
@@ -101,11 +100,6 @@
      * 
      * calculate:
      *  - loc
-     *  - lables
-     *  - jump
-     *  - jump_fw
-     *  - jump_bac
-     *  - jump_bad
      * 
      * return TRUE 
      * Exit program if there is error  
@@ -118,7 +112,7 @@
      */
     function syntax_validation($one_line){
 
-        global $loc, $labels, $jump, $jump_fw, $jump_bac, $jump_bad;
+        global $loc, $labels; 
         if (empty($one_line) == TRUE) return; //if empty line skip.
 
         $loc++; //One line of instruction 
@@ -145,14 +139,17 @@
             case "POPS":      // <var>
                 echo "POPS";
                 break;
-
+            /******* <label> *********************/
             case "CALL":      // <label>
+                expe_lable($one_line);
                 echo "CALL";
                 break;
             case "LABEL":     // <label>
+                expe_lable($one_line);
                 echo "LABEL";
                 break;
             case "JUMP":      // <label>
+                expe_lable($one_line);
                 echo "JUMP";
                 break;
             /******* <symb> ********************/
@@ -252,6 +249,7 @@
         return TRUE;
     }
 
+
     /**
      * For instruction with no params like PUSHFRAME or RETURN 
      * 
@@ -277,6 +275,19 @@
      * 
      */
     function expe_lable($one_line){
+        $frame_definiton = "/@/";  // comentary 
+
+        if (sizeof($one_line) != 2)
+            exit(22); 
+        
+        // GF@label format 
+        if (preg_match($frame_definiton, $one_line[1])){
+            $parts = explode('@', $one_line[1]);
+            echo($parts[0]);
+            if (($parts[0] != "GF") and ($parts[0] != "LF") and ($parts[0] != "TF"))
+                exit(22);
+            return;
+        }
         return;
     }
 
@@ -309,7 +320,34 @@
         return;
     }
 
+    /**
+     * 
+     */
+    function is_var($token){
+        return;
+    }
 
+    /**
+     * 
+     */
+    function is_sym($token){
+        return;
+    }
+    
+    /**
+     * 
+     */
+    function is_type($token){
+        return;
+    }
+    
+    /**
+     * 
+     */
+    function is_label($token){
+        return;
+    }
+    
     /** 
      * 
      * Remove commentary from line 
@@ -377,6 +415,14 @@
                     return FALSE;
             }
         }
+    }
+
+    /**
+     * 
+     */
+    function jump_stats_counter(){
+        global $jumps, $labels;
+        return;
     }
 
 
@@ -537,7 +583,14 @@
      * Check if stats file exist. 
      * 
      * error -12 --ouptu files cannot be open 
-     * //todo filepath can contain unicode in UTF-8 
+     * todo filepath can contain unicode in UTF-8 
+     * 
+     * todo -  Pozor na rozdíl mezi relativní cestou vůči zpracovávanému PHP skriptu
+     *  (rel/to/script/path) a relativní cestou vůči aktuálnímu adresáři
+     *  (./rel/to/actual/path). V případě, že bude skript spuštěn z jiného adresáře,
+     *  tak se liší a potom bude rozdílně fungovat např. funkce require_once(). Nepředpokládejte,
+     *  že bude váš skript při spuštění obsažen v aktuálním adresáři!
+     * 
      */
     function file_open_check($files){
         foreach($files as $f){
