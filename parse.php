@@ -128,123 +128,153 @@
         switch(strtoupper($one_line[0])){
             /******* <var> <symb> **************/
             case "MOVE":      // <var> <symb> 
+                expe_size($one_line, 3);
                 echo "MOVE";
                 break;
             case "INT2CHAR":  // <var> <symb>
+                expe_size($one_line, 3);
                 echo "CALL";
                 break;
             case "STRLEN":    // <var> <symb>
+                expe_size($one_line, 3);
                 echo "STRLEN";
                 break;
             case "TYPE":      // <var> <symb>
+                expe_size($one_line, 3);
                 echo "TYPE";
                 break;
             /******* <var> *********************/
             case "DEFVAR":    // <var>
+                expe_size($one_line, 2);
                 echo "DEFVAR";
                 break;
             case "POPS":      // <var>
+                expe_size($one_line, 2);
                 echo "POPS";
                 break;
             /******* <label> *********************/
             case "CALL":      // <label>
-                expe_lable($one_line, JUMP);
+                expe_size($one_line, 2);
+                expe_lable($one_line[1], JUMP);
                 echo "CALL";
                 break;
             case "LABEL":     // <label>
-                expe_lable($one_line, DECLARATION);
+                expe_size($one_line, 2);
+                expe_lable($one_line[1], DECLARATION);
                 echo "LABEL";
                 break;
             case "JUMP":      // <label>
-                expe_lable($one_line, JUMP);
+                expe_size($one_line, 2);
+                expe_lable($one_line[1], JUMP);
                 echo "JUMP";
                 break;
             /******* <symb> ********************/
             case "PUSHS":     // <symb>
+                expe_size($one_line, 2);
                 echo "PUSHS";
                 break;
             case "WRITE":     // <symb>
+                expe_size($one_line, 2);
                 echo "WRITE";
                 break;
             case "EXIT":      // <symb>
+                expe_size($one_line, 2);
                 echo "EXIT";
                 break;
             case "DPRINT":    // <symb>
+                expe_size($one_line, 2);
                 echo "DPRINT";
                 break;
             /******* <var> <symb1> <symb2> ****/
             case "ADD":       // <var> <symb1> <sybm2> 
+                expe_size($one_line, 4);
                 echo "ADD";
                 break;
             case "SUB":       // <var> <symb1> <sybm2> 
+                expe_size($one_line, 4);
                 echo "SUB";
                 break;
             case "MUL":       // <var> <symb1> <sybm2> 
+                expe_size($one_line, 4);
                 echo "MUL";
                 break;
             case "IDIV":      // <var> <symb1> <sybm2> 
+                expe_size($one_line, 4);
                 echo "IDIV";
                 break;
             case "LT":        // <var> <symb1> <sybm2> 
+                expe_size($one_line, 4);
                 echo "LT";
                 break;
             case "GT":        // <var> <symb1> <sybm2> 
+                expe_size($one_line, 4);
                 echo "GT";
                 break;
             case "EQ":        // <var> <symb1> <sybm2> 
+                expe_size($one_line, 4);
                 echo "EQ";
                 break;
             case "\AND":      // <var> <symb1> <sybm2> 
+                expe_size($one_line, 4);
                 echo "\AND";
                 break;
             case "OR":        // <var> <symb1> <sybm2> 
+                expe_size($one_line, 4);
                 echo "OR";
                 break;
             case "NOT":       // <var> <symb1> <sybm2> 
+                expe_size($one_line, 4);
                 echo "NOT";
                 break;
             case "STRI2INT":  // <var> <symb1> <symb2>
+                expe_size($one_line, 4);
                 echo "STRI2INT";
                 break;
             case "CONCAT":    // <var> <symb1> <symb2>
+                expe_size($one_line, 4);
                 echo "CONCAT";
                 break;
             case "GETCHAR":   // <var> <symb1> <symb2>
+                expe_size($one_line, 4);
                 echo "GETCHAR";
                 break;
             case "SETCHAR":   // <var> <symb1> <symb2>
+                expe_size($one_line, 4);
                 echo "SETCHAR";
                 break;
             /****** <label> <symb1> <symb2> ***/
             case "JUMPIFEQ":  // <label> <symb1> <symb2>
+                expe_size($one_line, 4);
                 echo "LABEL";
                 break;
             case "JUMPIFNEQ": // <label> <symb1> <symb2>
+                expe_size($one_line, 4);
                 echo "LABEL";
                 break;
             /******* <var> <type> *************/
             case "READ":      // <var> <type>
+                expe_size($one_line, 3);
                 echo "READ";
                 break;
             /******* NONE *********************/
             case "CREATEFRAME":
-                expe_none($one_line);
+                expe_size($one_line, 1); 
                 echo "CREATEFRAME";
                 break;
             case "PUSHFRAME": 
-                expe_none($one_line);
+                expe_size($one_line, 1); 
                 echo "PUSHFRAME";
                 break;
             case "POPFRAME": 
-                expe_none($one_line);
+                expe_size($one_line, 1); 
                 echo "POPFRAME";
                 break;
             case "RETURN": 
-                expe_none($one_line);
+                expe_size($one_line, 1); 
                 echo "RETURN";
                 break;
-            case "BREAK": 
-                expe_none($one_line);
+            case "BREAK":
+                expe_size($one_line, 1); 
                 echo "BREAK";
                 break;
             /******************************** */
@@ -256,25 +286,21 @@
         return TRUE;
     }
 
-
     /**
-     * For instruction with no params like PUSHFRAME or RETURN 
-     * 
-     * exit(22) if error 
-     * 
+     * Expect that array is $size big
      */
-    function expe_none($one_line){
-        if (sizeof($one_line) != 1){
+    function expe_size($one_line, $size){
+        if(sizeof($one_line) != $size){
             fwrite(STDERR, "Instruction doesn`t have operator.\n");
             exit(22);
         }
         return;
     }
-
+ 
     /**
      * 
      */
-    function expe_var($one_line){
+    function expe_var($token){
         /*
         // GF@label format 
         if (preg_match($frame_definiton, $one_line[1])){
@@ -292,25 +318,23 @@
      * 
      * $type - JUMP || DECLARATION 
      */
-    function expe_lable($one_line, $type){
+    function expe_lable($token, $type){
         global $labels, $jumps, $loc, $jumps_line, $labels_line;
         $frame_definiton = "/@/";  // comentary 
-        $name_lab = $one_line[1];
 
-        if (sizeof($one_line) != 2)
-            exit(22); 
-       
         // Variable  
-        if (preg_match($frame_definiton, $one_line[1]))
+        if (preg_match($frame_definiton, $token)){
+            fwrite(STDERR, "Expect label not variable\n");
             exit(22);
+        }
             
         // store for statistic 
         if ($type == JUMP){
-            array_push($jumps, $name_lab);
+            array_push($jumps, $token);
             array_push($jumps_line, $loc);
         }
         elseif($type == DECLARATION){
-            array_push($labels, $name_lab);
+            array_push($labels, $token);
             array_push($labels_line, $loc);
         }
 
@@ -321,58 +345,18 @@
     /**
      * 
      */
-    function expe_sym($one_line){
+    function expe_sym($token){
         return;
     }
     
-    /**
-     * 
-     */
-    function expe_var_sym_sym($one_line){
-        return;
-    }
     
-    /**
-     * 
-     */
-    function expe_lab_sym_sym($one_line){
-        return;
-    }
     
-    /**
-     * 
-     */
-    function expe_var_typ($one_line){
+    function expe_typ($token){
         return;
     }
 
-    /**
-     * 
-     */
-    function is_var($token){
-        return;
-    }
 
-    /**
-     * 
-     */
-    function is_sym($token){
-        return;
-    }
-    
-    /**
-     * 
-     */
-    function is_type($token){
-        return;
-    }
-    
-    /**
-     * 
-     */
-    function is_label($token){
-        return;
-    }
+   
     
     /** 
      * 
