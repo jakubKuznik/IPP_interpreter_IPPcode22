@@ -118,7 +118,7 @@
      * 
      */
     function syntax_validation($one_line){
-
+        // todo multiple @
         global $loc; 
         if (empty($one_line) == TRUE) return; //if empty line skip.
 
@@ -173,14 +173,17 @@
             /******* <symb> ********************/
             case "PUSHS":     // <symb>
                 expe_size($one_line, 2);
+                expe_sym($one_line[1]);
                 echo "PUSHS";
                 break;
             case "WRITE":     // <symb>
                 expe_size($one_line, 2);
+                expe_sym($one_line[1]);
                 echo "WRITE";
                 break;
             case "EXIT":      // <symb>
                 expe_size($one_line, 2);
+                expe_sym($one_line[1]);
                 echo "EXIT";
                 break;
             case "DPRINT":    // <symb>
@@ -271,10 +274,11 @@
                 expe_size($one_line, 1); 
                 echo "POPFRAME";
                 break;
-            case "RETURN": 
-                expe_size($one_line, 1); 
-                echo "RETURN";
-                break;
+            case "RETURN":         // Variable  
+                if (preg_match($frame_definiton, $token)){
+                    fwrite(STDERR, "Expect label not variable\n");
+                    exit(22);
+                };
             case "BREAK":
                 expe_size($one_line, 1); 
                 echo "BREAK";
@@ -300,7 +304,7 @@
     }
  
     /**
-     * 
+     * Expect variable in $token
      */
     function expe_var($token){
         $frame_definiton = "/@/";  // comentary 
@@ -321,7 +325,7 @@
     }
     
     /**
-     * 
+     * Expect label in $token  
      * $type - JUMP || DECLARATION 
      */
     function expe_lable($token, $type){
@@ -347,18 +351,46 @@
         return;
     }
 
-
     /**
-     * 
+     * Expect constant or variable 
+     * Zápis každé konstanty v IPPcode22 se skládá ze dvou částí oddělených zavináčem (znak @; bez
+     * bílých znaků), označení typu konstanty (int, bool, string, nil) a samotné konstanty (číslo, literál, nil).
+     * Např. bool@true, nil@nil nebo int@-5.
      */
     function expe_sym($token){
-        return;
+        $frame_definiton = "/@/";  // comentary 
+        echo($token);
+        // Variable  
+        if (preg_match($frame_definiton, $token) == FALSE){
+            fwrite(STDERR, "Expect constant or variable\n");
+            exit(22);
+        }
+
+        //todo WRITE string@Proměnná \032 GF@counter \032 obsahuje \032
+
+        $parts = explode('@', $token);
+        if (($parts[0] == "GF") or ($parts[0] == "LF") or ($parts[0] == "TF")){
+            return; //variable 
+        }
+        // todo kompability of data types 
+        else if (($parts[0] == "int") or ($parts[0] == "bool") or ($parts[0] == "string") or ($parts[0] == "nil")){
+            return; // constant 
+        }
+
+        exit (22);
     }
     
     
-    
+    /**
+     * type E {int, string, bool}
+     */
     function expe_typ($token){
-        return;
+        // todo kompability of data types 
+        if (($parts[0] == "int") or ($parts[0] == "bool") or ($parts[0] == "string")){
+            return; // constant 
+        }
+        fwrite(STDERR, "Expect type\n");
+        exit(22);
     }
 
 
