@@ -68,26 +68,179 @@
             $splitted = array_values(array_filter($splitted)); //remove empty
             if(empty($splitted) == TRUE)
                 continue;
-            $splitted = remove_comm($splitted);
-            print_r($splitted);
-            syntax_validation($splitted);
+            $splitted = remove_comm($splitted); 
+            syntax_validation($splitted); // there are also empty lines 
         }
     }
     /**
      * Store given instruction to xml
-     * 
-     * calculate loc and use that value as instruction_order  
+     *
+     * $instruction - one program line 
+     * $order       - instruction order 
+     *   
      * 
      */
-    function store_to_xml($instruction){
+    function store_to_xml($instruction, $order){
         return 0;
+    }
+
+    /**
+     * Get splited array of strings that represent one line of code from parse();
+     * 
+     * calculate:
+     *  - loc
+     *  - lables
+     *  - jump
+     *  - jump_fw
+     *  - jump_bac
+     *  - jump_bad
+     * 
+     * If succesfull send line to store_to_xml 
+     * 
+     * return TRUE 
+     * Exit program if there is error  
+     * 
+     * <var>   -- variable
+     * <symb>  -- constant or variable 
+     * <label> -- label
+     * <type>  -- {int, string, bool}
+     * 
+     */
+    function syntax_validation($one_line){
+
+        global $loc, $labels, $jump, $jump_fw, $jump_bac, $jump_bad;
+        if (empty($one_line) == TRUE) return; //if empty line skip.
+
+        $loc++; //One line of instruction 
+    
+        // echo($splitted[0] . "\n");
+        switch($one_line[0]){
+            /******* <var> <symb> **************/
+            case "MOVE":      // <var> <symb> 
+                echo "MOVE";
+                break;
+            case "INT2CHAR":  // <var> <symb>
+                echo "CALL";
+                break;
+            case "STRLEN":    // <var> <symb>
+                echo "STRLEN";
+                break;
+            case "TYPE":      // <var> <symb>
+                echo "TYPE";
+                break;
+            /******* <var> *********************/
+            case "DEFVAR":    // <var>
+                echo "DEFVAR";
+                break;
+            case "POPS":      // <var>
+                echo "POPS";
+                break;
+
+            case "CALL":      // <label>
+                echo "CALL";
+                break;
+            case "LABEL":     // <label>
+                echo "LABEL";
+                break;
+            case "JUMP":      // <label>
+                echo "JUMP";
+                break;
+            /******* <symb> ********************/
+            case "PUSHS":     // <symb>
+                echo "PUSHS";
+                break;
+            case "WRITE":     // <symb>
+                echo "WRITE";
+                break;
+            case "EXIT":      // <symb>
+                echo "EXIT";
+                break;
+            case "DPRINT":    // <symb>
+                echo "DPRINT";
+                break;
+            /******* <var> <symb1> <symb2> ****/
+            case "ADD":       // <var> <symb1> <sybm2> 
+                echo "ADD";
+                break;
+            case "SUB":       // <var> <symb1> <sybm2> 
+                echo "SUB";
+                break;
+            case "MUL":       // <var> <symb1> <sybm2> 
+                echo "MUL";
+                break;
+            case "IDIV":      // <var> <symb1> <sybm2> 
+                echo "IDIV";
+                break;
+            case "LT":        // <var> <symb1> <sybm2> 
+                echo "LT";
+                break;
+            case "GT":        // <var> <symb1> <sybm2> 
+                echo "GT";
+                break;
+            case "EQ":        // <var> <symb1> <sybm2> 
+                echo "EQ";
+                break;
+            case "\AND":      // <var> <symb1> <sybm2> 
+                echo "\AND";
+                break;
+            case "OR":        // <var> <symb1> <sybm2> 
+                echo "OR";
+                break;
+            case "NOT":       // <var> <symb1> <sybm2> 
+                echo "NOT";
+                break;
+            case "STRI2INT":  // <var> <symb1> <symb2>
+                echo "STRI2INT";
+                break;
+            case "CONCAT":    // <var> <symb1> <symb2>
+                echo "CONCAT";
+                break;
+            case "GETCHAR":   // <var> <symb1> <symb2>
+                echo "GETCHAR";
+                break;
+            case "SETCHAR":   // <var> <symb1> <symb2>
+                echo "SETCHAR";
+                break;
+            case "JUMPIFEQ":  // <label> <symb1> <symb2>
+                echo "LABEL";
+                break;
+            case "JUMPIFNEQ": // <label> <symb1> <symb2>
+                echo "LABEL";
+                break;
+            
+            /******* <var> <type> *************/
+            case "READ":      // <var> <type>
+                echo "READ";
+                break;
+            /******* NONE *********************/
+            case "CREATEFRAME": 
+                echo "CREATEFRAME";
+                break;
+            case "PUSHFRAME": 
+                echo "PUSHFRAME";
+                break;
+            case "POPFRAME": 
+                echo "POPFRAME";
+                break;
+            case "RETURN": 
+                echo "RETURN";
+                break;
+            case "BREAK": 
+                echo "BREAK";
+                break;
+            /******************************** */
+            default:
+                echo("Errurek\n");
+        }
+        echo("\n");
+        return TRUE;
     }
 
     /** 
      * 
      * Remove commentary from line 
      * 
-     * calculate coments 
+     * calculate coments for statistic 
      * 
      * Return new array without comments 
      * 
@@ -108,23 +261,6 @@
         return $new_array;
     }
 
-    /**
-     * Get splited array of strings that represent one line of code from parse();
-     * 
-     * calculate:
-     *  - lables
-     *  - 
-     * 
-     * If succesfull send line to store_to_xml 
-     * 
-     * return TRUE 
-     * Exit program if there is error  
-     * 
-     */
-    function syntax_validation($one_line){
-        // echo($splitted[0] . "\n");
-        return TRUE;
-    }
 
     /**
      * Check if there is a headear ". IPPcode22"
