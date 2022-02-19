@@ -46,33 +46,40 @@
     parse();
 
     
-    /*      INSTRUCTION 
-        MOVE      CREATEFRAME   PUSHFRAME   POPFRAME   DEFVAR   CALL 
-        RETURN    PUSHS         POPS        ADD        SUB      MUL
-        IDIV      LT            GT          EQ         AND      OR
-        NOT       INT2CHAR      STRI2INT    READ       WRITE    CONCAT
-        STRLEN    GETCHAR       SETCHAR     TYPE       LABEL    JUMP
-        JUMPIFEQ  JUMPIFNEQ     EXIT        DPRINT     BREAK
-
-        #comentary
-    */
     /**
-     * Parse input program in ipp_code22 to array
-     * 
+     * Parse input program in ipp_code22a and store to xml 
      */
     function parse(){
         $line_num = 0 ;   
         while($line = fgets(STDIN)){
-            
+            // parse 
             $splitted = preg_split('/\s+/', trim($line, "\n"));
             $splitted = array_values(array_filter($splitted)); //remove empty
             if(empty($splitted) == TRUE)
                 continue;
+            // remove commentary  
             $splitted = remove_comm($splitted); 
-            syntax_validation($splitted); // there are also empty lines 
+            // syntax chceck 
+            syntax_validation($splitted); 
+            // store to xml 
+            store_to_xml($splitted);
         }
     }
-    /**
+
+
+    /* 
+        <?xml version="1.0" encoding="UTF-8"?>
+
+        <program language="IPPcode22">
+        <instruction order="1" opcode="CREATEFRAME">
+        </instruction>
+        <instruction order="2" opcode="MOVE">
+                <arg1 type="var">TF@a</arg1>
+                <arg2 type="nil">nil</arg2>
+        </instruction>
+        </program>
+        February 17, 2022    */
+    /*
      * Store given instruction to xml
      *
      * $instruction - one program line 
@@ -80,12 +87,17 @@
      *   
      * 
      */
-    function store_to_xml($instruction, $order){
+    function store_to_xml($instruction){
+        global $loc;
         return 0;
     }
 
     /**
      * Get splited array of strings that represent one line of code from parse();
+     * 
+     * ERORRS: 
+     *  22 - unknown or bad opcode of instruction 
+     *  23 - other lexical or syntax error 
      * 
      * calculate:
      *  - loc
@@ -94,8 +106,6 @@
      *  - jump_fw
      *  - jump_bac
      *  - jump_bad
-     * 
-     * If succesfull send line to store_to_xml 
      * 
      * return TRUE 
      * Exit program if there is error  
@@ -114,7 +124,7 @@
         $loc++; //One line of instruction 
     
         // echo($splitted[0] . "\n");
-        switch($one_line[0]){
+        switch(strtoupper($one_line[0])){
             /******* <var> <symb> **************/
             case "MOVE":      // <var> <symb> 
                 echo "MOVE";
@@ -201,40 +211,104 @@
             case "SETCHAR":   // <var> <symb1> <symb2>
                 echo "SETCHAR";
                 break;
+            /****** <label> <symb1> <symb2> ***/
             case "JUMPIFEQ":  // <label> <symb1> <symb2>
                 echo "LABEL";
                 break;
             case "JUMPIFNEQ": // <label> <symb1> <symb2>
                 echo "LABEL";
                 break;
-            
             /******* <var> <type> *************/
             case "READ":      // <var> <type>
                 echo "READ";
                 break;
             /******* NONE *********************/
-            case "CREATEFRAME": 
+            case "CREATEFRAME":
+                expe_none($one_line);
                 echo "CREATEFRAME";
                 break;
             case "PUSHFRAME": 
+                expe_none($one_line);
                 echo "PUSHFRAME";
                 break;
             case "POPFRAME": 
+                expe_none($one_line);
                 echo "POPFRAME";
                 break;
             case "RETURN": 
+                expe_none($one_line);
                 echo "RETURN";
                 break;
             case "BREAK": 
+                expe_none($one_line);
                 echo "BREAK";
                 break;
             /******************************** */
             default:
-                echo("Errurek\n");
+                fwrite(STDERR, "Unknown or bad instruction.\n");
+                exit(22);      
         }
         echo("\n");
         return TRUE;
     }
+
+    /**
+     * For instruction with no params like PUSHFRAME or RETURN 
+     * 
+     * exit(22) if error 
+     * 
+     */
+    function expe_none($one_line){
+        if (sizeof($one_line) != 1){
+            fwrite(STDERR, "Instruction doesn`t have operator.\n");
+            exit(22);
+        }
+        return;
+    }
+
+    /**
+     * 
+     */
+    function expe_var($one_line){
+        return;
+    }
+    
+    /**
+     * 
+     */
+    function expe_lable($one_line){
+        return;
+    }
+
+
+    /**
+     * 
+     */
+    function expe_sym($one_line){
+        return;
+    }
+    
+    /**
+     * 
+     */
+    function expe_var_sym_sym($one_line){
+        return;
+    }
+    
+    /**
+     * 
+     */
+    function expe_lab_sym_sym($one_line){
+        return;
+    }
+    
+    /**
+     * 
+     */
+    function expe_var_typ($one_line){
+        return;
+    }
+
 
     /** 
      * 
@@ -355,7 +429,7 @@
                 if ($argc == 2)
                     echo HELP;
                 else {
-                    fwrite(STDERR, "Cannot combine --help with other parameters.");
+                    fwrite(STDERR, "Cannot combine --help with other parameters.\n");
                     exit(10);
                 }
             }
