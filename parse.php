@@ -29,6 +29,7 @@
     $labels[0]      = 0;       // labels declarations   
     $labels_line[0] = 0;
     $jumps_line[0]  = 0;
+    $retunrs        = 0;
 
     $stats_files;              // All files for statistic 
     $stats_params;             // all params for all files
@@ -47,6 +48,7 @@
         exit(21);
     }
     parse();
+    # dont forget to sum up jumps with returns 
     jump_stats_counter();
 
     exit(0);
@@ -119,7 +121,7 @@
      */
     function syntax_validation($one_line){
         // todo multiple @
-        global $loc; 
+        global $loc, $retunrs; 
         if (empty($one_line) == TRUE) return; //if empty line skip.
 
         $loc++; //One line of instruction 
@@ -267,10 +269,10 @@
                 echo "POPFRAME";
                 break;
             case "RETURN":         // Variable  
-                if (preg_match($frame_definiton, $token)){
-                    fwrite(STDERR, "Expect label not variable\n");
-                    exit(22);
-                };
+                expe_size($one_line, 1);
+                $retunrs++;
+                echo "RETURN";
+                break;
             case "BREAK":
                 expe_size($one_line, 1); 
                 echo "BREAK";
@@ -458,15 +460,37 @@
     }
 
     /**
+     * Count jumps in program based on $jumps $labels $jumps_line $labels_line 
+     * 
+     * return $jumps, $fwjumps, $backjumps $badjumps
      * 
      */
     function jump_stats_counter(){
         global $jumps, $labels, $jumps_line, $labels_line;
+        
+        $s_j = 0; $s_jf = 0; $s_jbac = 0; $s_jbad = 0;
+     
+        foreach($jumps as $key=>$j){
+            $s_j++;
+            if (in_array($j, $labels) == FALSE){
+                $s_jbad; // label doesnt exits
+                continue;
+            }
+            $i = array_search($j, $labels);
+            if ($labels_line[$i] > $jumps_line[$key]){
+                $s_jf++;
+            }
+            elseif($labels_line[$i] < $jumps_line[$key]){
+                $s_jbac;
+            }
+        }
+        
         print_r($jumps);
         print_r($jumps_line);
         print_r($labels_line);
         print_r($labels);
-        return;
+        
+        return [$s_j, $s_jf, $s_jbac, $s_jbad];
     }
 
 
