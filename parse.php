@@ -146,10 +146,12 @@
             /******* <var> *********************/
             case "DEFVAR":    // <var>
                 expe_size($one_line, 2);
+                expe_var($one_line[1]);
                 echo "DEFVAR";
                 break;
             case "POPS":      // <var>
                 expe_size($one_line, 2);
+                expe_var($one_line[1]);
                 echo "POPS";
                 break;
             /******* <label> *********************/
@@ -301,16 +303,20 @@
      * 
      */
     function expe_var($token){
-        /*
+        $frame_definiton = "/@/";  // comentary 
         // GF@label format 
-        if (preg_match($frame_definiton, $one_line[1])){
-            $parts = explode('@', $one_line[1]);
+        if (preg_match($frame_definiton, $token)){
+            $parts = explode('@', $token);
             echo($parts[0]);
-            if (($parts[0] != "GF") and ($parts[0] != "LF") and ($parts[0] != "TF"))
+            if (($parts[0] != "GF") and ($parts[0] != "LF") and ($parts[0] != "TF")){
+                fwrite(STDERR, "Unknown variable frame.\n");
                 exit(22);
-            $name_lab = $parts[1];
+            }
         }
-        */
+        else{
+            fwrite(STDERR, "Missing variable frame.\n");
+            exit(22);
+        }
         return;
     }
     
