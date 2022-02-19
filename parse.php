@@ -17,16 +17,21 @@
     --coments     // statistic - number of lines that has a comment 
     --labels      // statistic - number of labels in code     
     --jumps       // statistic - number or returns and jumps instruction\n");
+    define("JUMP", 0);
+    define("DECLARATION",1);
 
 
-    $loc      = 0;     // Number of lines, that has instruction in code, Same as instruction order 
-    $coments  = 0;     // Number of lines that has a comment 
-    $labels   = 0;     // Number of labels in code 
-    $jumps[0][0]  = 0; // jump on lables       $jumps[0]  - has labels names  $jumps[1]  - has lines number 
-    $lables[0][0] = 0; // labels declarations  $labels[0] - has labels names  $labels[1] - has lines number 
+ 
+    $loc            = 0;       // Number of lines, that has instruction in code, Same as instruction order 
+    $coments        = 0;       // Number of lines that has a comment 
     
-    $stats_files;   // All files for statistic 
-    $stats_params;  // all params for all files
+    $jumps[0]       = 0;       // jump on lables     
+    $labels[0]      = 0;       // labels declarations   
+    $labels_line[0] = 0;
+    $jumps_line[0]  = 0;
+
+    $stats_files;              // All files for statistic 
+    $stats_params;             // all params for all files
 
 
 
@@ -42,6 +47,8 @@
         exit(21);
     }
     parse();
+    jump_stats_counter();
+
     exit(0);
 
     
@@ -112,7 +119,7 @@
      */
     function syntax_validation($one_line){
 
-        global $loc, $labels; 
+        global $loc; 
         if (empty($one_line) == TRUE) return; //if empty line skip.
 
         $loc++; //One line of instruction 
@@ -141,15 +148,15 @@
                 break;
             /******* <label> *********************/
             case "CALL":      // <label>
-                expe_lable($one_line);
+                expe_lable($one_line, JUMP);
                 echo "CALL";
                 break;
             case "LABEL":     // <label>
-                expe_lable($one_line);
+                expe_lable($one_line, DECLARATION);
                 echo "LABEL";
                 break;
             case "JUMP":      // <label>
-                expe_lable($one_line);
+                expe_lable($one_line, JUMP);
                 echo "JUMP";
                 break;
             /******* <symb> ********************/
@@ -268,26 +275,45 @@
      * 
      */
     function expe_var($one_line){
-        return;
-    }
-    
-    /**
-     * 
-     */
-    function expe_lable($one_line){
-        $frame_definiton = "/@/";  // comentary 
-
-        if (sizeof($one_line) != 2)
-            exit(22); 
-        
+        /*
         // GF@label format 
         if (preg_match($frame_definiton, $one_line[1])){
             $parts = explode('@', $one_line[1]);
             echo($parts[0]);
             if (($parts[0] != "GF") and ($parts[0] != "LF") and ($parts[0] != "TF"))
                 exit(22);
-            return;
+            $name_lab = $parts[1];
         }
+        */
+        return;
+    }
+    
+    /**
+     * 
+     * $type - JUMP || DECLARATION 
+     */
+    function expe_lable($one_line, $type){
+        global $labels, $jumps, $loc, $jumps_line, $labels_line;
+        $frame_definiton = "/@/";  // comentary 
+        $name_lab = $one_line[1];
+
+        if (sizeof($one_line) != 2)
+            exit(22); 
+       
+        // Variable  
+        if (preg_match($frame_definiton, $one_line[1]))
+            exit(22);
+            
+        // store for statistic 
+        if ($type == JUMP){
+            array_push($jumps, $name_lab);
+            array_push($jumps_line, $loc);
+        }
+        elseif($type == DECLARATION){
+            array_push($labels, $name_lab);
+            array_push($labels_line, $loc);
+        }
+
         return;
     }
 
@@ -421,7 +447,11 @@
      * 
      */
     function jump_stats_counter(){
-        global $jumps, $labels;
+        global $jumps, $labels, $jumps_line, $labels_line;
+        print_r($jumps);
+        print_r($jumps_line);
+        print_r($labels_line);
+        print_r($labels);
         return;
     }
 
