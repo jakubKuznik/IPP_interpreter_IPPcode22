@@ -86,18 +86,6 @@
     }
 
 
-    /* 
-        <?xml version="1.0" encoding="UTF-8"?>
-
-        <program language="IPPcode22">
-        <instruction order="1" opcode="CREATEFRAME">
-        </instruction>
-        <instruction order="2" opcode="MOVE">
-                <arg1 type="var">TF@a</arg1>
-                <arg2 type="nil">nil</arg2>
-        </instruction = "">
-        </program>
-        February 17, 2022    */
     /*
      * Store given instruction to xml
      *
@@ -177,8 +165,8 @@
                 $arg3 = $dom->createElement("arg1", get_lit_name($one_line[3]));
                 $arg3->setAttribute("type", get_literal_type($one_line[3]));
                 $instr->appendChild($arg3);
-                
                 break;
+            
             default:
                 break;
         }
@@ -208,11 +196,9 @@
     function get_lit_name($token){
         $parts = explode('@', $token);
         $res = "";
-        foreach ($parts as $key=>$p){
-            if($key > 0){
+        foreach ($parts as $key=>$p)
+            if($key > 0)
                 $res = $res . $p;
-            }
-        }
         return $res;
     }
 
@@ -259,7 +245,6 @@
             fwrite(STDERR, "not a bool literal\n");
         }
     }
-
 
     /**
      * Get splited array of strings that represent one line of code from parse();
@@ -443,10 +428,8 @@
         else if (($parts[0] == "int") or ($parts[0] == "bool") or ($parts[0] == "string") or ($parts[0] == "nil")){
             return; // constant 
         }
-
         exit (22);
     }
-    
     
     /**
      * type E {int, string, bool}
@@ -460,9 +443,6 @@
         exit(22);
     }
 
-
-   
-    
     /** 
      * 
      * Remove commentary from line 
@@ -487,7 +467,6 @@
         }
         return $new_array;
     }
-
 
     /**
      * Check if there is a headear ". IPPcode22"
@@ -567,7 +546,6 @@
 
         return [$s_j, $s_jf, $s_jbac, $s_jbad];
     }
-
 
     /**
      * Function parse arguments.
