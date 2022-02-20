@@ -55,6 +55,7 @@
         fwrite(STDERR, "ERROR missing header .IPPcode22");
         exit(21);
     }
+    $dom = xml_init();
     parse();
     # dont forget to sum up jumps with returns 
     jump_stats_counter();
@@ -106,12 +107,27 @@
      * 
      */
     function store_to_xml($instruction, $type){
-        global $loc;
-        $dom = new DOMDocument('1.0', 'utf-8');
+        global $loc, $dom;
+        echo($loc);
 
-        echo($type);
-        print_r($instruction);
+        if($loc > 1) return;
+
+        print_r($dom->saveXML());
+        echo "\n";
         return 0;
+    }
+
+    /**
+     *  initialize xml.
+     */
+    function xml_init(){
+        $d = new DOMDocument('1.0', 'utf-8');
+        $d->preserveWhiteSpace = false;
+        $d->formatOutput = true;
+        $program = $d->createElement('program');
+        $program->setAttribute("language", "IPPcode22");
+        $d->appendChild($program);
+        return $d;
     }
 
     /**
@@ -282,7 +298,6 @@
         // GF@label format 
         if (preg_match($frame_definiton, $token)){
             $parts = explode('@', $token);
-            echo($parts[0]);
             if (($parts[0] != "GF") and ($parts[0] != "LF") and ($parts[0] != "TF")){
                 fwrite(STDERR, "Unknown variable frame.\n");
                 exit(22);
@@ -330,7 +345,6 @@
      */
     function expe_sym($token){
         $frame_definiton = "/@/";  // comentary 
-        echo($token);
         // Variable  
         if (preg_match($frame_definiton, $token) == FALSE){
             fwrite(STDERR, "Expect constant or variable\n");
@@ -647,7 +661,6 @@
                 $f = $relative . '/' . $f;
         
             if (!file_exists($f)){
-                echo ($f);
                 fwrite(STDERR, "File does not exist\n");
                 exit(12);
             }
