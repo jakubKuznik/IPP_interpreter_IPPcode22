@@ -28,9 +28,6 @@
     define("VARTYPE", 6);       define("VARSYMBSYMB", 7);
     define("LABELSYMBSYMB", 8); define("NONE", 9);
 
-    // Literal data types 
-    define("LINT", 1); define("LBOOL", 2); define("LSTRING", 3); define("LNIL", 4); define("LVAR", 5);
- 
     $loc            = 0;       // Number of lines, that has instruction in code, Same as instruction order 
     $coments        = 0;       // Number of lines that has a comment 
     
@@ -167,11 +164,7 @@
 
     /**
      * returns:
-     *  LINT    - literal int
-     *  LBOOL   - literal bool
-     *  LSTRING - literal string 
-     *  LNIL    - literal nil 
-     *  LVAR    - variable
+     *  literal data type or var string 
      * 
      *  and check compability error(23) if not comp.
      *  
@@ -180,14 +173,21 @@
 
         $parts = explode('@', $token);
         if (($parts[0] == "GF") or ($parts[0] == "LF") or ($parts[0] == "TF"))
-            return LVAR; //variable 
-        else if ($parts[0] == "int"){
+            return "var"; //variable 
+       
+        else if ($parts[0] == "int"){ // could be hexa deca or octal.
+            if ((intval($parts[1], 10)) or (intval($parts[1], 8)) or (intval($parts[1], 16)))      // decimal 
+                return "int";
 
-            return LINT;
+            fwrite(STDERR, "Not an int literal\n");
+            exit(23);
         }
-        else if ($parts[0] == "bool"){
-
-            return LINT;
+        else if ($parts[0] == "bool"){ // false or true 
+            if ($parts[1] == "true" or $parts[1] == "false")
+                return "bool";
+            
+            fwrite(STDERR, "not a bool literal\n");
+            exit(23);
         }
         /** todo 
          * Literál pro typ string je v případě konstanty zapsán jako sekvence
@@ -197,12 +197,12 @@
          * složené právě ze tří číslic 18 ; např. konstanta
          */
         else if ($parts[0] == "string"){
-
-            return LINT;
+            return "string";
         }
         else if ($parts[0] == "nil"){
-
-            return LINT;
+            if ($parts[1] == "nil")
+                return "nil";
+            fwrite(STDERR, "not a bool literal\n");
         }
     }
 
