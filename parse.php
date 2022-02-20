@@ -135,12 +135,49 @@
                 $instr->appendChild($arg1);
                 break;
             case VARTYPE:
+                $arg1 = $dom->createElement("arg1", $one_line[1]);
+                $arg1->setAttribute("type", "var");
+                $instr->appendChild($arg1);
+
+                $arg2 = $dom->createElement("arg2", $one_line[2]);
+                $arg2->setAttribute("type", "type");
+                $instr->appendChild($arg2);
                 break;
             case VARSYMB:
+                $arg1 = $dom->createElement("arg1", $one_line[1]);
+                $arg1->setAttribute("type", "var");
+                $instr->appendChild($arg1);
+
+                $arg2 = $dom->createElement("arg1", get_lit_name($one_line[2]));
+                $arg2->setAttribute("type", get_literal_type($one_line[2]));
+                $instr->appendChild($arg2);
                 break;
             case VARSYMBSYMB:
+                $arg1 = $dom->createElement("arg1", $one_line[1]);
+                $arg1->setAttribute("type", "var");
+                $instr->appendChild($arg1);
+
+                $arg2 = $dom->createElement("arg1", get_lit_name($one_line[2]));
+                $arg2->setAttribute("type", get_literal_type($one_line[2]));
+                $instr->appendChild($arg2);
+                
+                $arg3 = $dom->createElement("arg1", get_lit_name($one_line[3]));
+                $arg3->setAttribute("type", get_literal_type($one_line[3]));
+                $instr->appendChild($arg3);
                 break;
             case LABELSYMBSYMB:
+                $arg1 = $dom->createElement("arg1", $one_line[1]);
+                $arg1->setAttribute("type", "label");
+                $instr->appendChild($arg1);
+                
+                $arg2 = $dom->createElement("arg1", get_lit_name($one_line[2]));
+                $arg2->setAttribute("type", get_literal_type($one_line[2]));
+                $instr->appendChild($arg2);
+                
+                $arg3 = $dom->createElement("arg1", get_lit_name($one_line[3]));
+                $arg3->setAttribute("type", get_literal_type($one_line[3]));
+                $instr->appendChild($arg3);
+                
                 break;
             default:
                 break;
