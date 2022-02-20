@@ -95,7 +95,7 @@
         <instruction order="2" opcode="MOVE">
                 <arg1 type="var">TF@a</arg1>
                 <arg2 type="nil">nil</arg2>
-        </instruction>
+        </instruction = "">
         </program>
         February 17, 2022    */
     /*
@@ -125,11 +125,14 @@
                 $instr->appendChild($arg1);
                 break;
             case SYMB:
-                $arg1 = $dom->createElement("arg1", $one_line[1]);
-                $arg1->setAttribute("type", "var");
+                $arg1 = $dom->createElement("arg1", get_lit_name($one_line[1]));
+                $arg1->setAttribute("type", get_literal_type($one_line[1]));
                 $instr->appendChild($arg1);
                 break;
             case LABEL:
+                $arg1 = $dom->createElement("arg1", $one_line[1]);
+                $arg1->setAttribute("type", "label");
+                $instr->appendChild($arg1);
                 break;
             case VARTYPE:
                 break;
@@ -160,6 +163,20 @@
         $program->setAttribute("language", "IPPcode22");
         $d->appendChild($program);
         return [$d,$program];
+    }
+
+    /**
+     * return literal name.
+     */
+    function get_lit_name($token){
+        $parts = explode('@', $token);
+        $res = "";
+        foreach ($parts as $key=>$p){
+            if($key > 0){
+                $res = $res . $p;
+            }
+        }
+        return $res;
     }
 
     /**
