@@ -6,7 +6,9 @@
      * 10 - BAD params. combination
      * 11 - input files errors
      * 12 - output files errors 
-     * 21 - missing headear  
+     * 21 - missing headear 
+     * 22 - BAD OPCODE
+     * 23 - other syntax or lexical error 
      */
 
 
