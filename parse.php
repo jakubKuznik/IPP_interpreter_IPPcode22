@@ -27,6 +27,9 @@
     define("SYMB", 4);          define("VARSYMB", 5);
     define("VARTYPE", 6);       define("VARSYMBSYMB", 7);
     define("LABELSYMBSYMB", 8); define("NONE", 9);
+
+    // Literal data types 
+    define("LINT", 1); define("LBOOL", 2); define("LSTRING", 3); define("LNIL", 4); define("LVAR", 5);
  
     $loc            = 0;       // Number of lines, that has instruction in code, Same as instruction order 
     $coments        = 0;       // Number of lines that has a comment 
@@ -111,36 +114,35 @@
      */
     function store_to_xml($one_line, $type){
         global $loc, $dom, $program;
-        $instr;
+        //$instr, $arg1, $arg2, $arg3;
 
+        $instr = $dom->createElement('instruction');
+        $instr->setAttribute("order", $loc);
+        $instr->setAttribute("opcode", $one_line[0]);
         switch($type){
             case NONE:
-                $instr = $dom->createElement('instruction');
-                print_r($one_line);
                 break;
             case VARI:
-                return;    
+                $arg1 = $dom->createElement("arg1", $one_line[1]);
+                $arg1->setAttribute("type", "var");
+                $instr->appendChild($arg1);
                 break;
             case SYMB:
-                return;    
+                $arg1 = $dom->createElement("arg1", $one_line[1]);
+                $arg1->setAttribute("type", "var");
+                $instr->appendChild($arg1);
                 break;
             case LABEL:
-                return;    
                 break;
             case VARTYPE:
-                return;    
                 break;
             case VARSYMB:
-                return;    
                 break;
             case VARSYMBSYMB:
-                return;    
                 break;
             case LABELSYMBSYMB:
-                return;    
                 break;
             default:
-                return;    
                 break;
         }
         $program->appendChild($instr);
@@ -162,6 +164,48 @@
         $d->appendChild($program);
         return [$d,$program];
     }
+
+    /**
+     * returns:
+     *  LINT    - literal int
+     *  LBOOL   - literal bool
+     *  LSTRING - literal string 
+     *  LNIL    - literal nil 
+     *  LVAR    - variable
+     * 
+     *  and check compability error(23) if not comp.
+     *  
+     */
+    function get_literal_type($token){
+
+        $parts = explode('@', $token);
+        if (($parts[0] == "GF") or ($parts[0] == "LF") or ($parts[0] == "TF"))
+            return LVAR; //variable 
+        else if ($parts[0] == "int"){
+
+            return LINT;
+        }
+        else if ($parts[0] == "bool"){
+
+            return LINT;
+        }
+        /** todo 
+         * Literál pro typ string je v případě konstanty zapsán jako sekvence
+         *  tisknutelných znaků v kódování UTF-8 (vyjma bílých znaků, mřížky (#) a zpětného lomítka (\))
+         *  a escape sekvencí, takže není ohraničen uvozovkami. Escape sekvence, která je nezbytná pro znaky
+         * s dekadickým kódem 000–032, 035 a 092, je tvaru \xyz, kde xyz je dekadické číslo v rozmezí 000–999
+         * složené právě ze tří číslic 18 ; např. konstanta
+         */
+        else if ($parts[0] == "string"){
+
+            return LINT;
+        }
+        else if ($parts[0] == "nil"){
+
+            return LINT;
+        }
+    }
+
 
     /**
      * Get splited array of strings that represent one line of code from parse();
@@ -190,6 +234,7 @@
         $loc++; //One line of instruction 
     
         // echo($splitted[0] . "\n");
+        // todo resize 
         switch(strtoupper($one_line[0])){
             /******* <var> <symb> **************/
             case "MOVE":      // <var> <symb> 
@@ -375,6 +420,8 @@
      * Zápis každé konstanty v IPPcode22 se skládá ze dvou částí oddělených zavináčem (znak @; bez
      * bílých znaků), označení typu konstanty (int, bool, string, nil) a samotné konstanty (číslo, literál, nil).
      * Např. bool@true, nil@nil nebo int@-5.
+     * 
+     * 
      */
     function expe_sym($token){
         $frame_definiton = "/@/";  // comentary 
