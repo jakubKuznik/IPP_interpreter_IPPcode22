@@ -17,20 +17,16 @@
     --coments     // statistic - number of lines that has a comment 
     --labels      // statistic - number of labels in code     
     --jumps       // statistic - number or returns and jumps instruction\n");
-    define("JUMP", 0);          define("DECLARATION",1);
-    define("VARI", 2);           define("LABEL", 3);
+    
+    // FOR STATISTIC 
+    define("JUMP", 0);          
+    define("DECLARATION",1);
+    
+    // INSTRUCTION FORMATS 
+    define("VARI", 2);          define("LABEL", 3);
     define("SYMB", 4);          define("VARSYMB", 5);
     define("VARTYPE", 6);       define("VARSYMBSYMB", 7);
     define("LABELSYMBSYMB", 8); define("NONE", 9);
-
-            /******* <var> *********************/
-            /******* <label> *********************/
-            /******* <symb> ********************/
-            /******* <var> <symb> **************/
-            /******* <var> <type> *************/
-            /******* <var> <symb1> <symb2> ****/
-            /****** <label> <symb1> <symb2> ***/
-
  
     $loc            = 0;       // Number of lines, that has instruction in code, Same as instruction order 
     $coments        = 0;       // Number of lines that has a comment 
@@ -45,9 +41,8 @@
     $stats_params;             // all params for all files
 
     // return type of parse_args is array($stats_filse, $stats_params)
-    $h = parse_args($argc, $argv); 
-    $stats_files  = $h[0];
-    $stats_params = $h[1];
+    $h = parse_args($argc, $argv); // return array so i use help variable
+    $stats_files  = $h[0];  $stats_params = $h[1];
     if ($stats_files != NULL)
         file_open_check($stats_files);
     
@@ -55,11 +50,16 @@
         fwrite(STDERR, "ERROR missing header .IPPcode22");
         exit(21);
     }
-    $dom = xml_init();
-    parse();
-    # dont forget to sum up jumps with returns 
-    jump_stats_counter();
 
+    // Xml setup 
+    $h = xml_init(); // return array so i use help variable 
+    $dom     = $h[0]; $program = $h[1];
+    
+    parse();
+    print_r($dom->saveXML());
+    
+    # dont forget to sum up jumps with returns. Statistic 
+    jump_stats_counter();
     exit(0);
 
     
@@ -105,15 +105,47 @@
      * $order       - instruction order 
      *   
      * 
+     * $typ0e =   VARI || SYMB || LABEL || VARTYPE || VARSYMB || VARSYMBSYMB
+     *         || LABELSYMBSYMB || NONE  
+     * 
      */
-    function store_to_xml($instruction, $type){
-        global $loc, $dom;
-        echo($loc);
+    function store_to_xml($one_line, $type){
+        global $loc, $dom, $program;
+        $instr;
 
-        if($loc > 1) return;
+        switch($type){
+            case NONE:
+                $instr = $dom->createElement('instruction');
+                print_r($one_line);
+                break;
+            case VARI:
+                return;    
+                break;
+            case SYMB:
+                return;    
+                break;
+            case LABEL:
+                return;    
+                break;
+            case VARTYPE:
+                return;    
+                break;
+            case VARSYMB:
+                return;    
+                break;
+            case VARSYMBSYMB:
+                return;    
+                break;
+            case LABELSYMBSYMB:
+                return;    
+                break;
+            default:
+                return;    
+                break;
+        }
+        $program->appendChild($instr);
 
-        print_r($dom->saveXML());
-        echo "\n";
+
         return 0;
     }
 
@@ -121,13 +153,14 @@
      *  initialize xml.
      */
     function xml_init(){
+        global $program;
         $d = new DOMDocument('1.0', 'utf-8');
         $d->preserveWhiteSpace = false;
         $d->formatOutput = true;
         $program = $d->createElement('program');
         $program->setAttribute("language", "IPPcode22");
         $d->appendChild($program);
-        return $d;
+        return [$d,$program];
     }
 
     /**
