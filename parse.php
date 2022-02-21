@@ -49,7 +49,7 @@
         file_open_check($stats_files);
     
     if (check_header() == FALSE){
-        fwrite(STDERR, "ERROR missing header .IPPcode22");
+        fwrite(STDERR, "ERROR missing header .IPPcode22\n");
         exit(21);
     }
 
@@ -245,6 +245,7 @@
             if ($parts[1] == "nil")
                 return "nil";
             fwrite(STDERR, "not a bool literal\n");
+            exit(23);
         }
     }
 
@@ -342,7 +343,7 @@
             /******************************** */
             default:
                 fwrite(STDERR, "Unknown or bad instruction.\n");
-                exit(22);      
+                exit(23);      
         }
     }
 
@@ -352,7 +353,7 @@
     function expe_size($one_line, $size){
         if(sizeof($one_line) != $size){
             fwrite(STDERR, "Instruction doesn`t have operator.\n");
-            exit(22);
+            exit(23);
         }
         return;
     }
@@ -367,12 +368,12 @@
             $parts = explode('@', $token);
             if (($parts[0] != "GF") and ($parts[0] != "LF") and ($parts[0] != "TF")){
                 fwrite(STDERR, "Unknown variable frame.\n");
-                exit(22);
+                exit(23);
             }
         }
         else{
             fwrite(STDERR, "Missing variable frame.\n");
-            exit(22);
+            exit(23);
         }
         return;
     }
@@ -388,7 +389,7 @@
         // Variable  
         if (preg_match($frame_definiton, $token)){
             fwrite(STDERR, "Expect label not variable\n");
-            exit(22);
+            exit(23);
         }
             
         // store for statistic 
@@ -417,7 +418,7 @@
         // Variable  
         if (preg_match($frame_definiton, $token) == FALSE){
             fwrite(STDERR, "Expect constant or variable\n");
-            exit(22);
+            exit(23);
         }
 
         //todo WRITE string@Proměnná \032 GF@counter \032 obsahuje \032
@@ -430,7 +431,7 @@
         else if (($parts[0] == "int") or ($parts[0] == "bool") or ($parts[0] == "string") or ($parts[0] == "nil")){
             return; // constant 
         }
-        exit (22);
+        exit (23);
     }
     
     /**
@@ -442,7 +443,7 @@
             return; // constant 
         }
         fwrite(STDERR, "Expect type\n");
-        exit(22);
+        exit(23);
     }
 
     /** 
@@ -485,9 +486,12 @@
             $splitted = preg_split('/\s+/', trim($line, "\n"));
             $splitted = array_values(array_filter($splitted)); //remove empty
             $splitted = array_change_key_case($splitted, CASE_UPPER);
+            $splitted = array_filter($splitted);
+    
             if (empty($splitted) == TRUE)
                 continue; 
             foreach ($splitted as $key=>$sp){
+                $sp = strtoupper($sp);
                 //if it is commentary
                 if (preg_match($r_come, $sp)){
                     $coments++;
@@ -726,13 +730,11 @@
                 fwrite(STDERR, "File does not exist\n");
                 exit(12);
             }
-            $o_f = fopen($f, "w");
-            if ($o_f == false){
+            if ($f == false){
                 fwrite(STDERR, "Cannot open or Cannot write to output file. \n");
                 exit(12);
             }
-            fclose($o_f);
+            //fclose($f);
         }
-        exit(0);
     }
 ?>
