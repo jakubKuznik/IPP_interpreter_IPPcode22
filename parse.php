@@ -311,7 +311,7 @@
             case "LT":        // <var> <symb1> <sybm2> 
             case "GT":        // <var> <symb1> <sybm2> 
             case "EQ":        // <var> <symb1> <sybm2> 
-            case "\AND":      // <var> <symb1> <sybm2> 
+            case "AND":      // <var> <symb1> <sybm2> 
             case "OR":        // <var> <symb1> <sybm2> 
             case "NOT":       // <var> <symb1> <sybm2> 
             case "STRI2INT":  // <var> <symb1> <symb2>
