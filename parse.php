@@ -66,7 +66,8 @@
 
     
     /**
-     * Parse input program in ipp_code22a and store to xml 
+     * Parse input program in IPP_code22 and store to xml 
+     * 
      */
     function parse(){
         $line_num = 0 ;   
@@ -118,7 +119,7 @@
                 $instr->appendChild($arg1);
                 break;
             case SYMB:
-                $arg1 = $dom->createElement("arg1", get_lit_name($one_line[1]));
+                $arg1 = $dom->createElement("arg1", get_sym_name($one_line[1]));
                 $arg1->setAttribute("type", get_literal_type($one_line[1]));
                 $instr->appendChild($arg1);
                 break;
@@ -141,7 +142,7 @@
                 $arg1->setAttribute("type", "var");
                 $instr->appendChild($arg1);
 
-                $arg2 = $dom->createElement("arg2", get_lit_name($one_line[2]));
+                $arg2 = $dom->createElement("arg2", get_sym_name($one_line[2]));
                 $arg2->setAttribute("type", get_literal_type($one_line[2]));
                 $instr->appendChild($arg2);
                 break;
@@ -150,11 +151,11 @@
                 $arg1->setAttribute("type", "var");
                 $instr->appendChild($arg1);
 
-                $arg2 = $dom->createElement("arg2", get_lit_name($one_line[2]));
+                $arg2 = $dom->createElement("arg2", get_sym_name($one_line[2]));
                 $arg2->setAttribute("type", get_literal_type($one_line[2]));
                 $instr->appendChild($arg2);
                 
-                $arg3 = $dom->createElement("arg3", get_lit_name($one_line[3]));
+                $arg3 = $dom->createElement("arg3", get_sym_name($one_line[3]));
                 $arg3->setAttribute("type", get_literal_type($one_line[3]));
                 $instr->appendChild($arg3);
                 break;
@@ -163,11 +164,11 @@
                 $arg1->setAttribute("type", "label");
                 $instr->appendChild($arg1);
                 
-                $arg2 = $dom->createElement("arg2", get_lit_name($one_line[2]));
+                $arg2 = $dom->createElement("arg2", get_sym_name($one_line[2]));
                 $arg2->setAttribute("type", get_literal_type($one_line[2]));
                 $instr->appendChild($arg2);
                 
-                $arg3 = $dom->createElement("arg3", get_lit_name($one_line[3]));
+                $arg3 = $dom->createElement("arg3", get_sym_name($one_line[3]));
                 $arg3->setAttribute("type", get_literal_type($one_line[3]));
                 $instr->appendChild($arg3);
                 break;
@@ -198,9 +199,14 @@
     /**
      * return literal name.
      */
-    function get_lit_name($token){
+    function get_sym_name($token){
         $parts = explode('@', $token);
         $res = "";
+
+        if (($parts[0] == "GF") or ($parts[0] == "LF") or ($parts[0] == "TF")){
+            return $token;
+        }
+
         foreach ($parts as $key=>$p)
             if($key > 0)
                 $res = $res . $p;
@@ -221,17 +227,22 @@
         $r_oct  = "/[8-9]|[A-Z]|[a-z]/";
 
         $parts = explode('@', $token);
-        if (($parts[0] == "GF") or ($parts[0] == "LF") or ($parts[0] == "TF"))
+        if (($parts[0] == "GF") or ($parts[0] == "LF") or ($parts[0] == "TF")){
+            //return $token;
             return "var"; //variable 
-       
+        }
+      
+        
         else if ($parts[0] == "int"){ // could be hexa deca or octal.
             
+            ///0
             if ((!preg_match($r_oct, $parts[1])) and (intval($parts[1], 8))){   //bad octal 
                 return "int";
             }
             else if (!preg_match($r_dec, $parts[1]) and intval($parts[1], 10)){    //bad decimal 
                 return "int";
             }
+            // 0X
             else if (!preg_match($r_hexa, $parts[1]) and intval($parts[1], 16)){        //bad hex
                 return "int";
             }
@@ -330,7 +341,7 @@
             case "EQ":        // <var> <symb1> <sybm2> 
             case "AND":      // <var> <symb1> <sybm2> 
             case "OR":        // <var> <symb1> <sybm2> 
-            case "NOT":       // <var> <symb1> <sybm2> 
+            case "NOT":       // <var> <symb1> <sybm2> //todo check  
             case "STRI2INT":  // <var> <symb1> <symb2>
             case "CONCAT":    // <var> <symb1> <symb2>
             case "GETCHAR":   // <var> <symb1> <symb2>
@@ -456,6 +467,7 @@
      */
     function expe_typ($token){
         // todo kompability of data types 
+        $parts = explode('@', $token);
         if (($parts[0] == "int") or ($parts[0] == "bool") or ($parts[0] == "string")){
             return; // constant 
         }
