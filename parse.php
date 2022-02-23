@@ -106,7 +106,10 @@
         $instr = $dom->createElement('instruction');
         $instr->setAttribute("order", $loc);
         $instr->setAttribute("opcode", $one_line[0]);
+
+        
         switch($type){
+        
             case NONE:
                 break;
             case VARI:
@@ -138,7 +141,7 @@
                 $arg1->setAttribute("type", "var");
                 $instr->appendChild($arg1);
 
-                $arg2 = $dom->createElement("arg1", get_lit_name($one_line[2]));
+                $arg2 = $dom->createElement("arg2", get_lit_name($one_line[2]));
                 $arg2->setAttribute("type", get_literal_type($one_line[2]));
                 $instr->appendChild($arg2);
                 break;
@@ -147,11 +150,11 @@
                 $arg1->setAttribute("type", "var");
                 $instr->appendChild($arg1);
 
-                $arg2 = $dom->createElement("arg1", get_lit_name($one_line[2]));
+                $arg2 = $dom->createElement("arg2", get_lit_name($one_line[2]));
                 $arg2->setAttribute("type", get_literal_type($one_line[2]));
                 $instr->appendChild($arg2);
                 
-                $arg3 = $dom->createElement("arg1", get_lit_name($one_line[3]));
+                $arg3 = $dom->createElement("arg3", get_lit_name($one_line[3]));
                 $arg3->setAttribute("type", get_literal_type($one_line[3]));
                 $instr->appendChild($arg3);
                 break;
@@ -160,11 +163,11 @@
                 $arg1->setAttribute("type", "label");
                 $instr->appendChild($arg1);
                 
-                $arg2 = $dom->createElement("arg1", get_lit_name($one_line[2]));
+                $arg2 = $dom->createElement("arg2", get_lit_name($one_line[2]));
                 $arg2->setAttribute("type", get_literal_type($one_line[2]));
                 $instr->appendChild($arg2);
                 
-                $arg3 = $dom->createElement("arg1", get_lit_name($one_line[3]));
+                $arg3 = $dom->createElement("arg3", get_lit_name($one_line[3]));
                 $arg3->setAttribute("type", get_literal_type($one_line[3]));
                 $instr->appendChild($arg3);
                 break;
@@ -212,15 +215,29 @@
      *  
      */
     function get_literal_type($token){
+        
+        $r_hexa = "/[G-Z]|[g-z]/";  
+        $r_dec  = "/[A-Z]|[a-z]/";
+        $r_oct  = "/[8-9]|[A-Z]|[a-z]/";
 
         $parts = explode('@', $token);
         if (($parts[0] == "GF") or ($parts[0] == "LF") or ($parts[0] == "TF"))
             return "var"; //variable 
        
         else if ($parts[0] == "int"){ // could be hexa deca or octal.
-            if ((intval($parts[1], 10)) or (intval($parts[1], 8)) or (intval($parts[1], 16)))      // decimal 
+            
+            if ((!preg_match($r_oct, $parts[1])) and (intval($parts[1], 8))){   //bad octal 
                 return "int";
+            }
+            else if (!preg_match($r_dec, $parts[1]) and intval($parts[1], 10)){    //bad decimal 
+                return "int";
+            }
+            else if (!preg_match($r_hexa, $parts[1]) and intval($parts[1], 16)){        //bad hex
+                return "int";
+            }
 
+            //if ((intval($parts[1], 10)) or (intval($parts[1], 8)) or (intval($parts[1], 16)))      // decimal 
+            print_r($parts);
             fwrite(STDERR, "Not an int literal\n");
             exit(23);
         }
@@ -304,7 +321,7 @@
                 expe_size($one_line, 2); expe_sym($one_line[1]);
                 return(SYMB);
             /******* <var> <symb1> <symb2> ****/
-            case "ADD":       // <var> <symb1> <sybm2> 
+            case "ADD":       // <var> <symb1> <sybm2>
             case "SUB":       // <var> <symb1> <sybm2> 
             case "MUL":       // <var> <symb1> <sybm2> 
             case "IDIV":      // <var> <symb1> <sybm2> 
@@ -421,7 +438,7 @@
             exit(23);
         }
 
-        //todo WRITE string@Proměnná \032 GF@counter \032 obsahuje \032
+        //todo WRITE string@Proměnná\032GF@counter\032obsahuje\032
 
         $parts = explode('@', $token);
         if (($parts[0] == "GF") or ($parts[0] == "LF") or ($parts[0] == "TF")){
