@@ -246,6 +246,9 @@
             else if (!preg_match($r_hexa, $parts[1]) and intval($parts[1], 16)){        //bad hex
                 return "int";
             }
+            else if ($parts[1] == 0){
+                return "int";
+            }
 
             //if ((intval($parts[1], 10)) or (intval($parts[1], 8)) or (intval($parts[1], 16)))      // decimal 
             fwrite(STDERR, "Not an int literal\n");
@@ -370,7 +373,7 @@
             /******************************** */
             default:
                 fwrite(STDERR, "Unknown or bad instruction.\n");
-                exit(23);      
+                exit(22);      
         }
     }
 
@@ -434,11 +437,6 @@
 
     /**
      * Expect constant or variable 
-     * Zápis každé konstanty v IPPcode22 se skládá ze dvou částí oddělených zavináčem (znak @; bez
-     * bílých znaků), označení typu konstanty (int, bool, string, nil) a samotné konstanty (číslo, literál, nil).
-     * Např. bool@true, nil@nil nebo int@-5.
-     * 
-     * 
      */
     function expe_sym($token){
         $frame_definiton = "/@/";  // comentary 
@@ -449,15 +447,29 @@
         }
 
         //todo WRITE string@Proměnná\032GF@counter\032obsahuje\032
-
         $parts = explode('@', $token);
+        
         if (($parts[0] == "GF") or ($parts[0] == "LF") or ($parts[0] == "TF")){
             return; //variable 
         }
         // todo kompability of data types 
-        else if (($parts[0] == "int") or ($parts[0] == "bool") or ($parts[0] == "string") or ($parts[0] == "nil")){
+        else if (($parts[0] == "int") or ($parts[0] == "bool") or ($parts[0] == "nil")){
+
             return; // constant 
+        } # string cannot have # \ or white space 
+        else if ($parts[0] == "string"){
+            $lit = "";
+            foreach ($parts as $key => $s)
+                if ($key > 0)
+                    $lit = $lit.$s;
+            if (preg_match("/#|\s/", $lit)){
+                fwrite(STDERR, "Expect constant or variable\n");
+                exit(23);
+            }
+            return;
         }
+
+        fwrite(STDERR, "Expect constant or variable\n");
         exit (23);
     }
     
