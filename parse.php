@@ -465,9 +465,7 @@
      * type E {int, string, bool}
      */
     function expe_typ($token){
-        // todo kompability of data types 
-        $parts = explode('@', $token);
-        if (($parts[0] == "int") or ($parts[0] == "bool") or ($parts[0] == "string")){
+        if (($token == "int") or ($token == "bool") or ($token == "string")){
             return; // constant 
         }
         fwrite(STDERR, "Expect type\n");
