@@ -248,7 +248,6 @@
             }
 
             //if ((intval($parts[1], 10)) or (intval($parts[1], 8)) or (intval($parts[1], 16)))      // decimal 
-            print_r($parts);
             fwrite(STDERR, "Not an int literal\n");
             exit(23);
         }
@@ -311,6 +310,7 @@
             case "INT2CHAR":  // <var> <symb>
             case "STRLEN":    // <var> <symb>
             case "TYPE":      // <var> <symb>
+            case "NOT":       // <var> <symb1>   
                 expe_size($one_line, 3); expe_var($one_line[1]); expe_sym($one_line[2]);
                 return(VARSYMB);
             /******* <var> *********************/
@@ -341,9 +341,8 @@
             case "EQ":        // <var> <symb1> <sybm2> 
             case "AND":      // <var> <symb1> <sybm2> 
             case "OR":        // <var> <symb1> <sybm2> 
-            case "NOT":       // <var> <symb1> <sybm2> //todo check  
             case "STRI2INT":  // <var> <symb1> <symb2>
-            case "CONCAT":    // <var> <symb1> <symb2>
+            case "CONCAT":   
             case "GETCHAR":   // <var> <symb1> <symb2>
             case "SETCHAR":   // <var> <symb1> <symb2>
                 expe_size($one_line, 4); expe_var($one_line[1]); expe_sym($one_line[2]); expe_sym($one_line[3]);
@@ -380,7 +379,7 @@
      */
     function expe_size($one_line, $size){
         if(sizeof($one_line) != $size){
-            fwrite(STDERR, "Instruction doesn`t have operator.\n");
+            fwrite(STDERR, "Instruction doesn't have operator.\n");
             exit(23);
         }
         return;
@@ -486,14 +485,18 @@
     */
     function remove_comm($one_line){
         global $coments;
-        $r_come = "/^\#/";  // comentary 
+        $r_come = "/\#/";  // comentary 
         $is_coment = FALSE;
         $new_array = [];
         //Match all the commands 
         foreach($one_line as $tok){
+    
             if (preg_match($r_come, $tok)){
+                $before_coment = preg_split('/#/', $tok);
                 $coments++;
-                return $new_array;
+                array_push($new_array, $before_coment[0]);
+
+                return array_filter($new_array);
             }
             array_push($new_array, $tok);
         }
