@@ -12,8 +12,12 @@
 
     parse_args($argc, $argv);
 
+    $tests_files; // Files that we will test 
 
 
+    function testing($tests_files){
+        return 0;
+    }
 
 
     /**
@@ -22,6 +26,8 @@
      * --help               // Display help cannot be combinated with anything 
      * --parse-only         // olnly parser.php test. can't combine with --int-only, --int-script 
      * --int-only           // only interpret.py
+     * --source             // source parser-file 
+     * --input              // source interpreter file 
      * --recursive          // Not only given folder but recursive folder to 
      * --noclean            // doesnt remove temp. files
      * --directory=path     // Folder where we are looking for tests 
@@ -45,10 +51,19 @@
             
             if (str_contains($arg, "=")){
                 $arg = explode("=", $arg);
-                $file_name = concat_str($arg, 1);
+                $file_name = concat_str($arg, 1); // store file name
                 switch ($arg[0]){
-                    case "--help":
-                        echo "kunda";
+                    case "--directory";
+                        break;
+                    case "--parse-script":
+                        break;
+                    case "--int-script":
+                        break;
+                    case "--jexapath":
+                        break;
+                    case "--match":
+                        break;
+                    case "--testlist":
                         break;
                     default:
                         break;
@@ -57,7 +72,16 @@
 
             switch ($arg){
                 case "--help":
-                    echo "kunda";
+                    break;
+                case "--source":
+                    break;
+                case "--input":
+                    break;
+                case "--parse-only":
+                    break;
+                case "--recursive":
+                    break;
+                case "--noclean":
                     break;
                 default:
                     break;
@@ -70,21 +94,21 @@
      * @var arr - input array  
      * @var i_f - index from we are concatenate 
      * 
-     * @return - concatenate string 
+     * @return - concatenate string and add '=' between then
      */
     function concat_str($arr, $i_f){
-        $out;
+        $out = "";
         foreach ($arr as $key=>$n){
             if ($key < $i_f)
                 continue;
-            $out = $out . $n;
+            if ($key == sizeof($arr)-1){
+                $out = $out . $n; 
+                continue;
+            }
+            $out = $out . $n . "=";
         }
         return $out;
     }
-
-
-
-
 
 
 ?>
