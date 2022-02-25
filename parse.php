@@ -94,6 +94,17 @@
         }
     }
 
+    /**
+     *  replace & < > with &amp &gt &lt 
+     */
+    function xml_replace_special($var){
+        $v = $var;
+
+        $v = str_replace("&", "&amp;", $v);
+        $v = str_replace('>', "&gt;", $v);
+        $v = str_replace('<', "&lt;", $v);
+        return $v;
+    }
 
     /*
      * Store given instruction to xml
@@ -114,9 +125,12 @@
         $instr->setAttribute("order", $loc);
         $instr->setAttribute("opcode", strtoupper($one_line[0]));
 
-        
+        // replace & < > with xml escapes 
+        foreach ($one_line as $key=>$s)
+            $one_line[$key] = xml_replace_special($s);
+       
+            
         switch($type){
-        
             case NONE:
                 break;
             case VARI:
@@ -478,7 +492,7 @@
         $ilegal_char2 = "/\\\|\//";
         $beg_num = "/^[0-9]/";
         $nv_escape = "/\\\D..|\\\.\D.|\\\..\D/";
-        $escape = "/\\0[0-3][0-2]|092|035/";
+        $escape = "/\\\(0[0-3][0-2]|092|035)/";
         // Variable  
         if (preg_match($frame_definiton, $token) == FALSE){
             fwrite(STDERR, "Expect constant or variable\n");
@@ -516,7 +530,6 @@
                 fwrite(STDERR, "Expect constant or variable\n");
                 exit(23);
             }
-
             if (preg_match($ilegal_char2, $lit)){
                 if(preg_match($nv_escape, $lit)){
                     fwrite(STDERR, "Expect constant or variable\n");
