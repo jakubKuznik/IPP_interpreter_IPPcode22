@@ -63,11 +63,14 @@
     $h = xml_init(); // return array so i use help variable 
     $dom     = $h[0]; $program = $h[1];
     
+    # Parse input program 
     parse();
+
+    ## program to output 
     print_r($dom->saveXML());
-    
-    # dont forget to sum up jumps with returns. Statistic 
-    jump_stats_counter();
+    ## STATP - statistic to output files 
+    Write_stats($stats_files, $stats_params, $labels);
+
     exit(0);
 
     
@@ -325,9 +328,11 @@
                 return(VARI);
             /******* <label> *********************/
             case "CALL":      // <label>
-            case "LABEL":     // <label>
             case "JUMP":      // <label>
                 expe_size($one_line, 2); expe_lable($one_line[1], JUMP);
+                return(LABEL);
+            case "LABEL":     // <label>
+                expe_size($one_line, 2); expe_lable($one_line[1], DECLARATION);
                 return(LABEL);
             /******* <symb> ********************/
             case "PUSHS":     // <symb>
@@ -610,39 +615,6 @@
         }
     }
 
-    /**
-     * Count jumps in program based on $jumps $labels $jumps_line $labels_line 
-     * 
-     * return $jumps, $fwjumps, $backjumps $badjumps
-     */
-    function jump_stats_counter(){
-        global $jumps, $labels, $jumps_line, $labels_line;
-        $s_j = 0; $s_jf = 0; $s_jbac = 0; $s_jbad = 0;
-     
-        foreach($jumps as $key=>$j){
-            $s_j++;
-            if (in_array($j, $labels) == FALSE){
-                $s_jbad; // label doesnt exits
-                continue;
-            }
-            $i = array_search($j, $labels);
-            if ($labels_line[$i] > $jumps_line[$key]){
-                $s_jf++;
-            }
-            elseif($labels_line[$i] < $jumps_line[$key]){
-                $s_jbac;
-            }
-        }
-        
-        /*
-        print_r($jumps);
-        print_r($jumps_line);
-        print_r($labels_line);
-        print_r($labels);
-        */
-
-        return [$s_j, $s_jf, $s_jbac, $s_jbad];
-    }
 
     /**
      * Function parse arguments.
@@ -717,7 +689,7 @@
                 $s_p[$stats_sum-1][$stats_arg_sum] = 'com';
                 $stats_arg_sum++;
             }
-            else if ($ar == '--lables'){
+            else if ($ar == '--labels'){
                 if ($stats == false){
                     fwrite(STDERR, "--stats=fileName has to be defined before\n");
                     exit(10);
@@ -759,7 +731,7 @@
                 $stats_arg_sum++;
             }
             else {
-                fwrite(STDERR, "UNKNOWN parameter\n");
+                fwrite(STDERR, "UNKNOWN parameter: " . $ar . "\n");
                 exit(10);
             }
         }
@@ -823,4 +795,92 @@
             //fclose($f);
         }
     }
+    
+    /**
+     * Count jumps in program based on $jumps $labels $jumps_line $labels_line 
+     * 
+     * return $jumps, $fwjumps, $backjumps $badjumps
+     */
+    function jump_stats_counter(){
+        global $jumps, $labels, $jumps_line, $labels_line;
+        $s_j = 0; $s_jf = 0; $s_jbac = 0; $s_jbad = 0;
+     
+        foreach($jumps as $key=>$j){
+            $s_j++;
+            if (in_array($j, $labels) == FALSE){
+                $s_jbad; // label doesnt exits
+                continue;
+            }
+            $i = array_search($j, $labels);
+            if ($labels_line[$i] > $jumps_line[$key]){
+                $s_jf++;
+            }
+            elseif($labels_line[$i] < $jumps_line[$key]){
+                $s_jbac;
+            }
+        }
+       
+        return [$s_j, $s_jf, $s_jbac, $s_jbad];
+    }
+
+    /**
+     * Return number of unicate string in array 
+     * @labels array of string
+     */
+    function label_count($labels){
+
+        $labels = array_unique($labels);
+        array_shift($labels);
+        return count($labels);
+    }
+
+    /**
+     * Write statistic to output files. 
+     *
+     * $files  - where statistic will be writen
+     * $params - two dimensional array. (What statistic will be writen to each file.)
+     * 
+     */
+    function Write_stats($files, $params, $labels){
+        # dont forget to sum up jumps with returns. Statistic 
+        # -loc, com, lab, jump, fwj, bckj, badj,
+        global $loc;
+        global $coments;
+
+        $j;         // jump
+        $jf;        // jforw
+        $jbac;      // j back
+        $jbad;      // j bad 
+        $lab_uniq;  // number of unicate labels 
+
+        $h = jump_stats_counter();
+        $j = $h[0]; $jf = $h[1]; $jbac = $h[2]; $jbad = $h[3];
+        $lab_uniq = label_count($labels);
+        
+        foreach ($files as $key=>$f){
+            $openf = fopen($f, "w");
+            foreach ($params[$key] as $p){
+                switch($p){
+                    case "loc": 
+                        fwrite($openf, $loc); fwrite($openf, "\n"); break;
+                    case "com": 
+                        fwrite($openf, $coments); fwrite($openf, "\n"); break;
+                    case "lab": 
+                        fwrite($openf, $lab_uniq); fwrite($openf, "\n"); break;
+                    case "jum": 
+                        fwrite($openf, $j); fwrite($openf, "\n"); break;
+                    case "fwj": 
+                        fwrite($openf, $jf); fwrite($openf, "\n"); break;
+                    case "bac": 
+                        fwrite($openf, $jbac); fwrite($openf, "\n"); break;
+                    case "bad": 
+                        fwrite($openf, $jbad); fwrite($openf, "\n"); break;
+                    default:
+                        break;
+                }
+            }
+            fclose($openf);
+        }
+    }
+
 ?>
