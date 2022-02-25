@@ -477,7 +477,7 @@
         $ilegal_char = "/#|\s/";
         $ilegal_char2 = "/\\\|\//";
         $beg_num = "/^[0-9]/";
-        $escape = "/\\[0-9]{3}/";
+        $escape = "/\\0[0-3][0-2]|092|035/";
         // Variable  
         if (preg_match($frame_definiton, $token) == FALSE){
             fwrite(STDERR, "Expect constant or variable\n");
@@ -516,6 +516,7 @@
                 exit(23);
             }
             if ((preg_match($ilegal_char2, $lit)) and !(preg_match($escape, $lit))){
+
                 fwrite(STDERR, "Expect constant or variable\n");
                 exit(23);
 
