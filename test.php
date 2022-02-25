@@ -1,14 +1,20 @@
 <?php
     ini_set('display_errors', 'stderr'); //Erross on stderr 
 
-    define("HELP_MESS", " \nTesting script for IPPcode22 interpreter
-        --help        // Display help cannot be combinated with anything 
-        --stats=file  // File where statisic will be writen.
-        --loc         // statistic - number of lines   
-        --coments     // statistic - number of lines that has a comment 
-        --labels      // statistic - number of labels in code     
-        --jumps       // statistic - number or returns and jumps instruction\n");
+    define("HELP_MESS", " Test script for parser.php and interpret.py
+        --help               // Display help cannot be combinated with anything 
+        -parse-only         // olnly parser.php test. can't combine with --int-only, --int-script 
+        --int-only           // only interpret.py
+        --recursive          // Not only given folder but recursive folder to 
+        --noclean            // doesnt remove temp. files
+        --directory=path     // Folder where we are looking for tests 
+        --parse-script=file  // parse.php      - if not given actual folder  
+        --int-script=file    // interpret.py   - if not given actual folder 
+        --jexampath=path      // path to jexamxml.jar (A7Soft)
+        --match=regexp       // Only files that match regex of PCRE sytax 
+        --testlist=file      // explicit folders definition or files\n"); 
 
+    define ("ERR_HELP", "Cannot combine with other arguments\n");
 
     parse_args($argc, $argv);
 
@@ -16,9 +22,24 @@
 
 
     function testing($tests_files){
+        // if file rc != 0
+        // if file rc == 0
         return 0;
     }
 
+    // get output from .out file 
+    function test_file_output($test_case){
+        return 0;
+    }
+    
+    // get output from 
+    function get_output(){
+        return 0;
+    }
+
+    function test_file_rc(){
+        return 0;
+    }
 
     /**
      * Function parse arguments.
@@ -26,14 +47,12 @@
      * --help               // Display help cannot be combinated with anything 
      * --parse-only         // olnly parser.php test. can't combine with --int-only, --int-script 
      * --int-only           // only interpret.py
-     * --source             // source parser-file 
-     * --input              // source interpreter file 
      * --recursive          // Not only given folder but recursive folder to 
      * --noclean            // doesnt remove temp. files
      * --directory=path     // Folder where we are looking for tests 
      * --parse-script=file  // parse.php      - if not given actual folder  
      * --int-script=file    // interpret.py   - if not given actual folder 
-     * --jexapath=path      // path to jexamxml.jar (A7Soft)
+     * --jexampath=path      // path to jexamxml.jar (A7Soft)
      * --match=regexp       // Only files that match regex of PCRE sytax 
      * --testlist=file      // explicit folders definition or files 
      *                      // -can't combine with --directory
@@ -59,7 +78,7 @@
                         break;
                     case "--int-script":
                         break;
-                    case "--jexapath":
+                    case "--jexampath":
                         break;
                     case "--match":
                         break;
@@ -72,11 +91,10 @@
 
             switch ($arg){
                 case "--help":
-                    break;
-                case "--source":
-                    break;
-                case "--input":
-                    break;
+                    if ($argc != 2){
+                        fwrite(STDERR, ERR_HELP); exit(10);
+                    }
+                    echo (HELP_MESS); break;
                 case "--parse-only":
                     break;
                 case "--recursive":
