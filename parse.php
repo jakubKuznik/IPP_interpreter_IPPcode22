@@ -67,8 +67,9 @@
     exit(0);
     
     /**
-     * Parse input program in IPP_code22 and store to xml 
+     * Parse input program in IPP_code22 and store to xml
      * 
+     * @return void  
      */
     function parse(){
         $line_num = 0 ;   
@@ -92,9 +93,8 @@
     /**
      *  replace & < > with &amp &gt &lt
      * 
-     * @vars is array of strings  
-     * 
-     * return modified array
+     * @var vars is array of strings  
+     * @return modified array
      */
     function xml_replace_special($vars){
         foreach ($vars as $key=>$v){
@@ -111,11 +111,11 @@
      *
      * $instruction - one program line 
      * $order       - instruction order 
-     *   
      * 
-     * $typ0e =   VARI || SYMB || LABEL || VARTYPE || VARSYMB || VARSYMBSYMB
+     * @var one_line = one line from input file  
+     * @var type =   VARI || SYMB || LABEL || VARTYPE || VARSYMB || VARSYMBSYMB
      *         || LABELSYMBSYMB || NONE  
-     * 
+     * @return void  
      */
     function store_to_xml($one_line, $type){
         global $loc, $dom, $program;
@@ -200,6 +200,8 @@
 
     /**
      *  initialize xml.
+     *  
+     *  @return XML created in dom 
      */
     function xml_init(){
         global $program;
@@ -213,7 +215,8 @@
     }
 
     /**
-     * return literal name.
+     * @return literal name.
+     * @var token - one program token 
      */
     function get_sym_name($token){
         $parts = explode('@', $token);
@@ -237,6 +240,9 @@
      * exit(23) - if int is not an num 
      *          - nil is not nil 
      *          - bool is not true or false  
+     * 
+     * @return "var" || "int" || "bool" || "string" || "nil"
+     * @var token - one token 
      */
     function get_literal_type($token){
         $r_hexa = "/[G-Z]|[g-z]/";  
@@ -283,20 +289,21 @@
      * Get splited array of strings that represent one line of code from parse();
      * 
      * ERORRS: 
+     *  Exit program if there is error  
      *  22 - unknown or bad opcode of instruction 
      *  23 - other lexical or syntax error 
      * 
      * calculate:
      *  - loc
      * 
-     * return TRUE 
-     * Exit program if there is error  
-     * 
+     * @return VARSYMB || VARI || LABEL || SYMB || LABELSYMBSYMB || VARSYMBSYMB 
+     *          VARTYPE || NONE 
+     * @var one_line - one input program line 
+     *  
      * <var>   -- variable
      * <symb>  -- constant or variable 
      * <label> -- label
      * <type>  -- {int, string, bool}
-     * 
      */
     function syntax_validation($one_line){
         global $loc, $retunrs; 
@@ -323,7 +330,7 @@
             case "JUMP":      // <label>
                 expe_size($one_line, 2); expe_lable($one_line[1], JUMP);
                 return(LABEL);
-            case "LABEL":     // <label>
+            case "LABEL":     // <label> // separated because of stats calculation
                 expe_size($one_line, 2); expe_lable($one_line[1], DECLARATION);
                 return(LABEL);
             /******* <symb> ********************/
@@ -378,6 +385,9 @@
 
     /**
      * Expect that array is $size big
+     * @var one_line - one input program line 
+     * @var size - size we expect
+     * @return void 
      */
     function expe_size($one_line, $size){
         if(sizeof($one_line) != $size){
@@ -389,6 +399,8 @@
  
     /**
      * Expect variable in $token
+     * @var token - one token 
+     * @return void 
      */
     function expe_var($token){
         $frame_definiton = "/@/";  // comentary 
@@ -424,7 +436,9 @@
    
     /**
      * Expect label in $token  
-     * $type - JUMP || DECLARATION 
+     * @var type - JUMP || DECLARATION 
+     * @var token - one token 
+     * @return void 
      */
     function expe_lable($token, $type){
         global $labels, $jumps, $loc, $jumps_line, $labels_line;
@@ -462,6 +476,9 @@
 
     /**
      * Expect constant or variable 
+     * @var token - one token
+     * @return void 
+     * 
      */
     function expe_sym($token){
         $frame_definiton = "/@/";  // comentary 
@@ -526,6 +543,8 @@
     
     /**
      * type E {int, string, bool}
+     * @var token - one token 
+     * @return void  
      */
     function expe_typ($token){
         if (($token == "int") or ($token == "bool") or ($token == "string")){
@@ -539,8 +558,8 @@
      * Remove commentary from line 
      * 
      * calculate coments for statistic 
-     * 
-     * Return new array without comments 
+     * @var one_line - one program one 
+     * @return new array without comments 
     */
     function remove_comm($one_line){
         global $coments;
@@ -563,8 +582,8 @@
 
     /**
      * Check if there is a headear ". IPPcode22"
-     * return TRUE  if yes 
-     * return FALSE if not 
+     * @return TRUE  if yes
+     * @return FALSE if not 
      */
     function check_header(){
         global $coments;
@@ -635,7 +654,9 @@
      * -- unknown parameter           - error 10
      * -- multiple write to same file - error 12
      * 
-     * return array($stats_files, $stats_param)
+     * @var argv
+     * @var argc
+     * @return array($stats_files, $stats_param)
      * 
      *  */    
     function parse_args(int $argc, array $argv){
@@ -736,8 +757,9 @@
     }
 
     /**
-     * return True if array has duplicit node
-     * return False if not
+     * @var arr - array where we are looking for duplicit
+     * @return True if array has duplicit node
+     * @return False if not
      * 
      * for error 12  
      */
@@ -760,14 +782,14 @@
      * Check if stats file exist. 
      * 
      * error -12 --ouptu files cannot be open 
-     * todo filepath can contain unicode in UTF-8 
      * 
      * todo -  Pozor na rozdíl mezi relativní cestou vůči zpracovávanému PHP skriptu
      *  (rel/to/script/path) a relativní cestou vůči aktuálnímu adresáři
      *  (./rel/to/actual/path). V případě, že bude skript spuštěn z jiného adresáře,
      *  tak se liší a potom bude rozdílně fungovat např. funkce require_once(). Nepředpokládejte,
      *  že bude váš skript při spuštění obsažen v aktuálním adresáři!
-     * 
+     * @var files - array of files name 
+     * @return void  
      */
     function file_open_check($files){
         $relative = substr(dirname(__FILE__), strlen($_SERVER['DOCUMENT_ROOT']));
@@ -791,7 +813,7 @@
     /**
      * Count jumps in program based on $jumps $labels $jumps_line $labels_line 
      * 
-     * return $jumps, $fwjumps, $backjumps $badjumps
+     * @return $jumps, $fwjumps, $backjumps $badjumps
      */
     function jump_stats_counter(){
         global $jumps, $labels, $jumps_line, $labels_line;
@@ -816,8 +838,8 @@
     }
 
     /**
-     * Return number of unicate string in array 
-     * @labels array of string
+     * @return number of unicate string in array 
+     * @var labels array of string
      */
     function label_count($labels){
 
@@ -829,9 +851,9 @@
     /**
      * Write statistic to output files. 
      *
-     * $files  - where statistic will be writen
-     * $params - two dimensional array. (What statistic will be writen to each file.)
-     * 
+     * @var $files  - where statistic will be writen
+     * @var $params - two dimensional array. (What statistic will be writen to each file.)
+     * @return void 
      */
     function Write_stats($files, $params, $labels){
         # dont forget to sum up jumps with returns. Statistic 
@@ -874,5 +896,4 @@
             fclose($openf);
         }
     }
-
 ?>
