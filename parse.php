@@ -95,15 +95,20 @@
     }
 
     /**
-     *  replace & < > with &amp &gt &lt 
+     *  replace & < > with &amp &gt &lt
+     * 
+     * @vars is array of strings  
+     * 
+     * return modified array
      */
-    function xml_replace_special($var){
-        $v = $var;
-
-        $v = str_replace("&", "&amp;", $v);
-        $v = str_replace('>', "&gt;", $v);
-        $v = str_replace('<', "&lt;", $v);
-        return $v;
+    function xml_replace_special($vars){
+        foreach ($vars as $key=>$v){
+            $v = str_replace("&", "&amp;", $v);         
+            $v = str_replace(">", "&gt;", $v);         
+            $v = str_replace("<", "&lt;", $v);         
+            $vars[$key] = $v; 
+        }
+        return $vars;
     }
 
     /*
@@ -126,9 +131,7 @@
         $instr->setAttribute("opcode", strtoupper($one_line[0]));
 
         // replace & < > with xml escapes 
-        foreach ($one_line as $key=>$s)
-            $one_line[$key] = xml_replace_special($s);
-       
+        $one_line = xml_replace_special($one_line);
             
         switch($type){
             case NONE:
@@ -197,8 +200,6 @@
                 break;
         }
         $program->appendChild($instr);
-
-
         return 0;
     }
 
@@ -226,7 +227,6 @@
         if (($parts[0] == "GF") or ($parts[0] == "LF") or ($parts[0] == "TF")){
             return $token;
         }
-
         foreach ($parts as $key=>$p)
             if($key > 0)
                 $res = $res . $p;
@@ -235,60 +235,44 @@
 
     /**
      * returns:
-     *  literal data type or var string 
-     * 
-     *  and check compability error(23) if not comp.
+     *  literal data type or var. 
      *  
+     * Use on alredy checked symbols with exp func!
+     * 
+     * exit(23) - if int is not an num 
+     *          - nil is not nil 
+     *          - bool is not true or false  
      */
     function get_literal_type($token){
-        
         $r_hexa = "/[G-Z]|[g-z]/";  
         $r_dec  = "/[A-Z]|[a-z]/";
         $r_oct  = "/[8-9]|[A-Z]|[a-z]/";
 
         $parts = explode('@', $token);
+        /****** VARIABLE  *****/
         if (($parts[0] == "GF") or ($parts[0] == "LF") or ($parts[0] == "TF")){
-            
-            //return $token;
             return "var"; //variable 
-        }
-      
-        
+        } /**** INT *****/ 
         else if ($parts[0] == "int"){ // could be hexa deca or octal.
-            
             ///0
-            if ((!preg_match($r_oct, $parts[1])) and (intval($parts[1], 8))){   //bad octal 
+            if ((!preg_match($r_oct, $parts[1])) and (intval($parts[1], 8)))    // octal 
                 return "int";
-            }
-            else if (!preg_match($r_dec, $parts[1]) and intval($parts[1], 10)){    //bad decimal 
+            else if (!preg_match($r_dec, $parts[1]) and intval($parts[1], 10))  // decimal 
                 return "int";
-            }
-            // 0X
-            else if (!preg_match($r_hexa, $parts[1]) and intval($parts[1], 16)){        //bad hex
+            else if (!preg_match($r_hexa, $parts[1]) and intval($parts[1], 16)) // hex
                 return "int";
-            }
             else if ($parts[1] == 0){
                 return "int";
             }
-
-            //if ((intval($parts[1], 10)) or (intval($parts[1], 8)) or (intval($parts[1], 16)))      // decimal 
             fwrite(STDERR, "Not an int literal\n");
             exit(23);
-        }
+        } /***** BOOL  ****/
         else if ($parts[0] == "bool"){ // false or true 
             if ($parts[1] == "true" or $parts[1] == "false")
                 return "bool";
-            
             fwrite(STDERR, "not a bool literal\n");
             exit(23);
         }
-        /** todo 
-         * Literál pro typ string je v případě konstanty zapsán jako sekvence
-         *  tisknutelných znaků v kódování UTF-8 (vyjma bílých znaků, mřížky (#) a zpětného lomítka (\))
-         *  a escape sekvencí, takže není ohraničen uvozovkami. Escape sekvence, která je nezbytná pro znaky
-         * s dekadickým kódem 000–032, 035 a 092, je tvaru \xyz, kde xyz je dekadické číslo v rozmezí 000–999
-         * složené právě ze tří číslic 18 ; např. konstanta
-         */
         else if ($parts[0] == "string"){
             return "string";
         }
@@ -320,14 +304,11 @@
      * 
      */
     function syntax_validation($one_line){
-        // todo multiple @
         global $loc, $retunrs; 
         if (empty($one_line) == TRUE) return; //if empty line skip.
 
         $loc++; //One line of instruction 
     
-        // echo($splitted[0] . "\n");
-        // todo resize 
         switch(strtoupper($one_line[0])){
             /******* <var> <symb> **************/
             case "MOVE":      // <var> <symb> 
@@ -417,9 +398,9 @@
         $beg_num = "/^[0-9]/";
         $ilegal_char = "/#|\s/";
         $ilegal_char2 = "/\\\|\//";
+
         // GF@label format 
         if (preg_match($frame_definiton, $token)){
-
             $parts = explode('@', $token);
             if (($parts[0] != "GF") and ($parts[0] != "LF") and ($parts[0] != "TF")){
                 fwrite(STDERR, "Unknown variable frame.\n");
@@ -443,7 +424,7 @@
         }
         return;
     }
-    
+   
     /**
      * Expect label in $token  
      * $type - JUMP || DECLARATION 
@@ -479,7 +460,6 @@
             array_push($labels, $token);
             array_push($labels_line, $loc);
         }
-
         return;
     }
 
@@ -499,11 +479,10 @@
             exit(23);
         }
 
-        //todo WRITE string@Proměnná\032GF@counter\032obsahuje\032
         $parts = explode('@', $token);
-        
         if (($parts[0] == "GF") or ($parts[0] == "LF") or ($parts[0] == "TF")){
             if(sizeof($parts) > 2){
+                fwrite(STDERR, "bad variable symbol \n");
                 exit(23);
             }
             if (preg_match($beg_num, $parts[1])){ //cannot start with number 
@@ -560,13 +539,11 @@
     }
 
     /** 
-     * 
      * Remove commentary from line 
      * 
      * calculate coments for statistic 
      * 
      * Return new array without comments 
-     * 
     */
     function remove_comm($one_line){
         global $coments;
@@ -580,7 +557,6 @@
                 $before_coment = preg_split('/#/', $tok);
                 $coments++;
                 array_push($new_array, $before_coment[0]);
-
                 return array_filter($new_array);
             }
             array_push($new_array, $tok);
@@ -638,11 +614,9 @@
      * Count jumps in program based on $jumps $labels $jumps_line $labels_line 
      * 
      * return $jumps, $fwjumps, $backjumps $badjumps
-     * 
      */
     function jump_stats_counter(){
         global $jumps, $labels, $jumps_line, $labels_line;
-        
         $s_j = 0; $s_jf = 0; $s_jbac = 0; $s_jbad = 0;
      
         foreach($jumps as $key=>$j){
@@ -697,10 +671,6 @@
      * -- unknown parameter           - error 10
      * -- multiple write to same file - error 12
      * 
-     * todo Pokus o zápis více skupin statistik
-     * do stejného souboru během jednoho spuštění skriptu vede na chybu 12. [1,5 b]
-     * 
-     * 
      * return array($stats_files, $stats_param)
      * 
      *  */    
@@ -723,7 +693,6 @@
                     exit(10);
                 }
             }
-            // todo if --stats void then error 
             else if (preg_match($patern, $ar)){ // if == --stats
                 // explode return string after --stats= in array   
                 // imlode convert that array to single string 
