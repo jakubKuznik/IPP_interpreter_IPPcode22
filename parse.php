@@ -12,6 +12,12 @@
      */
 
 
+    // todo refactor 
+    // todo XML (např. <, >, &) využijte odpovídající XML
+    // entity (např. &lt;, &gt;, &amp;). Podobně převádějte problematické znaky vyskytující se v identifi-
+    // kátorech proměnných. Literály typu bool vždy zapisujte malými písmeny jako false nebo true.
+
+
     define("HELP", " \nProgram read IPP_code22 from stdin and represent it in xml
     --help        // Display help cannot be combinated with anything 
     --stats=file  // File where statisic will be writen.
@@ -106,7 +112,7 @@
 
         $instr = $dom->createElement('instruction');
         $instr->setAttribute("order", $loc);
-        $instr->setAttribute("opcode", $one_line[0]);
+        $instr->setAttribute("opcode", strtoupper($one_line[0]));
 
         
         switch($type){
@@ -228,6 +234,7 @@
 
         $parts = explode('@', $token);
         if (($parts[0] == "GF") or ($parts[0] == "LF") or ($parts[0] == "TF")){
+            
             //return $token;
             return "var"; //variable 
         }
@@ -393,11 +400,26 @@
      */
     function expe_var($token){
         $frame_definiton = "/@/";  // comentary 
+        $beg_num = "/^[0-9]/";
+        $ilegal_char = "/#|\s/";
+        $ilegal_char2 = "/\\\|\//";
         // GF@label format 
         if (preg_match($frame_definiton, $token)){
+
             $parts = explode('@', $token);
             if (($parts[0] != "GF") and ($parts[0] != "LF") and ($parts[0] != "TF")){
                 fwrite(STDERR, "Unknown variable frame.\n");
+                exit(23);
+            }
+            if (sizeof($parts) > 2){ // no multiple @
+                exit(23);
+            }
+            if (preg_match($beg_num, $parts[1])){ //cannot start with number 
+                fwrite(STDERR, "Var name cannot start with number\n");
+                exit(23);
+            }
+            if (preg_match($ilegal_char, $parts[1]) or preg_match($ilegal_char2, $parts[1])){
+                fwrite(STDERR, "bad label \n");
                 exit(23);
             }
         }
@@ -415,10 +437,22 @@
     function expe_lable($token, $type){
         global $labels, $jumps, $loc, $jumps_line, $labels_line;
         $frame_definiton = "/@/";  // comentary 
+        $ilegal_char = "/#|\s/";
+        $beg_num = "/^[0-9]/";
+        $ilegal_char2 = "/\\\|\//";
 
         // Variable  
         if (preg_match($frame_definiton, $token)){
             fwrite(STDERR, "Expect label not variable\n");
+            exit(23);
+        }
+
+        if (preg_match($ilegal_char, $token) || preg_match($ilegal_char2, $token)){
+            fwrite(STDERR, "bad label \n");
+            exit(23);
+        }
+        if (preg_match($beg_num, $token)){ //cannot start with number 
+            fwrite(STDERR, "lab name cannot start with number\n");
             exit(23);
         }
             
@@ -440,6 +474,10 @@
      */
     function expe_sym($token){
         $frame_definiton = "/@/";  // comentary 
+        $ilegal_char = "/#|\s/";
+        $ilegal_char2 = "/\\\|\//";
+        $beg_num = "/^[0-9]/";
+        $escape = "/\\[0-9]{3}/";
         // Variable  
         if (preg_match($frame_definiton, $token) == FALSE){
             fwrite(STDERR, "Expect constant or variable\n");
@@ -450,21 +488,37 @@
         $parts = explode('@', $token);
         
         if (($parts[0] == "GF") or ($parts[0] == "LF") or ($parts[0] == "TF")){
+            if(sizeof($parts) > 2){
+                exit(23);
+            }
+            if (preg_match($beg_num, $parts[1])){ //cannot start with number 
+                fwrite(STDERR, "Var name cannot start with number\n");
+                exit(23);
+            }
+            if (preg_match($ilegal_char, $parts[1]) or preg_match($ilegal_char2, $parts[1])){
+                fwrite(STDERR, "bad variable symbol \n");
+                exit(23);
+            }
             return; //variable 
         }
         // todo kompability of data types 
         else if (($parts[0] == "int") or ($parts[0] == "bool") or ($parts[0] == "nil")){
-
             return; // constant 
-        } # string cannot have # \ or white space 
+        } 
+        # string cannot have # \ or white space 
         else if ($parts[0] == "string"){
             $lit = "";
             foreach ($parts as $key => $s)
                 if ($key > 0)
                     $lit = $lit.$s;
-            if (preg_match("/#|\s/", $lit)){
+            if (preg_match($ilegal_char, $lit)){
                 fwrite(STDERR, "Expect constant or variable\n");
                 exit(23);
+            }
+            if ((preg_match($ilegal_char2, $lit)) and !(preg_match($escape, $lit))){
+                fwrite(STDERR, "Expect constant or variable\n");
+                exit(23);
+
             }
             return;
         }
