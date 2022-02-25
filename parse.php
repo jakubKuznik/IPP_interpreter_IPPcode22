@@ -11,13 +11,6 @@
      * 23 - other syntax or lexical error 
      */
 
-
-    // todo refactor 
-    // todo XML (např. <, >, &) využijte odpovídající XML
-    // entity (např. &lt;, &gt;, &amp;). Podobně převádějte problematické znaky vyskytující se v identifi-
-    // kátorech proměnných. Literály typu bool vždy zapisujte malými písmeny jako false nebo true.
-
-
     define("HELP", " \nProgram read IPP_code22 from stdin and represent it in xml
     --help        // Display help cannot be combinated with anything 
     --stats=file  // File where statisic will be writen.
@@ -72,7 +65,6 @@
     Write_stats($stats_files, $stats_params, $labels);
 
     exit(0);
-
     
     /**
      * Parse input program in IPP_code22 and store to xml 
@@ -310,7 +302,7 @@
         global $loc, $retunrs; 
         if (empty($one_line) == TRUE) return; //if empty line skip.
 
-        $loc++; //One line of instruction 
+        $loc++; // One line of instruction 
     
         switch(strtoupper($one_line[0])){
             /******* <var> <symb> **************/
@@ -862,19 +854,19 @@
             foreach ($params[$key] as $p){
                 switch($p){
                     case "loc": 
-                        fwrite($openf, $loc); fwrite($openf, "\n"); break;
+                        fwrite($openf, $loc);      fwrite($openf, "\n"); break;
                     case "com": 
-                        fwrite($openf, $coments); fwrite($openf, "\n"); break;
+                        fwrite($openf, $coments);  fwrite($openf, "\n"); break;
                     case "lab": 
                         fwrite($openf, $lab_uniq); fwrite($openf, "\n"); break;
                     case "jum": 
-                        fwrite($openf, $j); fwrite($openf, "\n"); break;
+                        fwrite($openf, $j);        fwrite($openf, "\n"); break;
                     case "fwj": 
-                        fwrite($openf, $jf); fwrite($openf, "\n"); break;
+                        fwrite($openf, $jf);       fwrite($openf, "\n"); break;
                     case "bac": 
-                        fwrite($openf, $jbac); fwrite($openf, "\n"); break;
+                        fwrite($openf, $jbac);     fwrite($openf, "\n"); break;
                     case "bad": 
-                        fwrite($openf, $jbad); fwrite($openf, "\n"); break;
+                        fwrite($openf, $jbad);     fwrite($openf, "\n"); break;
                     default:
                         break;
                 }
