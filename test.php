@@ -1,6 +1,7 @@
 <?php
     ini_set('display_errors', 'stderr'); //Erross on stderr 
 
+    /************** MACROS **************************/
     define("HELP_MESS", " Test script for parser.php and interpret.py
         --help               // Display help cannot be combinated with anything 
         -parse-only         // olnly parser.php test. can't combine with --int-only, --int-script 
@@ -16,17 +17,51 @@
 
     define ("ERR_HELP", "Cannot combine with other arguments\n");
     define ("ERR_COM", "Cannot combine --parse-only and --int-only\n");
+    define ("ERR_NON_EXI_FILE", " File does not exists.\n");
 
-    parse_args($argc, $argv);
-
+    /**************** GLOBAL VARS ******************/
     $tests_files;                                   // array of files that we will test 
+    $parser_on   = true;                           // parser tests 
+    $inter_on    = true;                           // interpreter 
+    $parse_path  = "parse.php";                     // path to parser script 
+    $int_path    = "interpret.py";                  // Path to interpreter script 
+    $jexam_path  = "/pub/courses/ipp/jexamxml/jexamxml.jar";
     
-    $parse_only  = false;                           // parser tests 
-    $int_only    = false;                           // interpreter 
-    $parse_path  = "";                              // path to parser script 
-    $int_path    = "";                              // Path to interpreter script 
-    $jexam_path  = "/pub/courses/ipp/jexamxml/";
+    /***************** PROGRAM  *******************/
+    parse_args($argc, $argv);
     
+    // check if $parse_path, $int_path, $jexam_path exist.
+    file_exist($parser_on, $inter_on);
+
+
+
+
+    /**
+     * Check if $parse_path, $int_path $jexam_path exist 
+     * exit(41) if not 
+     *
+     * @return void 
+     * @global $int_path, $parse_path, $jexam_path
+     * @var $par -- if true check $parse_path and $jexam_path
+     * @var @inte -- if true check $int_path 
+     */
+    function file_exist($par, $inte){
+        global $parse_path, $int_path, $jexam_path;
+
+        if ($par == true){
+            if (file_exists($parse_path) == false){
+                fwrite(STDERR, $parse_path . ERR_NON_EXI_FILE); exit(41);
+            }
+            if (file_exists($jexam_path) == false){
+                fwrite(STDERR, $jexam_path . ERR_NON_EXI_FILE); exit(41);
+            }
+        }
+        if ($inte == true){
+            if (file_exists($int_path) == false){
+                fwrite(STDERR, $int_path . ERR_NON_EXI_FILE); exit(41);
+            }
+        }
+    }
 
     function testing($tests_files){
         // if file rc != 0
@@ -65,7 +100,7 @@
      *                      // -can't combine with --directory
      * 
      * //globals that are modified in function 
-     * @global $parse_only, $int_only, $parse_path, $int_path
+     * @global $parser_on, $inter_on, $parse_path, $int_path, $jexam_path;
      * 
      * 
      * @var argc
@@ -74,7 +109,12 @@
      * 
      *  */    
     function parse_args(int $argc, array $argv){ 
-        global $parse_only, $int_only, $parse_path, $int_path;
+        global $parser_on, $inter_on, $parse_path, $int_path; $jexam_path;
+        
+        $parse_only = false; 
+        $int_only   = false;
+        $directory  = false;
+        $testlist   = false;
         
         $help_file_name;
         // two switch one for arguments with '='
@@ -87,25 +127,36 @@
                 
                 switch ($arg[0]){
                     case "--directory";
+                        if ($testlist == true){
+                            fwrite(STDERR, ERR_HELP); exit(10);
+                        }
+                        $directory = true;
                         break;
                     case "--parse-script":
                         if ($int_only == true){ //cannot combine with --int-only
                             fwrite(STDERR, ERR_COM); exit(10);
-                        } 
+                        }
+                        $parse_path = $help_file_name;
                         break;
                     case "--int-script":
                         if ($parse_only == true){
                             fwrite(STDERR, ERR_COM); exit(10);
                         }
+                        $int_path = $help_file_name;
                         break;
                     case "--jexampath":      
                         if ($int_only == true){ //cannot combine with --int-only
                             fwrite(STDERR, ERR_COM); exit(10);
-                        } 
+                        }
+                        $jexam_path = $help_file_name; 
                         break;
                     case "--match":
                         break;
                     case "--testlist":
+                        if ($directory == true){
+                            fwrite(STDERR, ERR_HELP); exit(10);
+                        }
+                        $testlist = true;
                         break;
                     default:
                         break;
@@ -122,13 +173,15 @@
                     if ($int_only == true){
                         fwrite(STDERR, ERR_COM); exit(10);
                     } 
-                    $parse_only = true; 
+                    $parse_only = true;
+                    $inter_on   = false;  // disable interpreter test 
                     break;
                 case "--int-only":
                     if ($parse_only == true){
                         fwrite(STDERR, ERR_COM); exit(10);
                     }
-                    $int_only = true;
+                    $int_only   = true;   
+                    $parser_on  = false;  // disable parser test 
                     break;
                 case "--recursive":
                     break;
@@ -160,6 +213,7 @@
         }
         return $out;
     }
+
 
 
 ?>
