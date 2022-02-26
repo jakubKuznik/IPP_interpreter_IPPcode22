@@ -15,11 +15,18 @@
         --testlist=file      // explicit folders definition or files\n"); 
 
     define ("ERR_HELP", "Cannot combine with other arguments\n");
+    define ("ERR_COM", "Cannot combine --parse-only and --int-only\n");
 
     parse_args($argc, $argv);
 
-    $tests_files; // Files that we will test 
-
+    $tests_files;                                   // array of files that we will test 
+    
+    $parse_only  = false;                           // parser tests 
+    $int_only    = false;                           // interpreter 
+    $parse_path  = "";                              // path to parser script 
+    $int_path    = "";                              // Path to interpreter script 
+    $jexam_path  = "/pub/courses/ipp/jexamxml/";
+    
 
     function testing($tests_files){
         // if file rc != 0
@@ -57,28 +64,44 @@
      * --testlist=file      // explicit folders definition or files 
      *                      // -can't combine with --directory
      * 
-     * @var 
-     * @return 
+     * //globals that are modified in function 
+     * @global $parse_only, $int_only, $parse_path, $int_path
+     * 
+     * 
+     * @var argc
+     * @var argv
+     * @return void 
      * 
      *  */    
-    function parse_args(int $argc, array $argv){
+    function parse_args(int $argc, array $argv){ 
+        global $parse_only, $int_only, $parse_path, $int_path;
         
-        $equal_sym = false;
-        $file_name;
+        $help_file_name;
         // two switch one for arguments with '='
         foreach ($argv as $arg){
             
+            /********** FOR ARGUMENTS WITH '=' SYMBOL ***********/
             if (str_contains($arg, "=")){
                 $arg = explode("=", $arg);
-                $file_name = concat_str($arg, 1); // store file name
+                $help_file_name = concat_str($arg, 1); // store file name
+                
                 switch ($arg[0]){
                     case "--directory";
                         break;
                     case "--parse-script":
+                        if ($int_only == true){ //cannot combine with --int-only
+                            fwrite(STDERR, ERR_COM); exit(10);
+                        } 
                         break;
                     case "--int-script":
+                        if ($parse_only == true){
+                            fwrite(STDERR, ERR_COM); exit(10);
+                        }
                         break;
-                    case "--jexampath":
+                    case "--jexampath":      
+                        if ($int_only == true){ //cannot combine with --int-only
+                            fwrite(STDERR, ERR_COM); exit(10);
+                        } 
                         break;
                     case "--match":
                         break;
@@ -88,14 +111,24 @@
                         break;
                 }
             }
-
+            /********** WITHOUT '=' *******************/
             switch ($arg){
                 case "--help":
-                    if ($argc != 2){
+                    if ($argc != 2){ // cannot combine help with other params  
                         fwrite(STDERR, ERR_HELP); exit(10);
                     }
                     echo (HELP_MESS); break;
                 case "--parse-only":
+                    if ($int_only == true){
+                        fwrite(STDERR, ERR_COM); exit(10);
+                    } 
+                    $parse_only = true; 
+                    break;
+                case "--int-only":
+                    if ($parse_only == true){
+                        fwrite(STDERR, ERR_COM); exit(10);
+                    }
+                    $int_only = true;
                     break;
                 case "--recursive":
                     break;
