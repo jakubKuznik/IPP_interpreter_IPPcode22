@@ -19,49 +19,57 @@
     define ("ERR_COM", "Cannot combine --parse-only and --int-only\n");
     define ("ERR_NON_EXI_FILE", " File does not exists.\n");
 
-    /**************** GLOBAL VARS ******************/
-    $tests_files;                                   // array of files that we will test 
-    $parser_on   = true;                           // parser tests 
-    $inter_on    = true;                           // interpreter 
-    $parse_path  = "parse.php";                     // path to parser script 
-    $int_path    = "interpret.py";                  // Path to interpreter script 
-    $jexam_path  = "/pub/courses/ipp/jexamxml/jexamxml.jar";
-    
     /***************** PROGRAM  *******************/
-    parse_args($argc, $argv);
+    $set = new Settings();
+    
+    parse_args($argc, $argv, $set);
     
     // check if $parse_path, $int_path, $jexam_path exist.
-    file_exist($parser_on, $inter_on);
 
-
+    $set->file_exist();
 
 
     /**
-     * Check if $parse_path, $int_path $jexam_path exist 
-     * exit(41) if not 
-     *
-     * @return void 
-     * @global $int_path, $parse_path, $jexam_path
-     * @var $par -- if true check $parse_path and $jexam_path
-     * @var @inte -- if true check $int_path 
+     * Script settings. 
      */
-    function file_exist($par, $inte){
-        global $parse_path, $int_path, $jexam_path;
+    class Settings {
+        public $parser_on   = true;              // parser tests 
+        public $inter_on    = true;              // interpreter 
+        public $recursive   = false;             // recursive folder                  
+        public $noclean     = false;             // dont delete temp files 
+        public $parse_path  = "parse.php";       // path to parser script 
+        public $int_path    = "interpret.py";    // Path to interpreter script 
+        public $jexam_path  = "/pub/courses/ipp/jexamxml/jexamxml.jar";
+        public $match_regex = "";                // match regex files 
+        public $tests_files;                     // array of files and folders that we will test 
 
-        if ($par == true){
-            if (file_exists($parse_path) == false){
-                fwrite(STDERR, $parse_path . ERR_NON_EXI_FILE); exit(41);
+        
+        /**
+         * Check if $parse_path, $int_path $jexam_path exist 
+         * exit(41) if not 
+         *
+         * @return void 
+         */
+        function file_exist(){
+
+            if ($this->parser_on == true){
+                if (file_exists($this->parse_path) == false){
+                    fwrite(STDERR, $this->parse_path . ERR_NON_EXI_FILE); exit(41);
+                }
+                if (file_exists($this->jexam_path) == false){
+                    fwrite(STDERR, $this->jexam_path . ERR_NON_EXI_FILE); exit(41);
+                }
             }
-            if (file_exists($jexam_path) == false){
-                fwrite(STDERR, $jexam_path . ERR_NON_EXI_FILE); exit(41);
+            if ($this->inter_on == true){
+                if (file_exists($this->int_path) == false){
+                    fwrite(STDERR, $this->int_path . ERR_NON_EXI_FILE); exit(41);
+                }
             }
         }
-        if ($inte == true){
-            if (file_exists($int_path) == false){
-                fwrite(STDERR, $int_path . ERR_NON_EXI_FILE); exit(41);
-            }
-        }
+        
     }
+
+
 
     function testing($tests_files){
         // if file rc != 0
@@ -99,24 +107,17 @@
      * --testlist=file      // explicit folders definition or files 
      *                      // -can't combine with --directory
      * 
-     * //globals that are modified in function 
-     * @global $parser_on, $inter_on, $parse_path, $int_path, $jexam_path;
-     * 
      * 
      * @var argc
      * @var argv
      * @return void 
      * 
      *  */    
-    function parse_args(int $argc, array $argv){ 
-        global $parser_on, $inter_on, $parse_path, $int_path; $jexam_path;
+    function parse_args(int $argc, array $argv, $set){ 
         
-        $parse_only = false; 
-        $int_only   = false;
-        $directory  = false;
-        $testlist   = false;
+        $int_only = false;
+        print_r($set);
         
-        $help_file_name;
         // two switch one for arguments with '='
         foreach ($argv as $arg){
             
@@ -127,9 +128,10 @@
                 
                 switch ($arg[0]){
                     case "--directory";
-                        if ($testlist == true){
+                        if ($testlist == true || $directory == true){
                             fwrite(STDERR, ERR_HELP); exit(10);
                         }
+
                         $directory = true;
                         break;
                     case "--parse-script":
@@ -213,7 +215,5 @@
         }
         return $out;
     }
-
-
 
 ?>
