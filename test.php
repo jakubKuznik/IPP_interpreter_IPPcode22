@@ -21,6 +21,7 @@
     define ("ERR_NON_EXI_FILE", " File does not exists.\n");
     define ("ERR_NON_EXI_DIR", " Directory does not exists.\n");
     define ("ERR_BAD_REG", " Not an PCRE regex.\n");
+    define ("ERR_FIL_CRE", " Cannot create file\n");
 
     /***************** PROGRAM  *******************/
     $set = new Settings();
@@ -44,7 +45,11 @@
     else                         // just from directory
         $tf->find_test_inputs($set->directory, $set->recursive, $set->match_regex);
 
-    print_r($tf->tests_files);
+    foreach ($tf->tests_files as $t){
+        $tf->gene_missing($t);
+    }
+
+
 
     exit(0);
 
@@ -125,6 +130,52 @@
         private $src = '/.src/';           // src files 
         private $hiden_f = "/\/\./";       // hidden file         
 
+
+        /**
+         * Generate missing .out .rc .in files
+         * 
+         * @var file_path
+         * 
+         * if cannot create file exit(41);
+         *  
+         */
+        function gene_missing($file_path){
+            $dirname   = dirname($file_path); 
+            $base_name = basename($file_path);
+            $base_name = preg_replace('/\\.[^.\\s]{3,4}$/', '', $base_name);
+            //echo $dirname . $base_name . "\n";
+
+            // .out file 
+            $h = $dirname . "/" . $base_name . ".out";
+            if (file_exists($h) == false){
+                if (($a = fopen($h, "w")) == false){
+                    fwrite(STDERR, $m . ERR_FIL_CRE); exit(41);
+                }
+                fclose($a);
+            }
+            // .in 
+            $h = $dirname . "/" . $base_name . ".in";
+            if (file_exists($h) == false){
+                if (($a = fopen($h, "w")) == false){
+                    fwrite(STDERR, $m . ERR_FIL_CRE); exit(41);
+                }
+                fclose($a);
+            }
+            // .rc
+            $h = $dirname . "/" . $base_name . ".rc";
+            if (file_exists($h) == false){
+                if (($a = fopen($h, "w")) == false){
+                    fwrite(STDERR, $m . ERR_FIL_CRE); exit(41);
+                }
+                fwrite($a, "0");
+                fclose($a);
+            }
+
+
+            //echo  . "\n";
+            //echo $file_path . "\n";
+            
+        }
 
         /**
          * Function finds test inputs and store it to $test_files array
