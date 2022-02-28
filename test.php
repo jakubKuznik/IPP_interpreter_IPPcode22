@@ -146,9 +146,11 @@
                     $this->find_test_inputs($path, $recursive, $match_regex);
                 }
                 else{
-                    if (preg_match($this->src ,$path) == true){
-                        array_push($this->tests_files, realpath($path));
-                    } 
+                    if (preg_match($this->src ,$path) == false) // does't ends with .src 
+                        continue;
+                    if (preg_match($match_regex, basename($path)) == false) // does't match regex
+                        continue;
+                    array_push($this->tests_files, realpath($path));
                 }
             }
             $this->tests_files = array_values(array_unique($this->tests_files));
