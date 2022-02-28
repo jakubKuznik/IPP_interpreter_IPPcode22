@@ -1,7 +1,6 @@
 <?php
     ini_set('display_errors', 'stderr'); //Erross on stderr 
 
-    //todo php storm auto gene doxygen alt-insert ()
 
     /************** MACROS **************************/
     define("HELP_MESS", " Test script for parser.php and interpret.py
@@ -41,11 +40,11 @@
     // FIND TEST FILES // could be --match=regex or --recursive 
     // loking for .src files 
     if ($set->test_list == true) // testlist-file=
-        $tf->find_test_from_list();
+        $tf->find_test_from_list($set->directory, $set->recursive, $set->match_regex);
     else                         // just from directory
         $tf->find_test_inputs($set->directory, $set->recursive, $set->match_regex);
 
-    //print_r($tf->tests_files);
+    print_r($tf->tests_files);
 
     exit(0);
 
@@ -71,7 +70,7 @@
         function regex_valid(){
             preg_match($this->match_regex, 'foobar foobar foobar');
             if (preg_last_error() !== PREG_NO_ERROR) {
-                fwrite(STDERR, $this->match_regex . ERR_BAD_REG); exit(41);
+                fwrite(STDERR, $this->match_regex . ERR_BAD_REG); exit(11);
             }
         }
 
@@ -128,12 +127,32 @@
 
 
         /**
-         * Find test from 
+         * Function finds test inputs and store it to $test_files array
+         * looking for .src 
+         *
+         * open $file and line by line go throw given paths 
+         *  
+         * @var $file 
+         * @var $recursive true or fals \
+         * @var $match regex - regex for filename 
          */
-        function find_test_from_list(){
-            // dont forget to match_regex
-            // dont forget to recursive 
-            echo "$test_list_param";
+        function find_test_from_list($file, $recursive, $match_regex){
+            // todo regex 
+            // todo recursive 
+            $f = fopen($file, "r");
+            while ($path = fgets($f)){
+                $path = rtrim($path, "\r\n");
+                if (is_dir(realpath($path))){
+                    $this->find_test_inputs($path, $recursive, $match_regex);
+                }
+                else{
+                    if (preg_match($this->src ,$path) == true){
+                        array_push($this->tests_files, realpath($path));
+                    } 
+                }
+            }
+            $this->tests_files = array_values(array_unique($this->tests_files));
+            fclose($f);
         }
 
 
@@ -147,13 +166,11 @@
          * 
          */
         function find_test_inputs($directory, $recursive, $match_regex){
-            // dont forget to match_regex
-            // dont forget to recursive
+            
             $files = scandir($directory);
             //print_r($files);
             foreach ($files as $f){
-                $f = $directory . "/" . $f;
-                //echo $f . "\n" .  " "; 
+                $f = $directory . "/" . $f;  //todo check if i have rights to read dir
                 if (is_dir(realpath($f))){ //directory
                     if (preg_match($this->hiden_f, $f))// hiden folders  
                         continue;
@@ -165,11 +182,12 @@
                 else{ // normal file 
                     if (preg_match($this->src ,$f) == false) // does't ends with .src 
                         continue;
-                    if (preg_match($match_regex, $f) == false) // does't match regex
+                    if (preg_match($match_regex, basename($f)) == false) // does't match regex
                         continue;
                     array_push($this->tests_files, realpath($f));
                 }
             }
+            $this->tests_files = array_values(array_unique($this->tests_files));
         }
     }
 
