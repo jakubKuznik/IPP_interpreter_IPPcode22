@@ -1,6 +1,8 @@
 <?php
     ini_set('display_errors', 'stderr'); //Erross on stderr 
 
+    //todo php storm auto gene doxygen alt-insert ()
+
     /************** MACROS **************************/
     define("HELP_MESS", " Test script for parser.php and interpret.py
         --help               // Display help cannot be combinated with anything 
@@ -27,11 +29,25 @@
     print_r($set);
     parse_args($argc, $argv, $set);
     print_r($set);
-    
-    // check if $parse_path, $int_path, $jexam_path exist.
+
+    // check if given files exists and regex is valid 
     $set->file_exist();
     $set->dir_exist();
     $set->regex_valid();
+
+    // creating test file class to find and store test files 
+    $tf = new Test_files;
+
+    // FIND TEST FILES // could be --match=regex or --recursive 
+    // loking for .src files 
+    if ($set->test_list == true) // testlist-file=
+        $tf->find_test_from_list();
+    else                         // just from directory
+        $tf->find_test_inputs($set->directory, $set->recursive, $set->match_regex);
+
+    //print_r($tf->tests_files);
+
+    exit(0);
 
     /**
      * Script settings. 
@@ -45,18 +61,14 @@
         public $parse_path  = "parse.php";       // path to parser script 
         public $int_path    = "interpret.py";    // Path to interpreter script 
         public $jexam_path  = "/pub/courses/ipp/jexamxml/jexamxml.jar";
-        public $match_regex = "";                // match regex files 
+        public $match_regex = "/.*/";            // match regex files 
         public $directory = ".";                 // for --directory= or --testlist=
         
-        public $tests_files;                     // array of files and folders that we will test 
-       
+     
         /**
          * Check if $match_regex is valid PCRE regex
          */
         function regex_valid(){
-            if ($this->match_regex == "")
-                return;
-
             preg_match($this->match_regex, 'foobar foobar foobar');
             if (preg_last_error() !== PREG_NO_ERROR) {
                 fwrite(STDERR, $this->match_regex . ERR_BAD_REG); exit(41);
@@ -106,25 +118,61 @@
         }
     }
 
-    function testing($tests_files){
-        // if file rc != 0
-        // if file rc == 0
-        return 0;
+    /**
+     * Finds out all test files and store them  
+     */ 
+    class Test_files {
+        public $tests_files = array();     // array of files and folders that we will test 
+        private $src = '/.src/';           // src files 
+        private $hiden_f = "/\/\./";       // hidden file         
+
+
+        /**
+         * Find test from 
+         */
+        function find_test_from_list(){
+            // dont forget to match_regex
+            // dont forget to recursive 
+            echo "$test_list_param";
+        }
+
+
+        /**
+         * Function finds test inputs and store it to $test_files array
+         * looking for .src 
+         * 
+         * @var $directory 
+         * @var $recursive true or fals \
+         * @var $match regex - regex for filename 
+         * 
+         */
+        function find_test_inputs($directory, $recursive, $match_regex){
+            // dont forget to match_regex
+            // dont forget to recursive
+            $files = scandir($directory);
+            //print_r($files);
+            foreach ($files as $f){
+                $f = $directory . "/" . $f;
+                //echo $f . "\n" .  " "; 
+                if (is_dir(realpath($f))){ //directory
+                    if (preg_match($this->hiden_f, $f))// hiden folders  
+                        continue;
+                    if ($recursive == true){ // recursive call 
+                        $this->find_test_inputs($f, $recursive, $match_regex);
+                        continue;
+                    }
+                }
+                else{ // normal file 
+                    if (preg_match($this->src ,$f) == false) // does't ends with .src 
+                        continue;
+                    if (preg_match($match_regex, $f) == false) // does't match regex
+                        continue;
+                    array_push($this->tests_files, realpath($f));
+                }
+            }
+        }
     }
 
-    // get output from .out file 
-    function test_file_output($test_case){
-        return 0;
-    }
-    
-    // get output from 
-    function get_output(){
-        return 0;
-    }
-
-    function test_file_rc(){
-        return 0;
-    }
 
     /**
      * Function parse arguments.
