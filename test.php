@@ -27,6 +27,8 @@
     define ("IN", 1);
     define ("RC", 2);
 
+    $temp_file_name = "";
+
     /***************** PROGRAM  *******************/
     $set = new Settings();
     
@@ -51,9 +53,9 @@
 
    
 
+    $par_t = new Parser_only_test($set);
+    $out_file = create_temp_file(); 
     // Check if .out .rc .in are there if not create them 
-    
-    $par_t = new Parser_only_test;
     foreach ($tf->tests_files as $test_file){
         echo $test_file . "\n";
         
@@ -62,13 +64,45 @@
         }
         
     }
+   
+    // deleting temp file 
+    fclose($out_file);
+    if ($set->noclean == false)
+        unlink($temp_file_name);
+        
     exit(0);
+
+
+    /**
+     * Create temp file for outputs
+     */
+    function create_temp_file(){
+        global $temp_file_name;
+        $temp_file_name = "xkuzni04_" . rand(0, 1000000000) . ".out";
+        echo $temp_file_name . "\n";
+        $myfile = fopen($temp_file_name, "w");
+        return $myfile;
+    }
+
 
 
     /**
      * Class for parse.php test 
      */
     class Parser_only_test {
+        
+        // constructor will set it from Settings class 
+        public $parse_path  = "";       // path to parser script 
+        public $jexam_path  = "";
+
+        /**
+         * @var $set -  set is type class Settings  
+         *              gets $parse_path and $jesam_path from there.
+         */
+        function __construct(Settings $set){
+            $this->parse_path = $set->parse_path;
+            $this->jexam_path = $set->jexam_path;
+        }
         
         /*  
             java -jar jexamxml.jar <arguments>
@@ -98,6 +132,17 @@
             echo get_file_name($file_path, OUT) . "\n";
             echo get_file_name($file_path, IN) . "\n";
             echo get_file_name($file_path, RC) . "\n";
+
+            $ref_rc = file_get_contents(get_file_name($file_path, RC), true);
+            if (is_numeric($ref_rc) == false)
+                exit(41);
+            // if return code is not 0;
+            if ($ref_rc != 0)
+
+                echo $ref_rc;
+            else{
+                echo $ref_rc;
+            }
         }
         
         function get_ref_file(){
@@ -252,7 +297,7 @@
          * @var $recursive true or fals \
          * @var $match regex - regex for filename 
          */
-        function find_test_from_list($file, $recursive, $match_regex){
+        function find_test_from_list($file, bool $recursive, $match_regex){
             // todo regex 
             // todo recursive 
             $f = fopen($file, "r");
@@ -283,7 +328,7 @@
          * @var $match regex - regex for filename 
          * 
          */
-        function find_test_inputs($directory, $recursive, $match_regex){
+        function find_test_inputs($directory, bool $recursive, $match_regex){
             
             $files = scandir($directory);
             //print_r($files);
@@ -332,7 +377,7 @@
      * @return void 
      * 
      *  */    
-    function parse_args(int $argc, array $argv, $set){ 
+    function parse_args(int $argc, array $argv, Settings $set){ 
         
         $int_only   = false; // cannot combine --int-only wiht --parse-only
         $parse_only = false;
@@ -432,7 +477,7 @@
      * 
      * @return - concatenate string and add '=' between then
      */
-    function concat_str($arr, $i_f){
+    function concat_str(array $arr, int $i_f){
         $out = "";
         foreach ($arr as $key=>$n){
             if ($key < $i_f)
@@ -452,7 +497,7 @@
      * @var @file_path 
      * @var $suff - OUT IN RC 
      */ 
-    function get_file_name($file_path, $suff){
+    function get_file_name($file_path, int $suff){
         $dirname   = dirname($file_path); 
         $base_name = basename($file_path);
         $base_name = preg_replace('/\\.[^.\\s]{3,4}$/', '', $base_name);
