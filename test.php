@@ -23,6 +23,10 @@
     define ("ERR_BAD_REG", " Not an PCRE regex.\n");
     define ("ERR_FIL_CRE", " Cannot create file\n");
 
+    define ("OUT", 0);
+    define ("IN", 1);
+    define ("RC", 2);
+
     /***************** PROGRAM  *******************/
     $set = new Settings();
     
@@ -45,20 +49,77 @@
     else                         // just from directory
         $tf->find_test_inputs($set->directory, $set->recursive, $set->match_regex);
 
-    foreach ($tf->tests_files as $t){
-        $tf->gene_missing($t);
+   
+
+    // Check if .out .rc .in are there if not create them 
+    
+    $par_t = new Parser_only_test;
+    foreach ($tf->tests_files as $test_file){
+        echo $test_file . "\n";
+        
+        if ($set->parser_only == true){
+            $par_t->test_file($test_file);
+        }
+        
+    }
+    exit(0);
+
+
+    /**
+     * Class for parse.php test 
+     */
+    class Parser_only_test {
+        
+        /*  
+            java -jar jexamxml.jar <arguments>
+
+            where arguments are:
+                <1-xml-file> <2-xml-file> [<delta-xml>] [<command>] [<option-file>]
+                <1-xml-file>  - the first XML file to compare
+                <2-xml-file>  - the second XML file to compare
+                <delta-xml>   - the delta XML file to print differences (optional)
+                <command>     - /D : print differences or /M : merge XML files
+                <option-file> - the option file containing all options as pairs name=value
+        */
+        
+        /*
+        $diff_return = 0;
+        $b = "b.out";
+        $d = "a.out";
+        $d = fopen($d, "r");
+        $b = fopen($b, "r");
+        exec("java -jar ".$set->jexam_path." temp_out ".$b, $d ,$diff_return);
+        */
+
+        /**
+         * 
+         */
+        function test_file($file_path){
+            echo $file_path;
+        }
+        
+        function get_ref_file(){
+            return;
+        }
+        function get_parser_out(){
+            return;
+        }
+        
     }
 
+    /**
+     * class for interpret.py test
+     */
+    class inter_test {
 
-
-    exit(0);
+    }
 
     /**
      * Script settings. 
      */
     class Settings {
-        public $parser_on   = true;              // parser tests 
-        public $inter_on    = true;              // interpreter 
+        public $parser_only = false;              // parser tests 
+        public $inter_only = false;              // interpreter 
         public $recursive   = false;             // recursive folder                  
         public $noclean     = false;             // dont delete temp files 
         public $test_list   = false;
@@ -105,8 +166,7 @@
          * @return void 
          */
         function file_exist(){
-
-            if ($this->parser_on == true){
+            if ($this->parser_only == true){
                 if (file_exists($this->parse_path) == false){
                     fwrite(STDERR, $this->parse_path . ERR_NON_EXI_FILE); exit(41);
                 }
@@ -114,11 +174,22 @@
                     fwrite(STDERR, $this->jexam_path . ERR_NON_EXI_FILE); exit(41);
                 }
             }
-            if ($this->inter_on == true){
+            else if ($this->inter_only == true){
                 if (file_exists($this->int_path) == false){
                     fwrite(STDERR, $this->int_path . ERR_NON_EXI_FILE); exit(41);
                 }
             }
+            else{
+                if (file_exists($this->parse_path) == false){
+                    fwrite(STDERR, $this->parse_path . ERR_NON_EXI_FILE); exit(41);
+                }
+                if (file_exists($this->jexam_path) == false){
+                    fwrite(STDERR, $this->jexam_path . ERR_NON_EXI_FILE); exit(41);
+                }
+                if (file_exists($this->int_path) == false){
+                    fwrite(STDERR, $this->int_path . ERR_NON_EXI_FILE); exit(41);
+                }
+            } 
         }
     }
 
@@ -171,10 +242,6 @@
                 fclose($a);
             }
 
-
-            //echo  . "\n";
-            //echo $file_path . "\n";
-            
         }
 
         /**
@@ -339,14 +406,14 @@
                         fwrite(STDERR, ERR_COM); exit(10);
                     } 
                     $parse_only = true;
-                    $set->inter_on   = false;  // disable interpreter test 
+                    $set->parser_only   = true;  // disable interpreter test 
                     break;
                 case "--int-only":
                     if ($parse_only == true){
                         fwrite(STDERR, ERR_COM); exit(10);
                     }
                     $int_only   = true;   
-                    $set->parser_on  = false;  // disable parser test
+                    $set->inter_only  = true;  // disable parser test
                     break;
                 case "--recursive":
                     $set->recursive = true;
@@ -379,6 +446,25 @@
             $out = $out . $n . "=";
         }
         return $out;
+    }
+
+    /**
+     * @return string with file name but with diferent suffix 
+     * 
+     * @var @file_path 
+     * @var $suff - OUT IN RC 
+     */ 
+    function get_file_name($file_path, $suff){
+        $dirname   = dirname($file_path); 
+        $base_name = basename($file_path);
+        $base_name = preg_replace('/\\.[^.\\s]{3,4}$/', '', $base_name);
+        
+        if ($suf == OUT)
+            return ($dirname . "/" . $base_name . ".out");
+        else if ($suf == IN)
+            return ($dirname . "/" . $base_name . ".in");
+        else if ($suf == RC)
+            return ($dirname . "/" . $base_name . ".rc");
     }
 
 ?>
