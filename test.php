@@ -53,14 +53,13 @@
 
    
 
-    $par_t = new Parser_only_test($set);
+    $test_c = new Test($set);
     $out_file = create_temp_file(); 
     // Check if .out .rc .in are there if not create them 
     foreach ($tf->tests_files as $test_file){
-        echo $test_file . "\n";
         
         if ($set->parser_only == true){
-            $par_t->test_file($test_file);
+            $test_c->parse_only_test($test_file, $temp_file_name);
         }
         
     }
@@ -73,27 +72,18 @@
     exit(0);
 
 
-    /**
-     * Create temp file for outputs
-     */
-    function create_temp_file(){
-        global $temp_file_name;
-        $temp_file_name = "xkuzni04_" . rand(0, 1000000000) . ".out";
-        echo $temp_file_name . "\n";
-        $myfile = fopen($temp_file_name, "w");
-        return $myfile;
-    }
 
 
 
     /**
      * Class for parse.php test 
      */
-    class Parser_only_test {
+    class Test {
         
         // constructor will set it from Settings class 
         public $parse_path  = "";       // path to parser script 
         public $jexam_path  = "";
+        public $int_path    = "";       // Path to interpreter script 
 
         /**
          * @var $set -  set is type class Settings  
@@ -102,6 +92,7 @@
         function __construct(Settings $set){
             $this->parse_path = $set->parse_path;
             $this->jexam_path = $set->jexam_path;
+            $this->int_path   = $set->int_path;
         }
         
         /*  
@@ -128,19 +119,24 @@
         /**
          * 
          */
-        function test_file($file_path){
-            echo get_file_name($file_path, OUT) . "\n";
-            echo get_file_name($file_path, IN) . "\n";
-            echo get_file_name($file_path, RC) . "\n";
-
+        function parse_only_test($file_path, $temp_file){
+            $result_out = "";
+            $restul_rc  = "";
+            $content    = file_get_contents($file_path);
+            
             $ref_rc = file_get_contents(get_file_name($file_path, RC), true);
             if (is_numeric($ref_rc) == false)
                 exit(41);
             // if return code is not 0;
-            if ($ref_rc != 0)
-
-                echo $ref_rc;
+            if ($ref_rc != 0){
+                exec("php8.1 ".$this->parse_path ." <$content >$temp_file", $result_out, $restul_rc);
+            }
             else{
+                echo $this->parse_path . "\n";
+                echo("php8.1 ".$this->parse_path ." <$file_path >$temp_file". $result_out. $restul_rc);
+                exec("php8.1 ".$this->parse_path ." <$file_path >$temp_file", $result_out, $restul_rc);
+                
+                print_r($result_out);
                 echo $ref_rc;
             }
         }
@@ -508,6 +504,17 @@
             return ($dirname . "/" . $base_name . ".in");
         else if ($suff == RC)
             return ($dirname . "/" . $base_name . ".rc");
+    }
+    
+    
+    /**
+     * Create temp file for outputs
+     */
+    function create_temp_file(){
+        global $temp_file_name;
+        $temp_file_name = "xkuzni04_" . rand(0, 1000000000) . ".out";
+        $myfile = fopen($temp_file_name, "w");
+        return $myfile;
     }
 
 ?>
