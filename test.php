@@ -95,7 +95,9 @@
          * 
          */
         function test_file($file_path){
-            echo $file_path;
+            echo get_file_name($file_path, OUT) . "\n";
+            echo get_file_name($file_path, IN) . "\n";
+            echo get_file_name($file_path, RC) . "\n";
         }
         
         function get_ref_file(){
@@ -211,13 +213,9 @@
          *  
          */
         function gene_missing($file_path){
-            $dirname   = dirname($file_path); 
-            $base_name = basename($file_path);
-            $base_name = preg_replace('/\\.[^.\\s]{3,4}$/', '', $base_name);
-            //echo $dirname . $base_name . "\n";
-
+            // todo valid 
             // .out file 
-            $h = $dirname . "/" . $base_name . ".out";
+            $h = get_file_name($file_path, OUT);
             if (file_exists($h) == false){
                 if (($a = fopen($h, "w")) == false){
                     fwrite(STDERR, $m . ERR_FIL_CRE); exit(41);
@@ -225,7 +223,7 @@
                 fclose($a);
             }
             // .in 
-            $h = $dirname . "/" . $base_name . ".in";
+            $h = get_file_name($file_path, IN);
             if (file_exists($h) == false){
                 if (($a = fopen($h, "w")) == false){
                     fwrite(STDERR, $m . ERR_FIL_CRE); exit(41);
@@ -233,7 +231,7 @@
                 fclose($a);
             }
             // .rc
-            $h = $dirname . "/" . $base_name . ".rc";
+            $h = get_file_name($file_path, RC);
             if (file_exists($h) == false){
                 if (($a = fopen($h, "w")) == false){
                     fwrite(STDERR, $m . ERR_FIL_CRE); exit(41);
@@ -459,11 +457,11 @@
         $base_name = basename($file_path);
         $base_name = preg_replace('/\\.[^.\\s]{3,4}$/', '', $base_name);
         
-        if ($suf == OUT)
+        if ($suff == OUT)
             return ($dirname . "/" . $base_name . ".out");
-        else if ($suf == IN)
+        else if ($suff == IN)
             return ($dirname . "/" . $base_name . ".in");
-        else if ($suf == RC)
+        else if ($suff == RC)
             return ($dirname . "/" . $base_name . ".rc");
     }
 
