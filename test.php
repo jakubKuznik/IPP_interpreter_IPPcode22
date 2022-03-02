@@ -81,9 +81,12 @@
     class Test {
         
         // constructor will set it from Settings class 
-        public $parse_path  = "";       // path to parser script 
-        public $jexam_path  = "";
-        public $int_path    = "";       // Path to interpreter script 
+        private $parse_path  = "";       // path to parser script 
+        private $jexam_path  = "";
+        private $int_path    = "";       // Path to interpreter script 
+        private $test_num    = 0;        // Every test has unique index
+        private $fail_sum    = 0;
+        private $succ_sum    = 0;
 
         /**
          * @var $set -  set is type class Settings  
@@ -95,57 +98,52 @@
             $this->int_path   = $set->int_path;
         }
         
-        /*  
-            java -jar jexamxml.jar <arguments>
-
-            where arguments are:
-                <1-xml-file> <2-xml-file> [<delta-xml>] [<command>] [<option-file>]
-                <1-xml-file>  - the first XML file to compare
-                <2-xml-file>  - the second XML file to compare
-                <delta-xml>   - the delta XML file to print differences (optional)
-                <command>     - /D : print differences or /M : merge XML files
-                <option-file> - the option file containing all options as pairs name=value
-        */
-        
-        /*
-        $diff_return = 0;
-        $b = "b.out";
-        $d = "a.out";
-        $d = fopen($d, "r");
-        $b = fopen($b, "r");
-        exec("java -jar ".$set->jexam_path." temp_out ".$b, $d ,$diff_return);
-        */
-
         /**
+         * --parse-only tests 
          * 
+         * @var $file_path -- path to file that ll be tested 
+         * @var $temp_file -- temporarily file for program outputs 
+         *  
          */
         function parse_only_test($file_path, $temp_file){
-            $result_out = "";
-            $restul_rc  = "";
-            $content    = file_get_contents($file_path);
-            
-            $ref_rc = file_get_contents(get_file_name($file_path, RC), true);
+            $this->test_num++;
+
+            $restul_rc      = "";
+            $diff_ret       = "";
+            $ref_file_out   = get_file_name($file_path, OUT);
+
+            $ref_rc = file_get_contents(get_file_name($file_path, RC), true);     
             if (is_numeric($ref_rc) == false)
                 exit(41);
-            // if return code is not 0;
+
+
+            /********* ref RETURN CODE NOT 0 ****************/
             if ($ref_rc != 0){
-                exec("php8.1 ".$this->parse_path ." <$content >$temp_file", $result_out, $restul_rc);
-            }
-            else{
-                echo $this->parse_path . "\n";
-                echo("php8.1 ".$this->parse_path ." <$file_path >$temp_file". $result_out. $restul_rc);
                 exec("php8.1 ".$this->parse_path ." <$file_path >$temp_file", $result_out, $restul_rc);
-                
-                print_r($result_out);
-                echo $ref_rc;
+                if ($restul_rc == $ref_rc){
+                    $this->succ_sum++;
+                    echo ("SUCCES Test: " . $this->test_num . " " . $file_path . "\n");
+                }
+                else{
+                    $this->fail_sum++;
+                    echo ("FAILED Test: " . $this->test_num . " " . $file_path . "\n");
+                }
             }
-        }
-        
-        function get_ref_file(){
-            return;
-        }
-        function get_parser_out(){
-            return;
+            /********* ref RETURN CODE 0  ****************/
+            else{
+                // store parser output to temp variable 
+                exec("php8.1 ".$this->parse_path ." <$file_path >$temp_file", $result_out, $restul_rc);
+                // compare ref output vs parser output using JeXAM
+                exec("java -jar " . $this->jexam_path . " temp_out " . $ref_file_out, $temp_file ,$diff_ret);
+                if (($diff_ret != 0) && ($restul_rc != $ref_rc)){
+                    $this->fail_sum++;
+                    echo ("FAILED Test: " . $this->test_num . " " . $file_path . "\n");
+                }
+                else{
+                    $this->succ_sum++;
+                    echo ("SUCCES Test: " . $this->test_num . " " . $file_path . "\n");
+                }
+            }
         }
         
     }
