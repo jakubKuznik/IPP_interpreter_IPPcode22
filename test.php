@@ -61,6 +61,9 @@
         if ($set->parser_only == true){
             $test_c->parse_only_test($test_file, $temp_file_name);
         }
+        else if ($set->inter_only == true){
+            $test_c->int_only_test($test_file, $temp_file_name);
+        }
         
     }
    
@@ -80,6 +83,8 @@
      */
     class Test {
         
+        //todo read tests  test.in
+    
         // constructor will set it from Settings class 
         private $parse_path  = "";       // path to parser script 
         private $jexam_path  = "";
@@ -97,6 +102,72 @@
             $this->jexam_path = $set->jexam_path;
             $this->int_path   = $set->int_path;
         }
+
+        /**
+         * --int-only tests 
+         * 
+         * @var $file_path -- path to file that ll be tested 
+         * @var $temp_file -- temporarily file for program outputs 
+         *  
+         */
+        function int_only_test($file_path, $temp_file){
+            $this->test_num++;
+            
+            $restul_rc      = "";
+            $diff_ret       = "";
+            $out            = "";
+            $ref_file_out   = get_file_name($file_path, OUT);
+            $ref_rc = file_get_contents(get_file_name($file_path, RC), true);     
+            
+            // Non valid return code 
+            if (is_numeric($ref_rc) == false){
+                echo ("UNVALID Test: " . $this->test_num . " " . $file_path . "\n");
+                return;
+            }
+
+            /********* ref RETURN CODE NOT 0 ****************/
+            if ($ref_rc != 0){
+                $this->non_zero_return($file_path, $temp_file, $ref_rc, $this->int_path);
+            }
+            /********* ref RETURN CODE 0  ****************/
+            else{
+                // store parser output to temp variable 
+                exec("php8.1 ".$this->int_path ." <" . $file_path . ">" . $temp_file, $result_out, $restul_rc);
+                exec("diff -q " . $ref_file_out . " " . $temp_file, $out ,$diff_ret);
+                echo $diff_ret;
+                if (($diff_ret != 0) || ($restul_rc != $ref_rc)){
+                    $this->test_fail($file_path);
+                }
+                else{
+                    $this->test_succ($file_path);
+                }
+            }
+        }
+        
+        /**
+         * if Ref return code is not 0
+         */
+        function non_zero_return($file_path, $temp_file, $ref_rc, $script){
+            exec("php8.1 ".$this->parse_path ." <" . $file_path . ">" . $temp_file, $result_out, $restul_rc);
+            if ($restul_rc == $ref_rc){
+                $this->succ_sum++;
+                echo ("SUCCES Test: " . $this->test_num . " " . $file_path . "\n");
+            }
+            else{
+                $this->fail_sum++;
+                echo ("FAILED Test: " . $this->test_num . " " . $file_path . "\n");
+            }
+        }
+
+        function test_fail($file_path){
+            $this->fail_sum++;
+            echo ("FAILED Test: " . $this->test_num . " " . $file_path . "\n");
+        }
+
+        function test_succ($file_path){
+            $this->succ_sum++;
+            echo ("SUCCES Test: " . $this->test_num . " " . $file_path . "\n");
+        }
         
         /**
          * --parse-only tests 
@@ -110,49 +181,37 @@
 
             $restul_rc      = "";
             $diff_ret       = "";
+            $out            = "";
             $ref_file_out   = get_file_name($file_path, OUT);
-
             $ref_rc = file_get_contents(get_file_name($file_path, RC), true);     
-            if (is_numeric($ref_rc) == false)
-                exit(41);
-
+            
+            // Non valid return code 
+            if (is_numeric($ref_rc) == false){
+                echo ("UNVALID Test: " . $this->test_num . " " . $file_path . "\n");
+                return;
+            }
 
             /********* ref RETURN CODE NOT 0 ****************/
             if ($ref_rc != 0){
-                exec("php8.1 ".$this->parse_path ." <$file_path >$temp_file", $result_out, $restul_rc);
-                if ($restul_rc == $ref_rc){
-                    $this->succ_sum++;
-                    echo ("SUCCES Test: " . $this->test_num . " " . $file_path . "\n");
-                }
-                else{
-                    $this->fail_sum++;
-                    echo ("FAILED Test: " . $this->test_num . " " . $file_path . "\n");
-                }
+                $this->non_zero_return($file_path, $temp_file, $ref_rc, $this->parse_path);
             }
             /********* ref RETURN CODE 0  ****************/
             else{
                 // store parser output to temp variable 
-                exec("php8.1 ".$this->parse_path ." <$file_path >$temp_file", $result_out, $restul_rc);
+                exec("php8.1 ".$this->parse_path ." < " . $file_path . " > " . $temp_file, $result_out, $restul_rc);
                 // compare ref output vs parser output using JeXAM
-                exec("java -jar " . $this->jexam_path . " temp_out " . $ref_file_out, $temp_file ,$diff_ret);
-                if (($diff_ret != 0) && ($restul_rc != $ref_rc)){
-                    $this->fail_sum++;
-                    echo ("FAILED Test: " . $this->test_num . " " . $file_path . "\n");
+                exec("java -jar " . $this->jexam_path . " " . $temp_file . $ref_file_out, $out ,$diff_ret);
+               
+                if (($diff_ret != 0) or ($restul_rc != $ref_rc)){
+                    echo(file_get_contents($temp_file));
+                    echo(file_get_contents($ref_file_out));
+                    $this->test_fail($file_path);
                 }
                 else{
-                    $this->succ_sum++;
-                    echo ("SUCCES Test: " . $this->test_num . " " . $file_path . "\n");
+                    $this->test_succ($file_path);
                 }
             }
         }
-        
-    }
-
-    /**
-     * class for interpret.py test
-     */
-    class inter_test {
-
     }
 
     /**
