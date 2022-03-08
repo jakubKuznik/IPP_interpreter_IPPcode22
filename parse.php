@@ -659,7 +659,7 @@
      * @return array($stats_files, $stats_param)
      * 
      *  */    
-    function parse_args(int $argc, array $argv){
+    function parse_args($argc, array $argv){
         $stats          = false;   // Indicator if stats arg is there 
         $stats_arg_sum  = 0;       // How many stats args are there 
         $stats_sum      = 0;       // how manz stats files are there.
@@ -870,6 +870,9 @@
         $h = jump_stats_counter();
         $j = $h[0]; $jf = $h[1]; $jbac = $h[2]; $jbad = $h[3];
         $lab_uniq = label_count($labels);
+       
+        if ($files == NULL)
+            return;
         
         foreach ($files as $key=>$f){
             $openf = fopen($f, "w");
