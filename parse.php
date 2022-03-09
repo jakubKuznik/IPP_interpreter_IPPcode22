@@ -36,7 +36,7 @@
     $labels[0]      = 0;       // labels declarations   
     $labels_line[0] = 0;
     $jumps_line[0]  = 0;
-    $retunrs        = 0;
+    $returns        = 0;
 
     $stats_files;              // All files for statistic 
     $stats_params;             // all params for all files
@@ -306,7 +306,7 @@
      * <type>  -- {int, string, bool}
      */
     function syntax_validation($one_line){
-        global $loc, $retunrs; 
+        global $loc, $returns; 
         if (empty($one_line) == TRUE) return; //if empty line skip.
 
         $loc++; // One line of instruction 
@@ -374,7 +374,8 @@
                 return(NONE);
             case "RETURN":         // Variable  
                 expe_size($one_line, 1);
-                $retunrs++;
+                $returns++;
+                echo "tu";
                 return(NONE);
             /******************************** */
             default:
@@ -817,21 +818,24 @@
      */
     function jump_stats_counter(){
         global $jumps, $labels, $jumps_line, $labels_line;
+        global $returns;
         $s_j = 0; $s_jf = 0; $s_jbac = 0; $s_jbad = 0;
     
         $i = 0;
+        $s_j = $returns;
+        array_shift($jumps);
         foreach($jumps as $key=>$j){
             $s_j++;
             $i = array_search($j, $labels);
             if (in_array($j, $labels) == FALSE){
-                $s_jbad; // label doesnt exits
+                $s_jbad++; // label doesnt exits
                 continue;
             }
             if ($labels_line[$i] >= $jumps_line[$key]){
                 $s_jf++;
             }
             elseif($labels_line[$i] < $jumps_line[$key]){
-                $s_jbac;
+                $s_jbac++;
             }
 
         }
