@@ -818,20 +818,22 @@
     function jump_stats_counter(){
         global $jumps, $labels, $jumps_line, $labels_line;
         $s_j = 0; $s_jf = 0; $s_jbac = 0; $s_jbad = 0;
-     
+    
+        $i = 0;
         foreach($jumps as $key=>$j){
             $s_j++;
+            $i = array_search($j, $labels);
             if (in_array($j, $labels) == FALSE){
                 $s_jbad; // label doesnt exits
                 continue;
             }
-            $i = array_search($j, $labels);
-            if ($labels_line[$i] > $jumps_line[$key]){
+            if ($labels_line[$i] >= $jumps_line[$key]){
                 $s_jf++;
             }
             elseif($labels_line[$i] < $jumps_line[$key]){
                 $s_jbac;
             }
+
         }
        
         return [$s_j, $s_jf, $s_jbac, $s_jbad];
@@ -873,7 +875,7 @@
        
         if ($files == NULL)
             return;
-        
+       
         foreach ($files as $key=>$f){
             $openf = fopen($f, "w");
             foreach ($params[$key] as $p){
