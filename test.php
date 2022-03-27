@@ -86,7 +86,7 @@
         private $test_num    = 0;        // Every test has unique index
         private $fail_sum    = 0;
         private $succ_sum    = 0;
-
+        
         /**
          * @var $set -  set is type class Settings  
          *              gets $parse_path and $jesam_path from there.
@@ -115,13 +115,25 @@
             echo ("SUCCES Test: " . $this->test_num . " " . $file_path . "\n");
         }
 
-        /*
+        /**
+         * @var $command that will be aplied 
+         */
+        function zero_rc_testcase($command, $ref_rc, $file_path){
+            exec($command, $result_out, $result_rc);
+            if ($result_rc == $ref_rc){
+                $this->test_succ($file_path);
+            }
+            else{
+                $this->test_fail($file_path);
+            }
+        }
+
         /**
          * --int-only tests 
          * 
          * @var $file_path -- path to file that ll be tested 
          * @var $temp_file -- temporarily file for program outputs 
-         *  
+         */ 
         function int_only_test($file_path, $temp_file){
             $this->test_num++;
             
@@ -130,23 +142,25 @@
             $out            = "";
             $ref_file_out   = get_file_name($file_path, OUT);
             $ref_rc = file_get_contents(get_file_name($file_path, RC), true);     
-            
+            $inter_comm     = "php8.1 ".$this->int_path ." <" . $file_path . ">" . $temp_file;           
+
+
             // Non valid return code 
             if (is_numeric($ref_rc) == false){
                 echo ("UNVALID Test: " . $this->test_num . " " . $file_path . "\n");
                 return;
             }
 
-            // ref RETURN CODE NOT 0 
+            /********* ref RETURN CODE NOT 0 ****************/
             if ($ref_rc != 0){
-                $this->non_zero_return($file_path, $temp_file, $ref_rc, $this->int_path);
+                $this->zero_rc_testcase($inter_comm, $ref_rc, $file_path);
             }
-            // ref RETURN CODE 0  
+            
+            /********* ref RETURN CODE 0  ****************/
             else{
                 // store parser output to temp variable 
-                exec("php8.1 ".$this->int_path ." <" . $file_path . ">" . $temp_file, $result_out, $result_rc);
+                exec($inter_comm, $result_out, $result_rc);
                 exec("diff -q " . $ref_file_out . " " . $temp_file, $out ,$diff_ret);
-                echo $diff_ret;
                 if (($diff_ret != 0) || ($result_rc != $ref_rc)){
                     $this->test_fail($file_path);
                 }
@@ -155,7 +169,6 @@
                 }
             }
         }
-        */
         
         /**
          * --parse-only tests 
@@ -172,6 +185,8 @@
             $ref_file_out   = get_file_name($file_path, OUT);
             $ref_rc = file_get_contents(get_file_name($file_path, RC), true);
             $script_stderr  = "";
+            $jar_com = "java -jar " . $this->jexam_path . " " . $ref_file_out  . " " . $temp_file;
+            $parse_com = "php8.1 ".$this->parse_path ." < " . $file_path . " > " . $temp_file; 
             
             // Non valid return code 
             if (is_numeric($ref_rc) == false){
@@ -181,37 +196,17 @@
 
             /********* ref RETURN CODE NOT 0 ****************/
             if ($ref_rc != 0){
-                exec("php8.1 ".$this->parse_path ." <" . $file_path . ">" . $temp_file, $result_out, $result_rc);
-                if ($result_rc == $ref_rc){
-                    $this->succ_sum++;
-                    echo ("SUCCES Test: " . $this->test_num . " " . $file_path . "\n");
-                }
-                else{
-                    $this->fail_sum++;
-                    echo ("FAILED Test: " . $this->test_num . " " . $file_path . "\n");
-                }
+                $this->zero_rc_testcase($parse_com, $ref_rc, $file_path);
             }
             /********* ref RETURN CODE 0  ****************/
             else{
                 // store parser output to temp variable 
-                exec("php8.1 ".$this->parse_path ." < " . $file_path . " > " . $temp_file, $result_out, $result_rc );
+                exec($parse_com, $result_out, $result_rc);
                 // compare ref output vs parser output using JeXAM
-                $jar_com = "java -jar " . $this->jexam_path . " " . $ref_file_out  . " " . $temp_file;
                 exec($jar_com, $non, $jar_rc);
 
                 if (($jar_rc != 0) or ($result_rc != $ref_rc)){
-                    
                     $this->test_fail($file_path);
-
-                    echo "\n";
-                    echo("program return should be  :   " . $ref_rc . "\n");
-                    echo("program return is         :   " . $result_rc . "\n");
-                    echo("jar     return is         :   " . $jar_rc . "\n");
-                    echo "\n";
-                    echo(file_get_contents($temp_file));
-                    echo(file_get_contents($ref_file_out));
-                    echo "\n";
-                    
                 }
                 else{
                     $this->test_succ($file_path);
