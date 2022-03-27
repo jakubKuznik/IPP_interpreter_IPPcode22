@@ -5,7 +5,7 @@
     /************** MACROS **************************/
     define("HELP_MESS", " Test script for parser.php and interpret.py
         --help               // Display help cannot be combinated with anything 
-        -parse-only         // olnly parser.php test. can't combine with --int-only, --int-script 
+        --parse-only         // olnly parser.php test. can't combine with --int-only, --int-script 
         --int-only           // only interpret.py
         --recursive          // Not only given folder but recursive folder to 
         --noclean            // doesnt remove temp. files
@@ -50,14 +50,12 @@
         $tf->find_test_from_list($set->directory, $set->recursive, $set->match_regex);
     else                         // just from directory
         $tf->find_test_inputs($set->directory, $set->recursive, $set->match_regex);
-
    
 
     $test_c = new Test($set);
     $out_file = create_temp_file(); 
     // Check if .out .rc .in are there if not create them 
     foreach ($tf->tests_files as $test_file){
-        
         if ($set->parser_only == true){
             $test_c->parse_only_test($test_file, $temp_file_name);
         }
@@ -73,10 +71,6 @@
         unlink($temp_file_name);
         
     exit(0);
-
-
-
-
 
     /**
      * Class for parse.php test 
@@ -102,18 +96,36 @@
             $this->jexam_path = $set->jexam_path;
             $this->int_path   = $set->int_path;
         }
+        
+        /**
+         * Call this method if test failed  
+         * @var @file_path file that failed 
+         */
+        function test_fail($file_path){
+            $this->fail_sum++;
+            echo ("FAILED Test: " . $this->test_num . " " . $file_path . "\n");
+        }
 
+        /**
+         * Call this method if test succ 
+         * @var @file_path file that succ 
+         */
+        function test_succ($file_path){
+            $this->succ_sum++;
+            echo ("SUCCES Test: " . $this->test_num . " " . $file_path . "\n");
+        }
+
+        /*
         /**
          * --int-only tests 
          * 
          * @var $file_path -- path to file that ll be tested 
          * @var $temp_file -- temporarily file for program outputs 
          *  
-         */
         function int_only_test($file_path, $temp_file){
             $this->test_num++;
             
-            $restul_rc      = "";
+            $result_rc      = "";
             $diff_ret       = "";
             $out            = "";
             $ref_file_out   = get_file_name($file_path, OUT);
@@ -125,17 +137,17 @@
                 return;
             }
 
-            /********* ref RETURN CODE NOT 0 ****************/
+            // ref RETURN CODE NOT 0 
             if ($ref_rc != 0){
                 $this->non_zero_return($file_path, $temp_file, $ref_rc, $this->int_path);
             }
-            /********* ref RETURN CODE 0  ****************/
+            // ref RETURN CODE 0  
             else{
                 // store parser output to temp variable 
-                exec("php8.1 ".$this->int_path ." <" . $file_path . ">" . $temp_file, $result_out, $restul_rc);
+                exec("php8.1 ".$this->int_path ." <" . $file_path . ">" . $temp_file, $result_out, $result_rc);
                 exec("diff -q " . $ref_file_out . " " . $temp_file, $out ,$diff_ret);
                 echo $diff_ret;
-                if (($diff_ret != 0) || ($restul_rc != $ref_rc)){
+                if (($diff_ret != 0) || ($result_rc != $ref_rc)){
                     $this->test_fail($file_path);
                 }
                 else{
@@ -143,31 +155,7 @@
                 }
             }
         }
-        
-        /**
-         * if Ref return code is not 0
-         */
-        function non_zero_return($file_path, $temp_file, $ref_rc, $script){
-            exec("php8.1 ".$this->parse_path ." <" . $file_path . ">" . $temp_file, $result_out, $restul_rc);
-            if ($restul_rc == $ref_rc){
-                $this->succ_sum++;
-                echo ("SUCCES Test: " . $this->test_num . " " . $file_path . "\n");
-            }
-            else{
-                $this->fail_sum++;
-                echo ("FAILED Test: " . $this->test_num . " " . $file_path . "\n");
-            }
-        }
-
-        function test_fail($file_path){
-            $this->fail_sum++;
-            echo ("FAILED Test: " . $this->test_num . " " . $file_path . "\n");
-        }
-
-        function test_succ($file_path){
-            $this->succ_sum++;
-            echo ("SUCCES Test: " . $this->test_num . " " . $file_path . "\n");
-        }
+        */
         
         /**
          * --parse-only tests 
@@ -179,11 +167,11 @@
         function parse_only_test($file_path, $temp_file){
             $this->test_num++;
 
-            $restul_rc      = "";
-            $diff_ret       = "";
+            $result_rc      = "";
             $out            = "";
             $ref_file_out   = get_file_name($file_path, OUT);
-            $ref_rc = file_get_contents(get_file_name($file_path, RC), true);     
+            $ref_rc = file_get_contents(get_file_name($file_path, RC), true);
+            $script_stderr  = "";
             
             // Non valid return code 
             if (is_numeric($ref_rc) == false){
@@ -193,19 +181,37 @@
 
             /********* ref RETURN CODE NOT 0 ****************/
             if ($ref_rc != 0){
-                $this->non_zero_return($file_path, $temp_file, $ref_rc, $this->parse_path);
+                exec("php8.1 ".$this->parse_path ." <" . $file_path . ">" . $temp_file, $result_out, $result_rc);
+                if ($result_rc == $ref_rc){
+                    $this->succ_sum++;
+                    echo ("SUCCES Test: " . $this->test_num . " " . $file_path . "\n");
+                }
+                else{
+                    $this->fail_sum++;
+                    echo ("FAILED Test: " . $this->test_num . " " . $file_path . "\n");
+                }
             }
             /********* ref RETURN CODE 0  ****************/
             else{
                 // store parser output to temp variable 
-                exec("php8.1 ".$this->parse_path ." < " . $file_path . " > " . $temp_file, $result_out, $restul_rc);
+                exec("php8.1 ".$this->parse_path ." < " . $file_path . " > " . $temp_file, $result_out, $result_rc );
                 // compare ref output vs parser output using JeXAM
-                exec("java -jar " . $this->jexam_path . " " . $temp_file . $ref_file_out, $out ,$diff_ret);
-               
-                if (($diff_ret != 0) or ($restul_rc != $ref_rc)){
+                $jar_com = "java -jar " . $this->jexam_path . " " . $ref_file_out  . " " . $temp_file;
+                exec($jar_com, $non, $jar_rc);
+
+                if (($jar_rc != 0) or ($result_rc != $ref_rc)){
+                    
+                    $this->test_fail($file_path);
+
+                    echo "\n";
+                    echo("program return should be  :   " . $ref_rc . "\n");
+                    echo("program return is         :   " . $result_rc . "\n");
+                    echo("jar     return is         :   " . $jar_rc . "\n");
+                    echo "\n";
                     echo(file_get_contents($temp_file));
                     echo(file_get_contents($ref_file_out));
-                    $this->test_fail($file_path);
+                    echo "\n";
+                    
                 }
                 else{
                     $this->test_succ($file_path);
