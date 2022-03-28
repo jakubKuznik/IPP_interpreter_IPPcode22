@@ -62,7 +62,9 @@
         else if ($set->inter_only == true){
             $test_c->int_only_test($test_file, $temp_file_name);
         }
-        
+        else{
+            $test_c->test_both($test_file, $temp_file_name);
+        }
     }
    
     // deleting temp file 
@@ -129,6 +131,61 @@
         }
 
         /**
+         *  -test for both parser and interpreter. parser will create a xml and interpret will execute it 
+         * @var $file_path -- path to file that ll be tested 
+         * @var $temp_file -- temporarily file for program outputs 
+         */
+        function test_both($file_path, $temp_file){
+            $this->test_num++;
+            
+            $result_rc      = "";
+            $diff_ret       = "";
+            $out            = "";
+            $ref_file_out   = get_file_name($file_path, OUT);
+            $ref_rc = file_get_contents(get_file_name($file_path, RC), true);     
+            $inter_comm     = "php8.1 ".$this->int_path ." <" . $file_path . ">" . $temp_file;
+            $inter_comm2    = "php8.1 ".$this->int_path ." <" . $temp_file . ">" . $temp_file;          
+            $parse_comm     = "php8.1 ".$this->parse_path ." < " . $file_path . " > " . $temp_file; 
+
+            // Non valid return code 
+            if (is_numeric($ref_rc) == false){
+                echo ("UNVALID Test: " . $this->test_num . " " . $file_path . "\n");
+                return;
+            }
+            
+            // vygeneruju xml pomoci parse pokud, parser hodi error porovnám ho pokud nehodí error 
+            // interpretuju kod 
+            
+            /********* ref RETURN CODE NOT 0 ****************/
+            if ($ref_rc != 0){    
+                exec($parse_comm, $result_out, $result_rc);
+                if ($result_rc == 0){ // parser have 0 return code 
+                    exec($inter_comm2, $result_out, $result_rc);
+                    if($result_rc == $ref_rc){
+                        $this->test_succ($file_path);
+                    }
+                    else{
+                        $this->test_fail($file_path);
+                    }
+                }
+                else{ // parser have negative return code
+                    if($result_rc == $ref_rc){
+                        $this->test_succ($file_path);
+                    }
+                    else{
+                        $this->test_fail($file_path);
+                    }
+                }
+            }
+
+            /********* ref RETURN CODE 0  ****************/
+            else{
+                echo "\n";
+            }
+
+        }
+
+        /**
          * --int-only tests 
          * 
          * @var $file_path -- path to file that ll be tested 
@@ -144,7 +201,6 @@
             $ref_rc = file_get_contents(get_file_name($file_path, RC), true);     
             $inter_comm     = "php8.1 ".$this->int_path ." <" . $file_path . ">" . $temp_file;           
 
-
             // Non valid return code 
             if (is_numeric($ref_rc) == false){
                 echo ("UNVALID Test: " . $this->test_num . " " . $file_path . "\n");
@@ -155,7 +211,7 @@
             if ($ref_rc != 0){
                 $this->zero_rc_testcase($inter_comm, $ref_rc, $file_path);
             }
-            
+
             /********* ref RETURN CODE 0  ****************/
             else{
                 // store parser output to temp variable 
