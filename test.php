@@ -143,9 +143,8 @@
             $out            = "";
             $ref_file_out   = get_file_name($file_path, OUT);
             $ref_rc = file_get_contents(get_file_name($file_path, RC), true);     
-            $inter_comm     = "php8.1 ".$this->int_path ." <" . $file_path . ">" . $temp_file;
-            $inter_comm2    = "php8.1 ".$this->int_path ." <" . $temp_file . ">" . $temp_file;          
-            $parse_comm     = "php8.1 ".$this->parse_path ." < " . $file_path . " > " . $temp_file; 
+            $parse_comm    = "php8.1 ".$this->parse_path ." < " . $file_path . " > " . $temp_file; 
+            $inter_comm    = "php8.1 ".$this->int_path ." <" . $temp_file . ">" . $temp_file;          
 
             // Non valid return code 
             if (is_numeric($ref_rc) == false){
@@ -160,7 +159,7 @@
             if ($ref_rc != 0){    
                 exec($parse_comm, $result_out, $result_rc);
                 if ($result_rc == 0){ // parser have 0 return code 
-                    exec($inter_comm2, $result_out, $result_rc);
+                    exec($inter_comm, $result_out, $result_rc); //execute interpret.py on xml 
                     if($result_rc == $ref_rc){
                         $this->test_succ($file_path);
                     }
@@ -177,10 +176,21 @@
                     }
                 }
             }
-
             /********* ref RETURN CODE 0  ****************/
             else{
-                echo "\n";
+                exec($parse_comm, $result_out, $result_rc);
+                if ($result_rc != 0){
+                    $this->test_fail($file_path); //parser failed 
+                    return;
+                }
+                exec($inter_comm, $result_out, $result_rc); //execute interpret.py on xml 
+                exec("diff -q " . $ref_file_out . " " . $temp_file, $out ,$diff_ret);
+                if (($diff_ret != 0) || ($result_rc != $ref_rc)){
+                    $this->test_fail($file_path);
+                }
+                else{
+                    $this->test_succ($file_path);
+                }
             }
 
         }
@@ -215,7 +225,7 @@
             /********* ref RETURN CODE 0  ****************/
             else{
                 // store parser output to temp variable 
-                exec($inter_comm, $result_out, $result_rc);
+                exec($inter_comm, $temp_file, $result_rc);
                 exec("diff -q " . $ref_file_out . " " . $temp_file, $out ,$diff_ret);
                 if (($diff_ret != 0) || ($result_rc != $ref_rc)){
                     $this->test_fail($file_path);
