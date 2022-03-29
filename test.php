@@ -54,7 +54,7 @@
 
     $test_c = new Test($set);
     $html_generator = new Html_generation();
-    $html_generator->create_header();
+    $html_generator->init($set);
     $out_file = create_temp_file(); 
     // Check if .out .rc .in are there if not create them 
     foreach ($tf->tests_files as $test_file){
@@ -68,6 +68,7 @@
             $test_c->test_both($test_file, $temp_file_name);
         }
     }
+    $html_generator->create_end($set);
    
     // deleting temp file 
     fclose($out_file);
@@ -289,9 +290,29 @@
      */
     class Html_generation { 
         public $header = '<!DOCTYPE html><html lang="en"><head><title>CSS Template</title><meta charset="utf-8"><style> .up { width: 100%; display: flex; justify-content: center; align-items: center; padding: 50; } .left_up { margin: 10px; border: 2px outset lightgray; background-color: rgb(250, 248, 248); text-align: center; padding: 50; } .right_up { margin: 10px; border: 2px outset lightgray; background-color: rgb(250, 248, 248); text-align: center; padding: 50; } .center { justify-content: center; text-align: center; align-items: center; position: relative; padding: 50; } .test { display: inline-block; left:50%; top:50%; width: 50%; margin: 10px; border: 2px outset lightgray; background-color: rgb(250, 248, 248); text-align: left; padding: 10pt; } .header { width: 100%; display: flex; justify-content: center; align-items: center; } ul { 	 display: inline-block; 	 text-align: left; 	}</style></head><body><div class="header"> <header> <h2>IPP 2022</h2> </header>';
+        public $config_begin = '</div><div class="up"> <div class="left_up"> <h2>Konfigurace</h2> <!-- VLOZIT TABULKU KONFIGURACE --> <ul>';
+        public $end = "</div></div></body>";
+        public $all_test = "";
+
+        function init(Settings $set){
+            $this->create_header();
+            $this->create_configuration($set);
+        }
 
         function create_header(){
             echo $this->header;
+        }
+
+        function create_configuration(Settings $set){
+            echo $this->config_begin;
+            echo "<li>Adresář";
+            echo $set->parser_only;
+            echo "</li>";
+            echo "</ul>";
+        }
+        
+        function create_end(){
+            echo $this->end;
         }
 
     }
