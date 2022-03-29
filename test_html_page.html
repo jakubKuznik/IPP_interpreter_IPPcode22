@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>CSS Template</title>
+<meta charset="utf-8">
+<style>
+    .up {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 50;
+    }
+    .left_up {
+        margin: 10px;
+        border: 2px outset lightgray;
+        background-color: rgb(250, 248, 248);
+        text-align: center;
+        padding: 50;
+    }
+    .right_up {
+        margin: 10px;
+        border: 2px outset lightgray;
+        background-color: rgb(250, 248, 248);
+        text-align: center;
+        padding: 50;
+    }
+    .center {
+        justify-content: center;
+        text-align: center;
+        align-items: center;
+        position: relative;
+        padding: 50;
+
+    }
+    .test {
+        display: inline-block;
+        left:50%;
+        top:50%;
+        width: 50%;
+        margin: 10px;
+        border: 2px outset lightgray;
+        background-color: rgb(250, 248, 248);
+        text-align: left;
+        padding: 10pt;
+    }
+    .header {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    ul { 
+	    display: inline-block; 
+	    text-align: left; 
+	}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <header>
+    <h2>IPP 2022</h2>
+    </header>
+</div>
+
+<div class="up">
+    <div class="left_up">
+        <h2>Konfigurace</h2>
+        <!-- VLOZIT TABULKU KONFIGURACE  -->
+        <ul> 
+            <li>Adresář: <b> ipp-2022-tests/parse-only&nbsp;&nbsp;&nbsp;</b></li>
+            <li >Rekurzivní prohledávání</li>
+            <li>Pouze parse</li>
+        </ul>
+    </div>
+
+    <div class="right_up">
+        <h2>Výsledky</h2>
+        <table>
+            <tbody>
+                <tr> 
+                    <td style="font-size: x-large;color: green; ">Úspěšných: .......................................</td>
+                    <td style="font-size: x-large;color: green;"> 4059</td>
+                </tr>
+                <tr>
+                    <td style="font-size: x-large; color: red;">Neúspěšných: ....................................</td>
+                    <td style="font-size: x-large; color: red;">2</td>
+                </tr>
+                <tr>
+                    <td style="font-size: x-large;">Celkem: ............................................</td>
+                    <td style="font-size: x-large;" >4061</td>
+                </tr>
+        </tbody></table>
+        <!-- VLOZIT TABULKU VYSLEDKU -->
+    </div>
+</div>
+
+
+<div class="center">
+    <h1>Výsledky jednotlivých testů:</h1>
+    
+    <div class="test">
+        <div style="display: flex; justify-content: space-between;">
+            <p >1.</p>
+            <p style="font-size: medium ;color: green;">SUCCESS</p>
+            <p>Složka: </p> <!-- Vlozit naze -->
+            <p>Test: </p> <!-- Vlozit naze -->
+        </div>
+            <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;content</p>
+    </div>
+    <div class="test">
+        <div style="display: flex; justify-content: space-between;">
+            <p >2.</p>
+            <p style="font-size: medium ;color: red;">FAIL</p>
+            <p>Složka: </p> <!-- Vlozit naze -->
+            <p>Test: </p> <!-- Vlozit naze -->
+        </div>
+        <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;content</p>
+    </div>
+</div>
+
+
+</body>
