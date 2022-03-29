@@ -53,6 +53,8 @@
    
 
     $test_c = new Test($set);
+    $html_generator = new Html_generation();
+    $html_generator->create_header();
     $out_file = create_temp_file(); 
     // Check if .out .rc .in are there if not create them 
     foreach ($tf->tests_files as $test_file){
@@ -73,6 +75,7 @@
         unlink($temp_file_name);
         
     exit(0);
+
 
     /**
      * Class for parse.php test 
@@ -105,7 +108,7 @@
          */
         function test_fail($file_path){
             $this->fail_sum++;
-            echo ("FAILED Test: " . $this->test_num . " " . $file_path . "\n");
+            fwrite(STDERR,"FAILED Test: " . $this->test_num . " " . $file_path . "\n");
         }
 
         /**
@@ -114,7 +117,7 @@
          */
         function test_succ($file_path){
             $this->succ_sum++;
-            echo ("SUCCES Test: " . $this->test_num . " " . $file_path . "\n");
+            fwrite(STDERR,"SUCCES Test: " . $this->test_num . " " . $file_path . "\n");
         }
 
         /**
@@ -148,7 +151,7 @@
 
             // Non valid return code 
             if (is_numeric($ref_rc) == false){
-                echo ("UNVALID Test: " . $this->test_num . " " . $file_path . "\n");
+                fwrite(STDERR,"UNVALID Test: " . $this->test_num . " " . $file_path . "\n");
                 return;
             }
             
@@ -213,7 +216,7 @@
 
             // Non valid return code 
             if (is_numeric($ref_rc) == false){
-                echo ("UNVALID Test: " . $this->test_num . " " . $file_path . "\n");
+                fwrite (STDERR,"UNVALID Test: " . $this->test_num . " " . $file_path . "\n");
                 return;
             }
 
@@ -256,7 +259,7 @@
             
             // Non valid return code 
             if (is_numeric($ref_rc) == false){
-                echo ("UNVALID Test: " . $this->test_num . " " . $file_path . "\n");
+                fwrite (STDERR, "UNVALID Test: " . $this->test_num . " " . $file_path . "\n");
                 return;
             }
 
@@ -280,6 +283,19 @@
             }
         }
     }
+
+    /**
+     * Generate html output. 
+     */
+    class Html_generation { 
+        public $header = '<!DOCTYPE html><html lang="en"><head><title>CSS Template</title><meta charset="utf-8"><style> .up { width: 100%; display: flex; justify-content: center; align-items: center; padding: 50; } .left_up { margin: 10px; border: 2px outset lightgray; background-color: rgb(250, 248, 248); text-align: center; padding: 50; } .right_up { margin: 10px; border: 2px outset lightgray; background-color: rgb(250, 248, 248); text-align: center; padding: 50; } .center { justify-content: center; text-align: center; align-items: center; position: relative; padding: 50; } .test { display: inline-block; left:50%; top:50%; width: 50%; margin: 10px; border: 2px outset lightgray; background-color: rgb(250, 248, 248); text-align: left; padding: 10pt; } .header { width: 100%; display: flex; justify-content: center; align-items: center; } ul { 	 display: inline-block; 	 text-align: left; 	}</style></head><body><div class="header"> <header> <h2>IPP 2022</h2> </header>';
+
+        function create_header(){
+            echo $this->header;
+        }
+
+    }
+
 
     /**
      * Script settings. 
