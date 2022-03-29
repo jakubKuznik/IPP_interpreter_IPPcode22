@@ -32,9 +32,9 @@
     /***************** PROGRAM  *******************/
     $set = new Settings();
     
-    print_r($set);
+    //print_r($set);
     parse_args($argc, $argv, $set);
-    print_r($set);
+    //print_r($set);
 
     // check if given files exists and regex is valid 
     $set->file_exist();
@@ -68,6 +68,7 @@
             $test_c->test_both($test_file, $temp_file_name);
         }
     }
+    $html_generator->create_summ(75, 25, 100);
     $html_generator->create_end($set);
    
     // deleting temp file 
@@ -305,10 +306,52 @@
 
         function create_configuration(Settings $set){
             echo $this->config_begin;
-            echo "<li>Adresář";
-            echo $set->parser_only;
+            echo "<li>Adresář: .....";
+            echo $set->directory;
             echo "</li>";
-            echo "</ul>";
+
+            if ($set->parser_only == true){
+                echo "<li>Parser only ON";
+                echo "</li>";
+            }
+            else if($set->inter_only == true){
+                echo "<li>Interpret only ON";
+                echo "</li>";
+            }
+            else{
+                echo "<li>Testing both ON";
+                echo "</li>";
+            }
+
+            if($set->recursive == true){
+                echo "<li>Recursive ON";
+                echo "</li>";
+            }
+            if($set->noclean == true){
+                echo "<li>noclean ON";
+                echo "</li>";
+            }
+            if($set->test_list == true){
+                echo "<li>Test list ON";
+                echo "</li>";
+            }
+
+            echo "<li>Regex match: .....";
+            echo $set->match_regex;
+            echo "</li>";
+            
+                    
+            echo "</ul></div>";
+        }
+
+        function create_summ(int $succ, int $fail, int $sum){
+            echo '<div class="right_up"> <h2>Výsledky</h2> <table> <tbody> <tr> <td style="font-size: x-large;color: green; ">Úspěšných: .......................................</td> <td style="font-size: x-large;color: green;"> ';    
+            echo $succ;
+            echo '</td> </tr> <tr> <td style="font-size: x-large; color: red;">Neúspěšných: ....................................</td> <td style="font-size: x-large; color: red;">';
+            echo $fail;
+            echo '</td> </tr> <tr> <td style="font-size: x-large;">Celkem: ............................................</td> <td style="font-size: x-large;" >';
+            echo $sum;
+            echo '</td> </tr> </tbody></table> </div></div>';
         }
         
         function create_end(){
