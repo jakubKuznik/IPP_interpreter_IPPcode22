@@ -27,6 +27,10 @@
     define ("IN", 1);
     define ("RC", 2);
 
+    define ("FAIL", 0);
+    define ("SUCCESS", 1);
+    define ("INVALID", 2);
+
     $temp_file_name = "";
 
     /***************** PROGRAM  *******************/
@@ -68,7 +72,7 @@
             $test_c->test_both($test_file, $temp_file_name);
         }
     }
-    $html_generator->create_summ(75, 25, 100);
+    $html_generator->create_summ($test_c->succ_sum, $test_c->fail_sum, $test_c->test_num);
     $html_generator->create_end($set);
    
     // deleting temp file 
@@ -90,9 +94,9 @@
         private $parse_path  = "";       // path to parser script 
         private $jexam_path  = "";
         private $int_path    = "";       // Path to interpreter script 
-        private $test_num    = 0;        // Every test has unique index
-        private $fail_sum    = 0;
-        private $succ_sum    = 0;
+        public $test_num    = 0;        // Every test has unique index
+        public $fail_sum    = 0;
+        public $succ_sum    = 0;
         
         /**
          * @var $set -  set is type class Settings  
@@ -108,9 +112,10 @@
          * Call this method if test failed  
          * @var @file_path file that failed 
          */
-        function test_fail($file_path){
+        function test_fail($file_path, $ref_rc, $rc){
+            global $html_generator;
             $this->fail_sum++;
-            fwrite(STDERR,"FAILED Test: " . $this->test_num . " " . $file_path . "\n");
+            $html_generator->store_test(FAIL, $this->test_num, $file_path, $ref_rc, $rc); 
         }
 
         /**
@@ -118,8 +123,9 @@
          * @var @file_path file that succ 
          */
         function test_succ($file_path){
+            global $html_generator;
             $this->succ_sum++;
-            fwrite(STDERR,"SUCCES Test: " . $this->test_num . " " . $file_path . "\n");
+            $html_generator->store_test(SUCCESS, $this->test_num, $file_path, 0, 0); 
         }
 
         /**
@@ -131,7 +137,7 @@
                 $this->test_succ($file_path);
             }
             else{
-                $this->test_fail($file_path);
+                $this->test_fail($file_path, $ref_rc, $result_rc);
             }
         }
 
@@ -169,7 +175,7 @@
                         $this->test_succ($file_path);
                     }
                     else{
-                        $this->test_fail($file_path);
+                        $this->test_fail($file_path, $ref_rc, $result_rc);
                     }
                 }
                 else{ // parser have negative return code
@@ -177,7 +183,7 @@
                         $this->test_succ($file_path);
                     }
                     else{
-                        $this->test_fail($file_path);
+                        $this->test_fail($file_path, $ref_rc, $result_rc);
                     }
                 }
             }
@@ -185,13 +191,13 @@
             else{
                 exec($parse_comm, $result_out, $result_rc);
                 if ($result_rc != 0){
-                    $this->test_fail($file_path); //parser failed 
+                    $this->test_fail($file_path, $ref_rc, $result_rc); //parser failed 
                     return;
                 }
                 exec($inter_comm, $result_out, $result_rc); //execute interpret.py on xml 
                 exec("diff -q " . $ref_file_out . " " . $temp_file, $out ,$diff_ret);
                 if (($diff_ret != 0) || ($result_rc != $ref_rc)){
-                    $this->test_fail($file_path);
+                    $this->test_fail($file_path, $ref_rc, $result_rc);
                 }
                 else{
                     $this->test_succ($file_path);
@@ -233,7 +239,7 @@
                 exec($inter_comm, $temp_file, $result_rc);
                 exec("diff -q " . $ref_file_out . " " . $temp_file, $out ,$diff_ret);
                 if (($diff_ret != 0) || ($result_rc != $ref_rc)){
-                    $this->test_fail($file_path);
+                    $this->test_fail($file_path, $ref_rc, $result_rc);
                 }
                 else{
                     $this->test_succ($file_path);
@@ -277,7 +283,7 @@
                 exec($jar_com, $non, $jar_rc);
 
                 if (($jar_rc != 0) or ($result_rc != $ref_rc)){
-                    $this->test_fail($file_path);
+                    $this->test_fail($file_path, $ref_rc, $result_rc);
                 }
                 else{
                     $this->test_succ($file_path);
@@ -290,7 +296,7 @@
      * Generate html output. 
      */
     class Html_generation { 
-        public $header = '<!DOCTYPE html><html lang="en"><head><title>CSS Template</title><meta charset="utf-8"><style> .up { width: 100%; display: flex; justify-content: center; align-items: center; padding: 50; } .left_up { margin: 10px; border: 2px outset lightgray; background-color: rgb(250, 248, 248); text-align: center; padding: 50; } .right_up { margin: 10px; border: 2px outset lightgray; background-color: rgb(250, 248, 248); text-align: center; padding: 50; } .center { justify-content: center; text-align: center; align-items: center; position: relative; padding: 50; } .test { display: inline-block; left:50%; top:50%; width: 50%; margin: 10px; border: 2px outset lightgray; background-color: rgb(250, 248, 248); text-align: left; padding: 10pt; } .header { width: 100%; display: flex; justify-content: center; align-items: center; } ul { 	 display: inline-block; 	 text-align: left; 	}</style></head><body><div class="header"> <header> <h2>IPP 2022</h2> </header>';
+        public $header = '<!DOCTYPE html><html lang="en"><head><title>CSS Template</title><meta charset="utf-8"><style> .up { width: 100%; display: flex; justify-content: center; align-items: center; padding: 50; } .left_up { margin: 10px; border: 2px outset lightgray; background-color: rgb(250, 248, 248); text-align: center; padding: 50; } .right_up { margin: 10px; border: 2px outset lightgray; background-color: rgb(250, 248, 248); text-align: center; padding: 50; } .center { justify-content: center; text-align: center; align-items: center; position: relative; padding: 50; } .test { display: inline-block; left:50%; top:50%; width: 80%; margin: 10px; border: 2px outset lightgray; background-color: rgb(250, 248, 248); text-align: left; padding: 10pt; } .header { width: 100%; display: flex; justify-content: center; align-items: center; } ul { 	 display: inline-block; 	 text-align: left; 	}</style></head><body><div class="header"> <header> <h2>IPP 2022</h2> </header>';
         public $config_begin = '</div><div class="up"> <div class="left_up"> <h2>Konfigurace</h2> <!-- VLOZIT TABULKU KONFIGURACE --> <ul>';
         public $end = "</div></div></body>";
         public $all_test = "";
@@ -308,6 +314,7 @@
             echo $this->config_begin;
             echo "<li>Adresář: .....";
             echo $set->directory;
+            echo "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
             echo "</li>";
 
             if ($set->parser_only == true){
@@ -336,9 +343,9 @@
                 echo "</li>";
             }
 
-            echo "<li>Regex match: .....";
+            echo "<li>Regex match: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'";
             echo $set->match_regex;
-            echo "</li>";
+            echo "'</li>";
             
                     
             echo "</ul></div>";
@@ -353,8 +360,24 @@
             echo $sum;
             echo '</td> </tr> </tbody></table> </div></div>';
         }
+
+        // TODO PROSTE TO UKLADEJ DO TOHO STRINGU A NA KONCI HO PRINTNI PRINTI 
+        function store_test($state, $index, $name, $ref_rc, $rc){
+            if($state == FAIL){
+                //difrent return code 
+                if ($ref_rc != $rc){
+                    $this->all_test = $this->all_test . '<div class="test"> <div style="display: flex; justify-content: space-between;"> <p>' . $index  . '.</p> <p style="font-size: medium ;color: red;">FAIL</p>  <p>Test:' .  $name  . '</p></div> <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ROZDÍLNÁ NÁVRATOVÁ HODNOTA:&nbsp;&nbsp;&nbsp;refereční:&nbsp;' . $ref_rc  . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; skutečný: &nbsp;' . $ref_rc  .'</p> </div>';
+                }
+                $this->all_test = $this->all_test . '<div class="test"> <div style="display: flex; justify-content: space-between;"> <p>' . $index  . '.</p> <p style="font-size: medium ;color: red;">FAIL</p>  <p>Test:' .  $name  . '</p></div> <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ROZDÍLNÝ VÝSTUP</p> </div>';
+            }
+            else if($state == SUCCESS){
+                $this->all_test = $this->all_test . '<div class="test"> <div style="display: flex; justify-content: space-between;"> <p>' . $index . '.</p> <p style="font-size: medium ;color: green;">SUCCESS</p> <p>Test:' . $name . '</p></div> </div>';
+            }
+        }
         
         function create_end(){
+            echo '<div class="center"><h1>Výsledky jednotlivých testů:</h1>';
+            echo $this->all_test;
             echo $this->end;
         }
 
