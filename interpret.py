@@ -1,10 +1,5 @@
-from ast import arg
-from cgi import print_arguments
-import re
+from importlib.metadata import files
 import sys
-
-from numpy import arange, size
-
 
 #
 # Prints help message
@@ -22,24 +17,27 @@ def help():
 
 def main():
     # parse arguments 
-    arg = Arg_parse()
+    arg = Arg_parse(True, "", "", "")
     ## files is object where program valid files and reads from them
-    files = Files(arg.get_in_file(), arg.get_so_file(), arg.get_std_read())
-    
-
-
+    files = Files(False, (arg.get_in_file()), (arg.get_so_file()), arg.get_std_read())
+    files.files_exists()
 
 
 ##
 #  Parse arguments and store input and source file 
 class Arg_parse:
     
-    def __init__(self):
-        self.__input_file = ""
-        self.__source_file = ""
-        self.__parse_arguments(sys.argv)
-        self.__read_from_stdin = True
-
+    def __init__(self, parsing, in_f, so_f, re_f):
+        if parsing == True:
+            self.__input_file = ""
+            self.__source_file = ""
+            self.__parse_arguments(sys.argv)
+            self.__read_from_stdin: bool
+        else:
+            self.__input_file = in_f
+            self.__source_file = so_f
+            self.__read_from_stdin = re_f
+                    
 
     def get_in_file(self):
         return self.__input_file    
@@ -49,12 +47,22 @@ class Arg_parse:
 
     def get_std_read(self):
         return self.__read_from_stdin
+
+    def set_in_file(self, val):
+        self.__input_file = val
+    
+    def set_so_file(self, val):
+        self.__source_file = val
+    
+    def set_std_file(self, val):
+        self.__read_from_stdin = val
     
     ##
     # Parse arguments that are stored in args
     # If error or --help exit() program
     # return file_path, command
     def __parse_arguments(self, args):
+        self.set_std_file(True)
         if len(args) > 3:
             sys.stderr.write("To many arguments.\n")
             exit(10)
@@ -67,12 +75,12 @@ class Arg_parse:
                 exit(0)
             elif a.startswith("--source="):
                 temp = a.split('=')
-                self.__source_file = self.__string_assemble(temp)
-                self.__read_from_stdin = False
+                self.set_so_file(self.__string_assemble(temp))
+                self.set_std_file(False)
             elif a.startswith("--input="):
                 temp = a.split('=')
-                self.__input_file = self.__string_assemble(temp)
-                self.__read_from_stdin = False
+                self.set_in_file(self.__string_assemble(temp))
+                self.set_std_file(False)
             else:
                 sys.stderr.write("Unknown \n")
                 exit(10)
@@ -93,16 +101,25 @@ class Arg_parse:
 # Read from input files validates them etc ...
 # Files names are stored in argpase 
 class Files(Arg_parse):
+
+    def __init__(self, parsing, in_f, so_f, re_f):
+        super().__init__(parsing, in_f, so_f, re_f)
     
-    def __init__(self, in_f, so_f, re_f):
-        self.__input_file = in_f
-        self.__source_file = so_f
-        self.__read_from_stdin = re_f
-
-
-    def files_exists(arg_object):
-        print(arg_object.get_source_file())
-
+    ##
+    # check if file exist
+    def file_exist(self, file):
+        try:
+            f = open(file)
+        except :
+            sys.stderr.write("File: " + file + " not accessible\n")
+            exit(10)    
+        f.close()
+    ##
+    # Call file exist for input files 
+    def files_exists(self):
+        if self.get_std_read() == False:
+            self.file_exist(self.get_in_file())
+            self.file_exist(self.get_so_file())
 
 
 
