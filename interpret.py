@@ -32,10 +32,10 @@ def help():
 
 def main():
     # parse arguments 
-    arg = Arg_parse(True, "", "", "")
+    arg = Arg_parse(True, "", "")
     
     ## files is object where program valid files and reads from them
-    files = Files(False, (arg.get_in_file()), (arg.get_so_file()), arg.get_std_read())
+    files = Files(False, (arg.get_in_file()), (arg.get_so_file()))
     files.files_exists()
 
     ## parse xml using xml library and store instructions 
@@ -43,15 +43,24 @@ def main():
     files.xml_validation(root)
     
     inst_l = Instruction.get_instructions()
+    #input jeden radek jeden read
+    for instr in inst_l:
+        Interpret.interpret(instr)
+
     
     #for i in range(0,3):
-    #    print(inst_l[i].get_order())
-    #    print(inst_l[i].get_name())
-    #    for j in inst_l[i].get_args():
-    #        print(j.get_order())
-    #        print(j.get_type())
-    #        print(j.get_content())
-    #    print("\n")
+
+class Interpret:
+    def interpret(instr):
+        print(instr.get_order())
+        print(instr.get_name())
+        for j in instr.get_args():
+            print(j.get_order())
+            print(j.get_type())
+            print(j.get_content())
+        print("\n")
+        
+        
 
 ##
 # Store one instruction 
@@ -91,16 +100,16 @@ class Instruction:
 # one instrustion argument. 
 class Args:
 
-    def __init__(self, order, type, content):
+    def __init__(self, order, typ, content):
         self.__order   = order
-        self.__type    = type
+        self.__typ    = typ
         self.__content = content
     
     def get_order(self):
         return self.__order
     
     def get_type(self):
-        return self.__type
+        return self.__typ
 
     def get_content(self):
         return self.__content
@@ -109,7 +118,7 @@ class Args:
         self.__order = orde
     
     def set_type(self, type):
-        self.__content = type
+        self.__content = typ
 
     def set_cont(self, cont):
         self.__content = cont
@@ -120,17 +129,14 @@ class Args:
 #  Parse arguments and store input and source file 
 class Arg_parse:
     
-    def __init__(self, parsing, in_f, so_f, re_f):
+    def __init__(self, parsing, in_f, so_f):
         if parsing == True:
             self.__input_file = ""
             self.__source_file = ""
             self.__parse_arguments(sys.argv)
-            self.__read_from_stdin: bool
         else:
             self.__input_file = in_f
             self.__source_file = so_f
-            self.__read_from_stdin = re_f
-                    
 
     def get_in_file(self):
         return self.__input_file    
@@ -138,27 +144,22 @@ class Arg_parse:
     def get_so_file(self):
         return self.__source_file   
 
-    def get_std_read(self):
-        return self.__read_from_stdin
-
     def set_in_file(self, val):
         self.__input_file = val
     
     def set_so_file(self, val):
         self.__source_file = val
     
-    def set_std_file(self, val):
-        self.__read_from_stdin = val
-    
     ##
     # Parse arguments that are stored in args
     # If error or --help exit() program
     # return file_path, command
     def __parse_arguments(self, args):
-        self.set_std_file(True)
         if len(args) > 3:
             sys.stderr.write("To many arguments.\n")
             exit(10)
+        source = False
+        input = False
         for a in args[1:]:
             if a == "--help" or a == "-h":
                 if len(args) != 2:
@@ -169,14 +170,22 @@ class Arg_parse:
             elif a.startswith("--source="):
                 temp = a.split('=')
                 self.set_so_file(self.__string_assemble(temp))
-                self.set_std_file(False)
+                source = True
             elif a.startswith("--input="):
                 temp = a.split('=')
                 self.set_in_file(self.__string_assemble(temp))
-                self.set_std_file(False)
+                input = True
             else:
                 sys.stderr.write("Unknown \n")
                 exit(10)
+        if input == False and source == False:
+            sys.stderr.write("Need --input or --source\n")
+            exit(10)
+        elif input == True and source == False:
+            self.set_so_file(sys.stdin)
+        elif input == False and source == True:
+            self.set_in_file(sys.stdin)
+
 
 
     ##
@@ -195,8 +204,8 @@ class Arg_parse:
 # Files names are stored in argpase 
 class Files(Arg_parse):
 
-    def __init__(self, parsing, in_f, so_f, re_f):
-        super().__init__(parsing, in_f, so_f, re_f)
+    def __init__(self, parsing, in_f, so_f):
+        super().__init__(parsing, in_f, so_f)
         self.__last_instr_order = 0
 
     ## need last_instr_order to chceck if instruction orders in xml are valid 
@@ -220,8 +229,9 @@ class Files(Arg_parse):
     ##
     # Call file exist for input files 
     def files_exists(self):
-        if self.get_std_read() == False:
+        if self.get_in_file() != sys.stdin:
             self.file_exist(self.get_in_file())
+        if self.get_so_file() != sys.stdin:
             self.file_exist(self.get_so_file())
 
     ##
