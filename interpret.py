@@ -3,6 +3,8 @@ import re
 import xml.etree.ElementTree as ET
 import string
 
+from numpy import argsort
+
 
 valid_instruction = [ "move", "int2char", "strlen", "type", "not",
  "defvar", "pops" , "call", "jump", "label", "pushs", "write", 
@@ -39,6 +41,66 @@ def main():
     ## parse xml using xml library
     root = files.xml_parse()
     files.xml_validation(root)
+
+##
+# Store one instruction 
+# __inst_list class attribute where all instructions are stored 
+class Instruction:
+    __inst_list = []
+
+    def __init__(self, name, order):
+        self.__name  = name
+        self.__order = order
+        self.__args : Args
+
+    def get_name(self):
+        return self.__name
+
+    def get_order(self):
+        return self.__order
+    
+    def get_args(self):
+        return self.__args
+    
+    def set_name(self, name):
+        self.__name = name
+    
+    def set_order(self, orde):
+        self.__order = orde
+
+    def append_arg(self, arg):
+        self.__args.append(arg)    
+    
+
+##
+# one instrustion argument. 
+class Args:
+
+    def __init__(self, order, type, content):
+        self.__order   = order
+        self.__type    = type
+        self.__content = content
+    
+    def get_order(self):
+        return self.__order
+    
+    def get_type(self):
+        return self.__type
+
+    def get_content(self):
+        return self.__content
+    
+    def set_order(self, orde):
+        self.__order = orde
+    
+    def set_type(self, type):
+        self.__content = type
+
+    def set_cont(self, cont):
+        self.__content = cont
+    
+
+
 ##
 #  Parse arguments and store input and source file 
 class Arg_parse:
@@ -222,11 +284,10 @@ class Files(Arg_parse):
                     sys.stderr.write("Invalid arg type \n")
                     exit(32)
                 type_flag = True
+                continue
             else:
                 sys.stderr.write("Invalid arg attribut \n")
                 exit(32)
-            print(a)
-            print(ia)
 
         if type_flag == False:
             sys.stderr.write("Missing arg type flag \n")
