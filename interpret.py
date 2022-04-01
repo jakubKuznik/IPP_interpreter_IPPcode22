@@ -3,6 +3,17 @@ import re
 import xml.etree.ElementTree as ET
 import string
 
+
+valid_instruction = [ "move", "int2char", "strlen", "type", "not",
+ "defvar", "pops" , "call", "jump", "label", "pushs", "write", 
+ "exit", "dprint", "add", "sub", "mul", "idiv", "lt", "gt", "eq",
+ "and", "or", "stri2int", "concat", "getchar", "setchar", "jumpifeq",
+ "jumpifneq", "read", "createframe", " break", "pushframe", "popframe"
+ "return"]
+
+valid_types = ["int", "bool", "string", "nil", "label", "type", "var"]
+
+
 #
 # Prints help message
 def help():
@@ -27,7 +38,7 @@ def main():
 
     ## parse xml using xml library
     root = files.xml_parse()
-    files.xml_valid_root(root)
+    files.xml_validation(root)
 ##
 #  Parse arguments and store input and source file 
 class Arg_parse:
@@ -109,6 +120,14 @@ class Files(Arg_parse):
 
     def __init__(self, parsing, in_f, so_f, re_f):
         super().__init__(parsing, in_f, so_f, re_f)
+        self.__last_instr_order = 0
+
+    ## need last_instr_order to chceck if instruction orders in xml are valid 
+    def set_last_instr(self, val):
+        self.__last_instr_order = val
+    
+    def get_last_instr(self):
+        return self.__last_instr_order
     
     ##
     # check if file exist
@@ -140,6 +159,55 @@ class Files(Arg_parse):
             exit(32)
 
     ##
+    # Valid whole xml 
+    def xml_validation(self, root): #<program>
+        self.xml_valid_root(root)
+        for child in root:          #<instruction>
+            self.xml_valid_instr(child)
+            arg_order = 1
+            for ar in child:        #<arg>
+                self.xml_valid_arg(ar, arg_order)
+                arg_order += 1
+    ##
+    # Check if instruction is valid
+    # - opcode is valid?
+    # - order is ok?
+    # if instruction has args chceck if arg has order and type 
+    def xml_valid_instr(self, inst):
+        print("\n")
+        print(inst)
+        print(inst.attrib)
+        for a in inst.attrib:
+            ia = (inst.attrib[a]).lower()
+            a = a.lower()
+            if a == "opcode":
+                if ia not in valid_instruction:
+                    sys.stderr.write("Not valid instruction\n")
+                    exit(32)
+                continue
+            elif a == "order":
+                try:
+                    ia = int(ia)
+                except:
+                    sys.stderr.write("Bad instruction order\n")
+                    exit(32)
+                if ia <= self.get_last_instr():
+                    sys.stderr.write("Bad instruction order\n")
+                    exit(32)
+                self.set_last_instr(ia)
+                continue            
+            else:
+                sys.stderr.write("Bad instruction flag\n")
+                exit(32)
+
+    ##
+    #
+    def xml_valid_arg(self, arg, order):
+        print(arg, order)
+        return
+
+
+    ##
     # valid root attributes which is <program>
     def xml_valid_root(self, root):
         if root.tag != "program":
@@ -168,6 +236,7 @@ class Files(Arg_parse):
         if language_flag == False:
             sys.stderr.write("Language flag missing\n")
             exit(31)
+    
 
 
 
