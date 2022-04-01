@@ -174,9 +174,8 @@ class Files(Arg_parse):
     # - order is ok?
     # if instruction has args chceck if arg has order and type 
     def xml_valid_instr(self, inst):
-        print("\n")
-        print(inst)
-        print(inst.attrib)
+        opcode_flag = False
+        order_flag = False
         for a in inst.attrib:
             ia = (inst.attrib[a]).lower()
             a = a.lower()
@@ -184,6 +183,7 @@ class Files(Arg_parse):
                 if ia not in valid_instruction:
                     sys.stderr.write("Not valid instruction\n")
                     exit(32)
+                opcode_flag = True
                 continue
             elif a == "order":
                 try:
@@ -195,15 +195,43 @@ class Files(Arg_parse):
                     sys.stderr.write("Bad instruction order\n")
                     exit(32)
                 self.set_last_instr(ia)
+                order_flag = True
                 continue            
             else:
                 sys.stderr.write("Bad instruction flag\n")
                 exit(32)
+        if order_flag == False or opcode_flag == False:
+            sys.stderr.write("Opcode or order missing\n")
+            exit(32)
+
 
     ##
-    #
+    # valid argument of instruction 
     def xml_valid_arg(self, arg, order):
-        print(arg, order)
+        pat = re.compile('arg' + str(order))
+        if not pat.match(arg.tag):
+            sys.stderr.write("Unvalid arg \n")
+            exit(32)
+
+        type_flag = False
+        for a in arg.attrib:
+            ia = (arg.attrib[a]).lower()
+            a = a.lower()
+            if a == "type":
+                if ia not in valid_types:
+                    sys.stderr.write("Invalid arg type \n")
+                    exit(32)
+                type_flag = True
+            else:
+                sys.stderr.write("Invalid arg attribut \n")
+                exit(32)
+            print(a)
+            print(ia)
+
+        if type_flag == False:
+            sys.stderr.write("Missing arg type flag \n")
+            exit(32)
+
         return
 
 
