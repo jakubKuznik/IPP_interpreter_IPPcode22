@@ -1,5 +1,6 @@
 from ast import arg
 from cgi import print_arguments
+import re
 import sys
 
 from numpy import arange, size
@@ -20,23 +21,34 @@ def help():
 
 
 def main():
-    arguments = Arg_parse()
+    # parse arguments 
+    arg = Arg_parse()
+    ## files is object where program valid files and reads from them
+    files = Files(arg.get_in_file(), arg.get_so_file(), arg.get_std_read())
+    
+
+
 
 
 ##
 #  Parse arguments and store input and source file 
 class Arg_parse:
-
+    
     def __init__(self):
         self.__input_file = ""
         self.__source_file = ""
         self.__parse_arguments(sys.argv)
+        self.__read_from_stdin = True
 
-    def get_input_file(self):
+
+    def get_in_file(self):
         return self.__input_file    
 
-    def get_source_file(self):
-        return self.__source_file    
+    def get_so_file(self):
+        return self.__source_file   
+
+    def get_std_read(self):
+        return self.__read_from_stdin
     
     ##
     # Parse arguments that are stored in args
@@ -56,9 +68,11 @@ class Arg_parse:
             elif a.startswith("--source="):
                 temp = a.split('=')
                 self.__source_file = self.__string_assemble(temp)
+                self.__read_from_stdin = False
             elif a.startswith("--input="):
                 temp = a.split('=')
                 self.__input_file = self.__string_assemble(temp)
+                self.__read_from_stdin = False
             else:
                 sys.stderr.write("Unknown \n")
                 exit(10)
@@ -75,7 +89,19 @@ class Arg_parse:
         return out
 
 
+##
+# Read from input files validates them etc ...
+# Files names are stored in argpase 
+class Files(Arg_parse):
+    
+    def __init__(self, in_f, so_f, re_f):
+        self.__input_file = in_f
+        self.__source_file = so_f
+        self.__read_from_stdin = re_f
 
+
+    def files_exists(arg_object):
+        print(arg_object.get_source_file())
 
 
 
