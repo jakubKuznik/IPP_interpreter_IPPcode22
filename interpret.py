@@ -41,6 +41,9 @@ def main():
     ## parse xml using xml library and store instructions 
     root = files.xml_parse()
     files.xml_validation(root)
+    ## store input file 
+    input_conte = files.input_store()
+    print(input_conte)
     
     inst_l = Instruction.get_instructions()
     #input jeden radek jeden read
@@ -117,7 +120,7 @@ class Args:
     def set_order(self, orde):
         self.__order = orde
     
-    def set_type(self, type):
+    def set_type(self, typ):
         self.__content = typ
 
     def set_cont(self, cont):
@@ -233,6 +236,24 @@ class Files(Arg_parse):
             self.file_exist(self.get_in_file())
         if self.get_so_file() != sys.stdin:
             self.file_exist(self.get_so_file())
+
+    ##
+    # store input file 
+    def input_store(self):
+        if self.get_in_file() != sys.stdin:
+            f = open(self.get_in_file())
+            Lines = f.readlines()
+            array = []
+            for l in Lines:
+                array.append(l)
+            f.close()
+            return array
+
+        Lines = self.get_in_file().readlines()
+        array = []
+        for l in Lines:
+            array.append(l)
+        return array
 
     ##
     # Parse xml using xml libr
