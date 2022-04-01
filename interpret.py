@@ -1,5 +1,7 @@
-from importlib.metadata import files
 import sys
+import re
+import xml.etree.ElementTree as ET
+import string
 
 #
 # Prints help message
@@ -18,11 +20,14 @@ def help():
 def main():
     # parse arguments 
     arg = Arg_parse(True, "", "", "")
+    
     ## files is object where program valid files and reads from them
     files = Files(False, (arg.get_in_file()), (arg.get_so_file()), arg.get_std_read())
     files.files_exists()
 
-
+    ## parse xml using xml library
+    root = files.xml_parse()
+    files.xml_valid_root(root)
 ##
 #  Parse arguments and store input and source file 
 class Arg_parse:
@@ -108,6 +113,8 @@ class Files(Arg_parse):
     ##
     # check if file exist
     def file_exist(self, file):
+        if file == "":
+            return
         try:
             f = open(file)
         except :
@@ -120,6 +127,47 @@ class Files(Arg_parse):
         if self.get_std_read() == False:
             self.file_exist(self.get_in_file())
             self.file_exist(self.get_so_file())
+
+    ##
+    # Parse xml using xml libr
+    # return xml root 
+    def xml_parse(self):
+        try:
+            tree = ET.parse(self.get_so_file())
+            return tree.getroot()
+        except:
+            sys.stderr.write("Bad xml format\n")
+            exit(32)
+
+    ##
+    # valid root attributes which is <program>
+    def xml_valid_root(self, root):
+        if root.tag != "program":
+            sys.stderr.write("Invalid XML root\n")
+            exit(31)
+
+        language_flag = False
+        for a in root.attrib:
+            ra = (root.attrib[a]).lower()
+            a = a.lower()
+            if a == "language":
+                language_flag = True
+                if ra != "ippcode22":
+                    sys.stderr.write("Language flag unsuported\n")
+                    exit(31)
+                continue
+            if a == "name":
+                continue
+            if a == "description":
+                continue
+            else:
+                print(a)
+                sys.stderr.write("Unknown <program> flag\n")
+                exit(31)
+
+        if language_flag == False:
+            sys.stderr.write("Language flag missing\n")
+            exit(31)
 
 
 
