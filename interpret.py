@@ -38,9 +38,20 @@ def main():
     files = Files(False, (arg.get_in_file()), (arg.get_so_file()), arg.get_std_read())
     files.files_exists()
 
-    ## parse xml using xml library
+    ## parse xml using xml library and store instructions 
     root = files.xml_parse()
     files.xml_validation(root)
+    
+    inst_l = Instruction.get_instructions()
+    
+    #for i in range(0,3):
+    #    print(inst_l[i].get_order())
+    #    print(inst_l[i].get_name())
+    #    for j in inst_l[i].get_args():
+    #        print(j.get_order())
+    #        print(j.get_type())
+    #        print(j.get_content())
+    #    print("\n")
 
 ##
 # Store one instruction 
@@ -51,7 +62,11 @@ class Instruction:
     def __init__(self, name, order):
         self.__name  = name
         self.__order = order
-        self.__args : Args
+        self.__args = []
+        Instruction.__inst_list.append(self)
+
+    def get_instructions():
+        return Instruction.__inst_list
 
     def get_name(self):
         return self.__name
@@ -221,23 +236,30 @@ class Files(Arg_parse):
             exit(32)
 
     ##
-    # Valid whole xml 
+    # Valid whole xml and store it  
     def xml_validation(self, root): #<program>
         self.xml_valid_root(root)
         for child in root:          #<instruction>
-            self.xml_valid_instr(child)
+            inst = self.xml_valid_instr(child)
+            inst = Instruction(inst[0], inst[1])
             arg_order = 1
             for ar in child:        #<arg>
-                self.xml_valid_arg(ar, arg_order)
+                arg = self.xml_valid_arg(ar, arg_order)
+                arg = Args(arg[0], arg[1], arg[2])
+                inst.append_arg(arg)
                 arg_order += 1
+        
     ##
     # Check if instruction is valid
     # - opcode is valid?
     # - order is ok?
-    # if instruction has args chceck if arg has order and type 
+    # if instruction has args chceck if arg has order and type
+    #   return instruction name, order 
     def xml_valid_instr(self, inst):
         opcode_flag = False
         order_flag = False
+        opcode = ""
+        ord = ""
         for a in inst.attrib:
             ia = (inst.attrib[a]).lower()
             a = a.lower()
@@ -246,6 +268,7 @@ class Files(Arg_parse):
                     sys.stderr.write("Not valid instruction\n")
                     exit(32)
                 opcode_flag = True
+                opcode = ia
                 continue
             elif a == "order":
                 try:
@@ -258,6 +281,7 @@ class Files(Arg_parse):
                     exit(32)
                 self.set_last_instr(ia)
                 order_flag = True
+                ord = int(ia)
                 continue            
             else:
                 sys.stderr.write("Bad instruction flag\n")
@@ -265,10 +289,12 @@ class Files(Arg_parse):
         if order_flag == False or opcode_flag == False:
             sys.stderr.write("Opcode or order missing\n")
             exit(32)
+        return opcode, ord
 
 
     ##
     # valid argument of instruction 
+    # return arg order, type, content 
     def xml_valid_arg(self, arg, order):
         pat = re.compile('arg' + str(order))
         if not pat.match(arg.tag):
@@ -276,6 +302,7 @@ class Files(Arg_parse):
             exit(32)
 
         type_flag = False
+        type = ""
         for a in arg.attrib:
             ia = (arg.attrib[a]).lower()
             a = a.lower()
@@ -284,6 +311,7 @@ class Files(Arg_parse):
                     sys.stderr.write("Invalid arg type \n")
                     exit(32)
                 type_flag = True
+                type = ia
                 continue
             else:
                 sys.stderr.write("Invalid arg attribut \n")
@@ -293,7 +321,7 @@ class Files(Arg_parse):
             sys.stderr.write("Missing arg type flag \n")
             exit(32)
 
-        return
+        return order, type, arg.text
 
 
     ##
@@ -318,7 +346,6 @@ class Files(Arg_parse):
             if a == "description":
                 continue
             else:
-                print(a)
                 sys.stderr.write("Unknown <program> flag\n")
                 exit(31)
 
