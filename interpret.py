@@ -75,25 +75,47 @@ class Interpret:
 
     def get_active_LT(self):
         return self.__active_LT
+        
+        #try:
+        #    return self.__active_LT
+        #except:
+        #    sys.stderr.write("LF has not been created yet\n")
+        #    exit(10)
+
+
     def set_active_LT(self, val):
         self.__active_LT = val
+
     def inc_active_LT(self):
         self.__active_LT = self.__active_LT + 1
+
     def dec_active_LT(self):
         self.__active_LT = self.__active_LT - 1
 
     def create_TF(self):
         ## todo maybe drop program if double creation
         self.__TF = Frame()
+   
     def delete_TF(self):
         del self.__TF
     
     def get_First_LT_created(self):
         return self.__First_LT_created
+  
     def set_First_Lt_created(self, val):
         self.__First_LT_created = val 
+    
+    ##
+    # Create local frame 
+    def create_LF(self):
+        self.inc_active_LT()
+        self.__LF[self.get_active_LT()] = Frame()
+
+    ##
+    # Remove local frame 
     def remove_LF(self):
-        return
+        self.__LF.pop(self.get_active_LT())
+        self.dec_active_LT()
 
     ##
     # store variable to active LF 
@@ -103,28 +125,26 @@ class Interpret:
 
     def store_var_to_GF(self, name, typ, value):
         var = Variable(name, typ, value)
-        self.__LF[self.get_active_LT()].add_variable(var)
+        self.__GF.add_variable(var)
 
     def store_var_to_TF(self, name, typ, value):
         var = Variable(name, typ, value)
-        self.__LF[self.get_active_LT()].add_variable(var)
+        self.__TF.add_variable(var)
 
-
-
-
+    ##
+    # DEBUG FUNCTION 
     def print_frames(self):
         print("GF:")
-        self.__GF.add_variable(var)
+        self.store_var_to_GF("chuj", "int", 8)
         for a in self.__GF.get_variables():
             print("name:" + a.get_name())
             print("type" + a.get_typ())
             print("value" + str(a.get_value()))
-        print("TF:")
         
-        var = Variable("chuj", "neco", 8)
+        print("TF:")
         self.create_TF()
-        self.__TF.add_variable(var)
-        for a in self.__TF.__variables:
+        self.store_var_to_TF("neco", "nil", "nil")
+        for a in self.__TF.get_variables():
             print("name:" + a.get_name())
             print("type" + a.get_typ())
             print("value" + str(a.get_value()))
@@ -133,13 +153,11 @@ class Interpret:
         for frame in self.__LF:
             print("LF" + i)
             i+=1
-            for a in self.__TF.__variables:
+            for a in frame.get_variables():
                 print("name:" + a.get_name())
                 print("type" + a.get_typ())
                 print("value" + str(a.get_value()))
 
-                        
-        
 
     
     def create_LF(self):
