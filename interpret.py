@@ -57,10 +57,12 @@ def main():
 class Interpret:
 
     def __init__(self):
-        self.__GF : Frame
+        self.__GF = Frame()
         self.__TF : Frame
         self.__LF = []
         self.__stack = [] # use append and pop 
+        self.__active_LT : int
+        self.__First_LT_created = False
 
     ##
     # pop from stack
@@ -71,11 +73,87 @@ class Interpret:
     def push(self, val):
         self.__stack.append(val)
 
+    def get_active_LT(self):
+        return self.__active_LT
+    def set_active_LT(self, val):
+        self.__active_LT = val
+    def inc_active_LT(self):
+        self.__active_LT = self.__active_LT + 1
+    def dec_active_LT(self):
+        self.__active_LT = self.__active_LT - 1
+
+    def create_TF(self):
+        ## todo maybe drop program if double creation
+        self.__TF = Frame()
+    def delete_TF(self):
+        del self.__TF
+    
+    def get_First_LT_created(self):
+        return self.__First_LT_created
+    def set_First_Lt_created(self, val):
+        self.__First_LT_created = val 
+    def remove_LF(self):
+        return
+
+    ##
+    # store variable to active LF 
+    def store_var_to_LF(self, name, typ, value):
+        var = Variable(name, typ, value)
+        self.__LF[self.get_active_LT()].add_variable(var)
+
+    def store_var_to_GF(self, name, typ, value):
+        var = Variable(name, typ, value)
+        self.__LF[self.get_active_LT()].add_variable(var)
+
+    def store_var_to_TF(self, name, typ, value):
+        var = Variable(name, typ, value)
+        self.__LF[self.get_active_LT()].add_variable(var)
 
 
+
+
+    def print_frames(self):
+        print("GF:")
+        self.__GF.add_variable(var)
+        for a in self.__GF.get_variables():
+            print("name:" + a.get_name())
+            print("type" + a.get_typ())
+            print("value" + str(a.get_value()))
+        print("TF:")
+        
+        var = Variable("chuj", "neco", 8)
+        self.create_TF()
+        self.__TF.add_variable(var)
+        for a in self.__TF.__variables:
+            print("name:" + a.get_name())
+            print("type" + a.get_typ())
+            print("value" + str(a.get_value()))
+        
+        i = 0
+        for frame in self.__LF:
+            print("LF" + i)
+            i+=1
+            for a in self.__TF.__variables:
+                print("name:" + a.get_name())
+                print("type" + a.get_typ())
+                print("value" + str(a.get_value()))
+
+                        
+        
+
+    
+    def create_LF(self):
+        # first LF hasn't been created yet
+        if self.get_First_LT_created() == False:
+            self.set_active_LT(0)
+        else:
+            self.inc_active_LT()
+        self.__LF[self.get_active_LT()] = Frame()
+        
     ##
     # Functions that call proper __ins_* function
     def interpret(self, instr):
+        self.print_frames()
         if instr.get_name() == "move":
             self.__ins_move(instr)
         elif instr.get_name() == "int2char":
@@ -191,6 +269,7 @@ class Interpret:
     # <var>
     def __ins_defvar(self, instr):
         self.__control_args(instr, 1)
+
         print(instr.get_name())
         print(len(instr.get_args()))
     
@@ -373,10 +452,13 @@ class Interpret:
 class Frame:
     
     def __init__(self):
-        self.__varables = []
+        self.__variables = []
     
     def add_variable(self, var):
-        self.__varables.append(var)
+        self.__variables.append(var)
+
+    def get_variables(self):
+        return self.__variables
 
 ##
 # one variable or constant 
