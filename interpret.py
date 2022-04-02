@@ -13,7 +13,7 @@ valid_instruction = [ "move", "int2char", "strlen", "type", "not",
  "jumpifneq", "read", "createframe", " break", "pushframe", "popframe"
  "return"]
 
-valid_types = ["int", "bool", "string", "nil", "label", "type", "var"]
+valid_types = ["int", "bool", "string", "nil", "label", "type", "var", "float"]
 
 
 #
@@ -45,15 +45,21 @@ def main():
     input_conte = files.input_store()
     print(input_conte)
     
-    inst_l = Instruction.get_instructions()
-    #input jeden radek jeden read
+    # gets all instructions 
+    inst_l = Instruction.get_instructions() 
+    # interpret instruction one by one 
     for instr in inst_l:
         Interpret.interpret(instr)
-
     
-    #for i in range(0,3):
-
+##
+# Class for code interpretation 
 class Interpret:
+    
+    def __init__(self):
+        nic = 0
+
+    ##
+    # Functions that call proper __ins_* function
     def interpret(instr):
         print(instr.get_order())
         print(instr.get_name())
@@ -62,8 +68,182 @@ class Interpret:
             print(j.get_type())
             print(j.get_content())
         print("\n")
+    
+    ##
+    # <var> <symb>
+    def __ins_move(self, instruction):
+        print()
+    
+    ##
+    # <var> <symb>
+    def __ins_int2char(self, instruction):
+        print()
+    
+    ##
+    # <var> <symb>
+    def __ins_strlen(self, instruction):
+        print()
         
+    ##
+    # <var> <symb>
+    def __ins_type(self, instruction):
+        print()
+    
+    ##
+    # <var> <symb>
+    def __ins_not(self, instruction):
+        print()
         
+    ##
+    # <var>
+    def __ins_defvar(self, instruction):
+        print()
+    
+    ##
+    # <var>
+    def __ins_pops(self, instruction):
+        print()
+
+    ##
+    # <label>
+    def __ins_call(self, instruction):
+        print()
+    
+    ##
+    # <label>
+    def __ins_jump(self, instruction):
+        print()
+
+    ##
+    # <label>
+    def __ins_label(self, instruction):
+        print()
+    
+    ##
+    # <symb>
+    def __ins_pushs(self, instruction):
+        print()
+
+    ##
+    # <symb>
+    def __ins_write(self, instruction):
+        print()
+    
+    ##
+    # <symb>
+    def __ins_exit(self, instruction):
+        print()
+
+    ##
+    # <symb>
+    def __ins_dprint(self, instruction):
+        print()
+
+    ##
+    # <var> <symb1> <symb2>
+    def __ins_add(self, instruction):
+        print()
+    
+    ##
+    # <var> <symb1> <symb2>
+    def __ins_sub(self, instruction):
+        print()
+
+    ##
+    # <var> <symb1> <symb2>
+    def __ins_mul(self, instruction):
+        print()
+    
+    ##
+    # <var> <symb1> <symb2>
+    def __ins_idiv(self, instruction):
+        print()
+
+    ##
+    # <var> <symb1> <symb2>
+    def __ins_lt(self, instruction):
+        print()
+    
+    ##
+    # <var> <symb1> <symb2>
+    def __ins_gt(self, instruction):
+        print()
+
+    ##
+    # <var> <symb1> <symb2>
+    def __ins_eq(self, instruction):
+        print()
+    
+    ##
+    # <var> <symb1> <symb2>
+    def __ins_and(self, instruction):
+        print()
+
+    ##
+    # <var> <symb1> <symb2>
+    def __ins_or(self, instruction):
+        print()
+    
+    ##
+    # <var> <symb1> <symb2>
+    def __ins_stri2int(self, instruction):
+        print()
+
+    ##
+    # <var> <symb1> <symb2>
+    def __ins_concat(self, instruction):
+        print()
+    
+    ##
+    # <var> <symb1> <symb2>
+    def __ins_getchar(self, instruction):
+        print()
+
+    ##
+    # <var> <symb1> <symb2>
+    def __ins_setchar(self, instruction):
+        print()
+    
+    ##
+    # <label> <symb1> <symb2>
+    def __ins_jumpifeq(self, instruction):
+        print()
+
+    ##
+    # <label> <symb1> <symb2>
+    def __ins_jumpifneq(self, instruction):
+        print()
+    
+    ##
+    # <var> <type>
+    def __ins_read(self, instruction):
+        print()
+
+    ##
+    # 
+    def __ins_createframe(self, instruction):
+        print()
+    
+    ##
+    # 
+    def __ins_break(self, instruction):
+        print()
+    
+    ##
+    # 
+    def __ins_pushframe(self, instruction):
+        print()
+    
+    ##
+    # 
+    def __ins_popframe(self, instruction):
+        print()
+    
+    ##
+    #
+    def __ins_return(self, instruction):
+        print()
+
 
 ##
 # Store one instruction 
@@ -98,7 +278,6 @@ class Instruction:
     def append_arg(self, arg):
         self.__args.append(arg)    
     
-
 ##
 # one instrustion argument. 
 class Args:
@@ -126,8 +305,6 @@ class Args:
     def set_cont(self, cont):
         self.__content = cont
     
-
-
 ##
 #  Parse arguments and store input and source file 
 class Arg_parse:
