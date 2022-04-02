@@ -2,6 +2,7 @@ import sys
 import re
 import xml.etree.ElementTree as ET
 import string
+from matplotlib.cbook import Stack
 
 from numpy import argsort
 
@@ -43,206 +44,361 @@ def main():
     files.xml_validation(root)
     ## store input file 
     input_conte = files.input_store()
-    print(input_conte)
     
     # gets all instructions 
+    inter = Interpret()
     inst_l = Instruction.get_instructions() 
     # interpret instruction one by one 
     for instr in inst_l:
-        Interpret.interpret(instr)
+        inter.interpret(instr)
     
 ##
 # Class for code interpretation 
 class Interpret:
-    
+
     def __init__(self):
-        nic = 0
+        self.__GF : Frame
+        self.__TF : Frame
+        self.__LF = []
+        self.__stack = [] # use append and pop 
+
+    ##
+    # pop from stack
+    def pop(self):
+        self.__stack.pop()
+    ##
+    # push to stack 
+    def push(self, val):
+        self.__stack.append(val)
+
+
 
     ##
     # Functions that call proper __ins_* function
-    def interpret(instr):
-        print(instr.get_order())
+    def interpret(self, instr):
+        if instr.get_name() == "move":
+            self.__ins_move(instr)
+        elif instr.get_name() == "int2char":
+            self.__ins_int2char(instr)
+        elif instr.get_name() == "strlen":
+            self.__ins_strlen(instr)
+        elif instr.get_name() == "type":
+            self.__ins_type(instr)
+        elif instr.get_name() == "not":
+            self.__ins_not(instr)
+        elif instr.get_name() == "defvar":
+            self.__ins_defvar(instr)
+        elif instr.get_name() == "pops":
+            self.__ins_pops(instr)
+        elif instr.get_name() == "call":
+            self.__ins_call(instr)
+        elif instr.get_name() == "jump":
+            self.__ins_jump(instr)
+        elif instr.get_name() == "label":
+            self.__ins_label(instr)
+        elif instr.get_name() == "pushs":
+            self.__ins_pushs(instr)
+        elif instr.get_name() == "write":
+            self.__ins_write(instr)
+        elif instr.get_name() == "exit":
+            self.__ins_exit(instr)
+        elif instr.get_name() == "dprint":
+            self.__ins_dprint(instr)
+        elif instr.get_name() == "add":
+            self.__ins_add(instr)
+        elif instr.get_name() == "sub":
+            self.__ins_sub(instr)
+        elif instr.get_name() == "mul":
+            self.__ins_mul(instr)
+        elif instr.get_name() == "idiv":
+            self.__ins_idiv(instr)
+        elif instr.get_name() == "lt":
+            self.__ins_lt(instr)
+        elif instr.get_name() == "gt":
+            self.__ins_gt(instr)
+        elif instr.get_name() == "eq":
+            self.__ins_eq(instr)
+        elif instr.get_name() == "and":
+            self.__ins_and(instr)
+        elif instr.get_name() == "or":
+            self.__ins_or(instr)
+        elif instr.get_name() == "stri2int":
+            self.__ins_stri2int(instr)
+        elif instr.get_name() == "concat":
+            self.__ins_concat(instr)
+        elif instr.get_name() == "getchar":
+            self.__ins_getchar(instr)
+        elif instr.get_name() == "setchar":
+            self.__ins_setchar(instr)
+        elif instr.get_name() == "jumpifneq":
+            self.__ins_jumpifeq(instr)
+        elif instr.get_name() == "read":
+            self.__ins_read(instr)
+        elif instr.get_name() == "createframe":
+            self.__ins_createframe(instr)
+        elif instr.get_name() == "break":
+            self.__ins_break(instr)
+        elif instr.get_name() == "pushframe":
+            self.__ins_pushframe(instr)
+        elif instr.get_name() == "popframe":
+            self.__ins_popframe(instr)
+        elif instr.get_name() == "return":
+            self.__ins_return(instr)
+        else:
+            sys.stderr.write("Unknown instruction\n")
+            exit(51)
+    
+    ##
+    # Control if there are number arguments in instruction 
+    def __control_args(self, instr, number):
+        # instr 
+        if len(instr.get_args()) != number:
+            sys.stderr.write("Not enought instruction arguments\n")
+            exit(32)
+
+
+    ##
+    # <var> <symb>
+    def __ins_move(self, instr):
+        self.__control_args(instr, 2)
+        print("move")
+    
+    ##
+    # <var> <symb>
+    def __ins_int2char(self, instr):
+        self.__control_args(instr, 2)
+        print("i2ch")
+    
+    ##
+    # <var> <symb>
+    def __ins_strlen(self, instr):
+        self.__control_args(instr, 2)
+        print("strlen")
+        
+    ##
+    # <var> <symb>
+    def __ins_type(self, instr):
+        self.__control_args(instr, 2)
+        print("type")
+    
+    ##
+    # <var> <symb>
+    def __ins_not(self, instr):
+        self.__control_args(instr, 2)
+        print("not")
+        
+    ##
+    # <var>
+    def __ins_defvar(self, instr):
+        self.__control_args(instr, 1)
         print(instr.get_name())
-        for j in instr.get_args():
-            print(j.get_order())
-            print(j.get_type())
-            print(j.get_content())
-        print("\n")
-    
-    ##
-    # <var> <symb>
-    def __ins_move(self, instruction):
-        print()
-    
-    ##
-    # <var> <symb>
-    def __ins_int2char(self, instruction):
-        print()
-    
-    ##
-    # <var> <symb>
-    def __ins_strlen(self, instruction):
-        print()
-        
-    ##
-    # <var> <symb>
-    def __ins_type(self, instruction):
-        print()
-    
-    ##
-    # <var> <symb>
-    def __ins_not(self, instruction):
-        print()
-        
-    ##
-    # <var>
-    def __ins_defvar(self, instruction):
-        print()
+        print(len(instr.get_args()))
     
     ##
     # <var>
-    def __ins_pops(self, instruction):
-        print()
+    def __ins_pops(self, instr):
+        self.__control_args(instr, 1)
+        print("pops")
 
     ##
     # <label>
-    def __ins_call(self, instruction):
-        print()
+    def __ins_call(self, instr):
+        self.__control_args(instr, 1)
+        print("call")
     
     ##
     # <label>
-    def __ins_jump(self, instruction):
-        print()
+    def __ins_jump(self, instr):
+        self.__control_args(instr, 1)
+        print("jump")
 
     ##
     # <label>
-    def __ins_label(self, instruction):
-        print()
+    def __ins_label(self, instr):
+        self.__control_args(instr, 1)
+        print("label")
     
     ##
     # <symb>
-    def __ins_pushs(self, instruction):
-        print()
+    def __ins_pushs(self, instr):
+        self.__control_args(instr, 1)
+        print("pushs")
 
     ##
     # <symb>
-    def __ins_write(self, instruction):
-        print()
+    def __ins_write(self, instr):
+        self.__control_args(instr, 1)
+        print("write")
     
     ##
     # <symb>
-    def __ins_exit(self, instruction):
-        print()
+    def __ins_exit(self, instr):
+        self.__control_args(instr, 1)
+        print("exit")
 
     ##
     # <symb>
-    def __ins_dprint(self, instruction):
-        print()
+    def __ins_dprint(self, instr):
+        self.__control_args(instr, 1)
+        print("dprint")
 
     ##
     # <var> <symb1> <symb2>
-    def __ins_add(self, instruction):
-        print()
+    def __ins_add(self, instr):
+        self.__control_args(instr, 3)
+        print("add")
     
     ##
     # <var> <symb1> <symb2>
-    def __ins_sub(self, instruction):
-        print()
+    def __ins_sub(self, instr):
+        self.__control_args(instr, 3)
+        print("sub")
 
     ##
     # <var> <symb1> <symb2>
-    def __ins_mul(self, instruction):
-        print()
+    def __ins_mul(self, instr):
+        self.__control_args(instr, 3)
+        print("mul")
     
     ##
     # <var> <symb1> <symb2>
-    def __ins_idiv(self, instruction):
-        print()
+    def __ins_idiv(self, instr):
+        self.__control_args(instr, 3)
+        print("idiv")
 
     ##
     # <var> <symb1> <symb2>
-    def __ins_lt(self, instruction):
-        print()
+    def __ins_lt(self, instr):
+        self.__control_args(instr, 3)
+        print("lt")
     
     ##
     # <var> <symb1> <symb2>
-    def __ins_gt(self, instruction):
-        print()
+    def __ins_gt(self, instr):
+        self.__control_args(instr, 3)
+        print("gt")
 
     ##
     # <var> <symb1> <symb2>
-    def __ins_eq(self, instruction):
-        print()
+    def __ins_eq(self, instr):
+        self.__control_args(instr, 3)
+        print("eq")
     
     ##
     # <var> <symb1> <symb2>
-    def __ins_and(self, instruction):
-        print()
+    def __ins_and(self, instr):
+        self.__control_args(instr, 3)
+        print("and")
 
     ##
     # <var> <symb1> <symb2>
-    def __ins_or(self, instruction):
-        print()
+    def __ins_or(self, instr):
+        self.__control_args(instr, 3)
+        print("or")
     
     ##
     # <var> <symb1> <symb2>
-    def __ins_stri2int(self, instruction):
-        print()
+    def __ins_stri2int(self, instr):
+        self.__control_args(instr, 3)
+        print("stri2int")
 
     ##
     # <var> <symb1> <symb2>
-    def __ins_concat(self, instruction):
-        print()
+    def __ins_concat(self, instr):
+        self.__control_args(instr, 3)
+        print("concat")
     
     ##
     # <var> <symb1> <symb2>
-    def __ins_getchar(self, instruction):
-        print()
+    def __ins_getchar(self, instr):
+        self.__control_args(instr, 3)
+        print("getchar")
 
     ##
     # <var> <symb1> <symb2>
-    def __ins_setchar(self, instruction):
-        print()
+    def __ins_setchar(self, instr):
+        self.__control_args(instr, 3)
+        print("setchar")
     
     ##
     # <label> <symb1> <symb2>
-    def __ins_jumpifeq(self, instruction):
-        print()
+    def __ins_jumpifeq(self, instr):
+        self.__control_args(instr, 3)
+        print("jumpifeq")
 
     ##
     # <label> <symb1> <symb2>
-    def __ins_jumpifneq(self, instruction):
-        print()
+    def __ins_jumpifneq(self, instr):
+        self.__control_args(instr, 3)
+        print("jumpifneq")
     
     ##
     # <var> <type>
-    def __ins_read(self, instruction):
-        print()
+    def __ins_read(self, instr):
+        self.__control_args(instr, 2)
+        print("read")
 
     ##
     # 
-    def __ins_createframe(self, instruction):
-        print()
+    def __ins_createframe(self, instr):
+        self.__control_args(instr, 0)
+        print("createframe")
     
     ##
     # 
-    def __ins_break(self, instruction):
-        print()
+    def __ins_break(self, instr):
+        self.__control_args(instr, 0)
+        print("break")
     
     ##
     # 
-    def __ins_pushframe(self, instruction):
-        print()
+    def __ins_pushframe(self, instr):
+        self.__control_args(instr, 0)
+        print("pushframe")
     
     ##
     # 
-    def __ins_popframe(self, instruction):
-        print()
+    def __ins_popframe(self, instr):
+        self.__control_args(instr, 0)
+        print("popframe")
     
     ##
     #
-    def __ins_return(self, instruction):
-        print()
+    def __ins_return(self, instr):
+        self.__control_args(instr, 0)
+        print("return")
+
+##
+# class that represent one data frame used in GF, TF or in LF
+class Frame:
+    
+    def __init__(self):
+        self.__varables = []
+    
+    def add_variable(self, var):
+        self.__varables.append(var)
+
+##
+# one variable or constant 
+class Variable:
+    def __init__(self, name, typ, value):
+        self.__name = name
+        self.__typ  = typ
+        self.__value = value
+    
+    def get_name(self):
+        return self.__name
+    def get_typ(self):
+        return self.__typ
+    def get_value(self):
+        return self.__value
+    
+    def set_name(self, val):
+        self.__name = val
+    def set_typ(self, val):
+        self.__typ = val
+    def set_value(self, val):
+        self.__value = val
 
 
 ##
