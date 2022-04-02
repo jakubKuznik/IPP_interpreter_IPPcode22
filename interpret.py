@@ -1,3 +1,4 @@
+from math import exp
 import sys
 import re
 import xml.etree.ElementTree as ET
@@ -82,7 +83,6 @@ class Interpret:
         #    sys.stderr.write("LF has not been created yet\n")
         #    exit(10)
 
-
     def set_active_LT(self, val):
         self.__active_LT = val
 
@@ -130,34 +130,6 @@ class Interpret:
     def store_var_to_TF(self, name, typ, value):
         var = Variable(name, typ, value)
         self.__TF.add_variable(var)
-
-    ##
-    # DEBUG FUNCTION 
-    def print_frames(self):
-        print("GF:")
-        self.store_var_to_GF("chuj", "int", 8)
-        for a in self.__GF.get_variables():
-            print("name:" + a.get_name())
-            print("type" + a.get_typ())
-            print("value" + str(a.get_value()))
-        
-        print("TF:")
-        self.create_TF()
-        self.store_var_to_TF("neco", "nil", "nil")
-        for a in self.__TF.get_variables():
-            print("name:" + a.get_name())
-            print("type" + a.get_typ())
-            print("value" + str(a.get_value()))
-        
-        i = 0
-        for frame in self.__LF:
-            print("LF" + i)
-            i+=1
-            for a in frame.get_variables():
-                print("name:" + a.get_name())
-                print("type" + a.get_typ())
-                print("value" + str(a.get_value()))
-
 
     
     def create_LF(self):
@@ -244,13 +216,6 @@ class Interpret:
             sys.stderr.write("Unknown instruction\n")
             exit(51)
     
-    ##
-    # Control if there are number arguments in instruction 
-    def __control_args(self, instr, number):
-        # instr 
-        if len(instr.get_args()) != number:
-            sys.stderr.write("Not enought instruction arguments\n")
-            exit(32)
 
 
     ##
@@ -287,9 +252,8 @@ class Interpret:
     # <var>
     def __ins_defvar(self, instr):
         self.__control_args(instr, 1)
+        self.__control_arg_type(instr, 0, "var")
 
-        print(instr.get_name())
-        print(len(instr.get_args()))
     
     ##
     # <var>
@@ -464,6 +428,55 @@ class Interpret:
     def __ins_return(self, instr):
         self.__control_args(instr, 0)
         print("return")
+    
+    
+    ############## CONTROL FUNCTIONS (SEMATIC OR SYNTAX)############
+    
+    ##
+    # Control if there are number arguments in instruction 
+    def __control_args(self, instr, number):
+        # instr 
+        if len(instr.get_args()) != number:
+            sys.stderr.write("Not enought instruction arguments\n")
+            exit(32)
+    ##
+    # Check if argument on nth position has expect type 
+    def __control_arg_type(self, instr, nth, expect):
+        args = instr.get_args()
+        arg_type = args[nth].get_type()
+        if arg_type.lower() != expect:
+            sys.stderr.write("Unexpected xml argument.\n")
+            exit(32)
+            
+    ################################################################
+    
+    ##
+    # DEBUG FUNCTION 
+    def print_frames(self):
+        print("..GF:")
+        self.store_var_to_GF("chuj", "int", 8)
+        for a in self.__GF.get_variables():
+            print("..name:... " + a.get_name(), end=" ")
+            print("..type:... " + a.get_typ(), end=" ")
+            print("..value:... " + str(a.get_value()),)
+        
+        print("..TF:")
+        self.create_TF()
+        self.store_var_to_TF("neco", "nil", "nil")
+        for a in self.__TF.get_variables():
+            print("..name:... " + a.get_name(), end=" ")
+            print("..type:... " + a.get_typ(), end=" ")
+            print("..value:... " + str(a.get_value()))
+        
+        i = 0
+        for frame in self.__LF:
+            print("..LF" + i)
+            i+=1
+            for a in frame.get_variables():
+                print("..name:... " + a.get_name(),end=" ")
+                print("..type:... " + a.get_typ(),end=" ")
+                print("..value:..." + str(a.get_value()))
+
 
 ##
 # class that represent one data frame used in GF, TF or in LF
