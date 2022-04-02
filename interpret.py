@@ -1,6 +1,7 @@
 from math import exp
 import sys
 import re
+from unicodedata import name
 import xml.etree.ElementTree as ET
 import string
 from matplotlib.cbook import Stack
@@ -130,6 +131,14 @@ class Interpret:
     def store_var_to_TF(self, name, typ, value):
         var = Variable(name, typ, value)
         self.__TF.add_variable(var)
+    
+    def store_var(self, frame, name, typ, value):
+        if frame.lower() == "lf":
+            self.store_var_to_LF(name, typ, value)
+        elif frame.lower() == "gf":
+            self.store_var_to_GF(name, typ, value)
+        elif frame.lower() == "tf":
+            self.store_var_to_TF(name, typ, value)
 
     
     def create_LF(self):
@@ -139,6 +148,7 @@ class Interpret:
         else:
             self.inc_active_LT()
         self.__LF[self.get_active_LT()] = Frame()
+
         
     ##
     # Functions that call proper __ins_* function
@@ -215,8 +225,6 @@ class Interpret:
         else:
             sys.stderr.write("Unknown instruction\n")
             exit(51)
-    
-
 
     ##
     # <var> <symb>
@@ -253,8 +261,10 @@ class Interpret:
     def __ins_defvar(self, instr):
         self.__control_args(instr, 1)
         self.__control_arg_type(instr, 0, "var")
-
-    
+        frame, var = self.__control_var(instr.get_n_arg(0))
+        self.__control_var_exist(var, frame)
+        self.store_var(frame, var, "" , "")
+        
     ##
     # <var>
     def __ins_pops(self, instr):
@@ -433,6 +443,21 @@ class Interpret:
     ############## CONTROL FUNCTIONS (SEMATIC OR SYNTAX)############
     
     ##
+    # from LF@var gets -> [LF, var]
+    # TODO transefer /321 to real character 
+    def __control_var(self, arg):
+        var = arg.get_content()
+        var = var.split("@")
+        i = ""
+        for v in var[1:]:
+            i = i + v
+        var[1] = i
+        if var[0].lower() != "lf" and var[0].lower() != "gf" and var[0].lower() != "tf":
+            sys.stderr.write("Unexpected frame\n")
+            exit(32)
+        return var[0], var[1]
+
+    ##
     # Control if there are number arguments in instruction 
     def __control_args(self, instr, number):
         # instr 
@@ -447,6 +472,22 @@ class Interpret:
         if arg_type.lower() != expect:
             sys.stderr.write("Unexpected xml argument.\n")
             exit(32)
+    
+    def __control_var_exist(self, var, frame):
+        if frame.lower() == "gf":
+            if self.__GF.var_exist(name) == True:
+                sys.stderr.write("Variable already exists in frame.\n")
+                exit(52)
+        elif frame.lower() == "lf":
+            if self.__LF[self.get_active_LT()].var_exist(name) == True:
+                sys.stderr.write("Variable already exists in frame.\n")
+                exit(52)
+        elif frame.lower() == "tf":
+            if self.__TF.var_exist(name) == True:
+                sys.stderr.write("Variable already exists in frame.\n")
+                exit(52)
+        self.store_var(frame, var, "", "")
+            
             
     ################################################################
     
@@ -454,28 +495,34 @@ class Interpret:
     # DEBUG FUNCTION 
     def print_frames(self):
         print("..GF:")
-        self.store_var_to_GF("chuj", "int", 8)
-        for a in self.__GF.get_variables():
-            print("..name:... " + a.get_name(), end=" ")
-            print("..type:... " + a.get_typ(), end=" ")
-            print("..value:... " + str(a.get_value()),)
-        
+        try:
+            for a in self.__GF.get_variables():
+                print("....name:... " + a.get_name(), end=" ")
+                print("....type:... " + a.get_typ(), end=" ")
+                print("....value:... " + str(a.get_value()),)
+        except:
+            print("....empty")
+
         print("..TF:")
-        self.create_TF()
-        self.store_var_to_TF("neco", "nil", "nil")
-        for a in self.__TF.get_variables():
-            print("..name:... " + a.get_name(), end=" ")
-            print("..type:... " + a.get_typ(), end=" ")
-            print("..value:... " + str(a.get_value()))
+        try:
+            for a in self.__TF.get_variables():
+                print("....name:... " + a.get_name(), end=" ")
+                print("....type:... " + a.get_typ(), end=" ")
+                print("....value:... " + str(a.get_value()))
+        except:
+            print("....empty")
         
         i = 0
         for frame in self.__LF:
             print("..LF" + i)
             i+=1
-            for a in frame.get_variables():
-                print("..name:... " + a.get_name(),end=" ")
-                print("..type:... " + a.get_typ(),end=" ")
-                print("..value:..." + str(a.get_value()))
+            try:
+                for a in frame.get_variables():
+                    print("....name:... " + a.get_name(),end=" ")
+                    print("....type:... " + a.get_typ(),end=" ")
+                    print("....value:..." + str(a.get_value()))
+            except:
+                print("....empty")
 
 
 ##
@@ -490,6 +537,16 @@ class Frame:
 
     def get_variables(self):
         return self.__variables
+
+    ##
+    # return true if variable exist in frame
+    #       else return false 
+    def var_exist(self, name):
+        print(name)
+        for v in self.__variables:
+            if v.get_name() == name:
+                return True
+        return False
 
 ##
 # one variable or constant 
@@ -547,6 +604,9 @@ class Instruction:
     def append_arg(self, arg):
         self.__args.append(arg)    
     
+    def get_n_arg(self, n):
+        return self.__args[n]
+    
 ##
 # one instrustion argument. 
 class Args:
@@ -573,6 +633,7 @@ class Args:
 
     def set_cont(self, cont):
         self.__content = cont
+
     
 ##
 #  Parse arguments and store input and source file 
