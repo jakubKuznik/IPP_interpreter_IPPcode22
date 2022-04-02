@@ -122,7 +122,11 @@ class Interpret:
     # store variable to active LF 
     def store_var_to_LF(self, name, typ, value):
         var = Variable(name, typ, value)
-        self.__LF[self.get_active_LT()].add_variable(var)
+        try:
+            self.__LF[self.get_active_LT()].add_variable(var)
+        except:
+            sys.stderr.write("Frame does not exists \n")
+            exit(32)
 
     def store_var_to_GF(self, name, typ, value):
         var = Variable(name, typ, value)
@@ -130,7 +134,12 @@ class Interpret:
 
     def store_var_to_TF(self, name, typ, value):
         var = Variable(name, typ, value)
-        self.__TF.add_variable(var)
+        try:
+            self.__TF.add_variable(var)
+        except:
+            sys.stderr.write("Frame does not exists \n")
+            exit(32)
+            
     
     def store_var(self, frame, name, typ, value):
         if frame.lower() == "lf":
@@ -139,6 +148,7 @@ class Interpret:
             self.store_var_to_GF(name, typ, value)
         elif frame.lower() == "tf":
             self.store_var_to_TF(name, typ, value)
+        
 
     
     def create_LF(self):
@@ -486,8 +496,6 @@ class Interpret:
             if self.__TF.var_exist(name) == True:
                 sys.stderr.write("Variable already exists in frame.\n")
                 exit(52)
-        self.store_var(frame, var, "", "")
-            
             
     ################################################################
     
