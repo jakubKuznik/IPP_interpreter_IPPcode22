@@ -5,6 +5,7 @@ from unicodedata import name
 import xml.etree.ElementTree as ET
 import string
 from matplotlib.cbook import Stack
+import copy
 
 from numpy import argsort
 
@@ -100,21 +101,24 @@ class Interpret:
     def delete_TF(self):
         del self.__TF
     
-    def get_First_LT_created(self):
-        return self.__First_LT_created
-  
-    def set_First_Lt_created(self, val):
-        self.__First_LT_created = val 
-    
     ##
     # Create local frame 
     def create_LF(self):
         self.inc_active_LT()
-        self.__LF[self.get_active_LT()] = Frame()
+        if len(self.__LF) == 0:
+            self.set_active_LT(0)
+            self.__LF[self.get_active_LT()] = copy.copy(self.__TF)
+        else:
+            self.inc_active_LT()
+            self.__LF[self.get_active_LT()] = copy.copy(self.__TF)
+        del self.__TF
 
     ##
     # Remove local frame 
     def remove_LF(self):
+        if len(self.__LF) == 0:
+            sys.stderr.write("Error there is no LF\n")
+            exit(32)
         self.__LF.pop(self.get_active_LT())
         self.dec_active_LT()
 
@@ -420,10 +424,11 @@ class Interpret:
         print("read")
 
     ##
-    # 
+    # remove TF content and create new one 
     def __ins_createframe(self, instr):
         self.__control_args(instr, 0)
-        print("createframe")
+        self.delete_TF()
+        self.create_TF() 
     
     ##
     # 
