@@ -1,4 +1,5 @@
 from math import exp
+from pickle import NONE
 import sys
 import re
 from unicodedata import name
@@ -65,7 +66,6 @@ class Interpret:
         self.__LF = []
         self.__stack = [] # use append and pop 
         self.__active_LT : int
-        self.__First_LT_created = False
 
     ##
     # pop from stack
@@ -76,6 +76,22 @@ class Interpret:
     def push(self, val):
         self.__stack.append(val)
 
+    def get_GF(self):
+        return self.__GF
+    
+    def get_TF(self):
+        return self.__TF
+    
+    def get_FRAME(self, frame):
+        if frame.lower() == "gf":
+            return self.get_GF()
+        elif frame.lower() == "tf":
+            return self.get_TF()
+        elif frame.lower() == "lf":
+            return self.__LF(self.get_active_LT())
+        else:
+            return NONE
+
     def get_active_LT(self):
         return self.__active_LT
         
@@ -84,6 +100,18 @@ class Interpret:
         #except:
         #    sys.stderr.write("LF has not been created yet\n")
         #    exit(10)
+
+
+    def LT_is_empty(self):
+        if len(self.__LF) == 0:
+            return True
+        return False
+
+    ##
+    # Copy active LF to TF and delete it 
+    def LF_to_TF(self):
+        self.__TF = copy.copy(self.__LF[self.get_active_LT()])
+        self.remove_LF()
 
     def set_active_LT(self, val):
         self.__active_LT = val
@@ -111,7 +139,7 @@ class Interpret:
         else:
             self.inc_active_LT()
             self.__LF[self.get_active_LT()] = copy.copy(self.__TF)
-        del self.__TF
+        self.delete_TF()
 
     ##
     # Remove local frame 
@@ -152,8 +180,6 @@ class Interpret:
             self.store_var_to_GF(name, typ, value)
         elif frame.lower() == "tf":
             self.store_var_to_TF(name, typ, value)
-        
-
     
     def create_LF(self):
         # first LF hasn't been created yet
@@ -163,7 +189,7 @@ class Interpret:
             self.inc_active_LT()
         self.__LF[self.get_active_LT()] = Frame()
 
-        
+
     ##
     # Functions that call proper __ins_* function
     def interpret(self, instr):
@@ -283,7 +309,27 @@ class Interpret:
     # <var>
     def __ins_pops(self, instr):
         self.__control_args(instr, 1)
+        
         print("pops")
+        try:
+            var = self.pop()
+        except:
+            sys.stderr.write("Error stack is empty\n")
+            exit(56)
+
+        ## check if variable exists
+        frame, val = self.__control_var(instr.get_n_arg(0)) 
+        frame = self.get_FRAME(frame)
+        if frame.var_exist(val) == False:
+            sys.stderr.write("Přístup k neexistující proměnné")
+            exit(54)
+        
+        variable = frame.get_variable_index(frame.find_variable_index(val))
+        variable.set_name(val)
+        
+
+
+
 
     ##
     # <label>
@@ -307,7 +353,12 @@ class Interpret:
     # <symb>
     def __ins_pushs(self, instr):
         self.__control_args(instr, 1)
-        print("pushs")
+        typ = instr.get_n_arg(0).get_type()
+        if typ == "var":
+            a, val = self.__control_var(instr.get_n_arg(0))
+        else:
+            val = self.__control_var(instr.get_n_arg(0).get_content())
+        self.push(val)
 
     ##
     # <symb>
@@ -440,14 +491,19 @@ class Interpret:
     # 
     def __ins_pushframe(self, instr):
         self.__control_args(instr, 0)
-        print("pushframe")
+        self.create_LF()
     
     ##
     # 
     def __ins_popframe(self, instr):
         self.__control_args(instr, 0)
-        print("popframe")
-    
+        if self.LT_is_empty():
+            sys.stderr.write("Frame does not exists \n")
+            exit(55)
+        self.LF_to_TF()
+         
+             
+
     ##
     #
     def __ins_return(self, instr):
@@ -551,11 +607,19 @@ class Frame:
     def get_variables(self):
         return self.__variables
 
+    def get_variable_index(self, index):
+        return self.__variables[index]
+
+    def find_variable_index(self, name):
+        i = 0
+        for v in self.__variables:
+            if v.get_name() == name:
+                return i
+            i = i + 1
     ##
     # return true if variable exist in frame
     #       else return false 
     def var_exist(self, name):
-        print(name)
         for v in self.__variables:
             if v.get_name() == name:
                 return True
