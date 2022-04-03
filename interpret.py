@@ -1,3 +1,4 @@
+from doctest import debug_src
 from math import exp
 from pickle import NONE
 import sys
@@ -270,31 +271,31 @@ class Interpret:
     # <var> <symb>
     def __ins_move(self, instr):
         self.__control_args(instr, 2)
-        print("move")
+        debug("move")
     
     ##
     # <var> <symb>
     def __ins_int2char(self, instr):
         self.__control_args(instr, 2)
-        print("i2ch")
+        debug("i2ch")
     
     ##
     # <var> <symb>
     def __ins_strlen(self, instr):
         self.__control_args(instr, 2)
-        print("strlen")
+        debug("strlen")
         
     ##
     # <var> <symb>
     def __ins_type(self, instr):
         self.__control_args(instr, 2)
-        print("type")
+        debug("type")
     
     ##
     # <var> <symb>
     def __ins_not(self, instr):
         self.__control_args(instr, 2)
-        print("not")
+        debug("not")
         
     ##
     # <var>
@@ -310,9 +311,9 @@ class Interpret:
     def __ins_pops(self, instr):
         self.__control_args(instr, 1)
         
-        print("pops")
+        debug("pops")
         try:
-            var = self.pop()
+            set_to = self.pop()
         except:
             sys.stderr.write("Error stack is empty\n")
             exit(56)
@@ -325,29 +326,26 @@ class Interpret:
             exit(54)
         
         variable = frame.get_variable_index(frame.find_variable_index(val))
-        variable.set_name(val)
+        variable.set_name(set_to)
         
-
-
-
 
     ##
     # <label>
     def __ins_call(self, instr):
         self.__control_args(instr, 1)
-        print("call")
+        debug("call")
     
     ##
     # <label>
     def __ins_jump(self, instr):
         self.__control_args(instr, 1)
-        print("jump")
+        debug("jump")
 
     ##
     # <label>
     def __ins_label(self, instr):
         self.__control_args(instr, 1)
-        print("label")
+        debug("label")
     
     ##
     # <symb>
@@ -364,37 +362,37 @@ class Interpret:
     # <symb>
     def __ins_write(self, instr):
         self.__control_args(instr, 1)
-        print("write")
+        debug("write")
     
     ##
     # <symb>
     def __ins_exit(self, instr):
         self.__control_args(instr, 1)
-        print("exit")
+        debug("exit")
 
     ##
     # <symb>
     def __ins_dprint(self, instr):
         self.__control_args(instr, 1)
-        print("dprint")
+        debug("dprint")
 
     ##
     # <var> <symb1> <symb2>
     def __ins_add(self, instr):
         self.__control_args(instr, 3)
-        print("add")
+        debug("add")
     
     ##
     # <var> <symb1> <symb2>
     def __ins_sub(self, instr):
         self.__control_args(instr, 3)
-        print("sub")
+        debug("sub")
 
     ##
     # <var> <symb1> <symb2>
     def __ins_mul(self, instr):
         self.__control_args(instr, 3)
-        print("mul")
+        debug("mul")
     
     ##
     # <var> <symb1> <symb2>
@@ -406,73 +404,73 @@ class Interpret:
     # <var> <symb1> <symb2>
     def __ins_lt(self, instr):
         self.__control_args(instr, 3)
-        print("lt")
+        debug("lt")
     
     ##
     # <var> <symb1> <symb2>
     def __ins_gt(self, instr):
         self.__control_args(instr, 3)
-        print("gt")
+        debug("gt")
 
     ##
     # <var> <symb1> <symb2>
     def __ins_eq(self, instr):
         self.__control_args(instr, 3)
-        print("eq")
+        debug("eq")
     
     ##
     # <var> <symb1> <symb2>
     def __ins_and(self, instr):
         self.__control_args(instr, 3)
-        print("and")
+        debug("and")
 
     ##
     # <var> <symb1> <symb2>
     def __ins_or(self, instr):
         self.__control_args(instr, 3)
-        print("or")
+        debug("or")
     
     ##
     # <var> <symb1> <symb2>
     def __ins_stri2int(self, instr):
         self.__control_args(instr, 3)
-        print("stri2int")
+        debug("stri2int")
 
     ##
     # <var> <symb1> <symb2>
     def __ins_concat(self, instr):
         self.__control_args(instr, 3)
-        print("concat")
+        debug("concat")
     
     ##
     # <var> <symb1> <symb2>
     def __ins_getchar(self, instr):
         self.__control_args(instr, 3)
-        print("getchar")
+        debug("getchar")
 
     ##
     # <var> <symb1> <symb2>
     def __ins_setchar(self, instr):
         self.__control_args(instr, 3)
-        print("setchar")
+        debug("setchar")
     
     ##
     # <label> <symb1> <symb2>
     def __ins_jumpifeq(self, instr):
         self.__control_args(instr, 3)
-        print("jumpifeq")
+        debug("jumpifeq")
 
     ##
     # <label> <symb1> <symb2>
     def __ins_jumpifneq(self, instr):
         self.__control_args(instr, 3)
-        print("jumpifneq")
+        debug("jumpifneq")
     
     ##
     # <var> <type>
     def __ins_read(self, instr):
         self.__control_args(instr, 2)
-        print("read")
+        debug("read")
 
     ##
     # remove TF content and create new one 
@@ -485,7 +483,7 @@ class Interpret:
     # 
     def __ins_break(self, instr):
         self.__control_args(instr, 0)
-        print("break")
+        debug("break")
     
     ##
     # 
@@ -508,7 +506,7 @@ class Interpret:
     #
     def __ins_return(self, instr):
         self.__control_args(instr, 0)
-        print("return")
+        debug("return")
     
     
     ############## CONTROL FUNCTIONS (SEMATIC OR SYNTAX)############
@@ -563,35 +561,35 @@ class Interpret:
     ##
     # DEBUG FUNCTION 
     def print_frames(self):
-        print("..GF:")
+        debug("..GF:")
         try:
             for a in self.__GF.get_variables():
-                print("....name:... " + a.get_name(), end=" ")
-                print("....type:... " + a.get_typ(), end=" ")
-                print("....value:... " + str(a.get_value()),)
+                debug("....name:... " + a.get_name(), end=" ")
+                debug("....type:... " + a.get_typ(), end=" ")
+                debug("....value:... " + str(a.get_value()),)
         except:
-            print("....empty")
+            debug("....empty")
 
-        print("..TF:")
+        debug("..TF:")
         try:
             for a in self.__TF.get_variables():
-                print("....name:... " + a.get_name(), end=" ")
-                print("....type:... " + a.get_typ(), end=" ")
-                print("....value:... " + str(a.get_value()))
+                debug("....name:... " + a.get_name(), end=" ")
+                debug("....type:... " + a.get_typ(), end=" ")
+                debug("....value:... " + str(a.get_value()))
         except:
-            print("....empty")
+            debug("....empty")
         
         i = 0
         for frame in self.__LF:
-            print("..LF" + i)
+            debug("..LF" + i)
             i+=1
             try:
                 for a in frame.get_variables():
-                    print("....name:... " + a.get_name(),end=" ")
-                    print("....type:... " + a.get_typ(),end=" ")
-                    print("....value:..." + str(a.get_value()))
+                    debug("....name:... " + a.get_name(),end=" ")
+                    debug("....type:... " + a.get_typ(),end=" ")
+                    debug("....value:..." + str(a.get_value()))
             except:
-                print("....empty")
+                debug("....empty")
 
 
 ##
@@ -967,11 +965,11 @@ class Files(Arg_parse):
         if language_flag == False:
             sys.stderr.write("Language flag missing\n")
             exit(31)
-    
 
 
 
-
+def debug(string):
+    sys.stderr.write(string + "\n")
 
 if __name__ == '__main__':
     main()
