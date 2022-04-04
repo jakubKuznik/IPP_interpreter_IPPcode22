@@ -17,7 +17,7 @@ valid_instruction = [ "move", "int2char", "strlen", "type", "not",
  "exit", "dprint", "add", "sub", "mul", "idiv", "lt", "gt", "eq",
  "and", "or", "stri2int", "concat", "getchar", "setchar", "jumpifeq",
  "jumpifneq", "read", "createframe", " break", "pushframe", "popframe"
- "return"]
+ "return", "div", "int2float", "float2int"]
 
 valid_types = ["int", "bool", "string", "nil", "label", "type", "var", "float"]
 
@@ -268,6 +268,12 @@ class Interpret:
             self.__ins_popframe(instr)
         elif instr.get_name() == "return":
             self.__ins_return(instr)
+        elif instr.get_name() == "div":
+            self.__ins_div(instr)
+        elif instr.get_name() == "int2float":
+            self.__ins_int2float(instr)
+        elif instr.get_name() == "float2int":
+            self.__ins_float2int(instr)
         else:
             error("Unknown instruction", 51)
 
@@ -389,10 +395,29 @@ class Interpret:
 
     ##
     # <symb>
+    # nil is empty string 
     def __ins_write(self, instr):
         self.__control_args(instr, 1)
-        debug("write")
-    
+        
+        typ = instr.get_n_arg(0).get_type()
+        if typ == "var":
+            ## check if variable exists
+            frame, name = self.__control_var(instr.get_n_arg(0))
+            if self.__control_var_exist(name, frame) == False:
+                error("Variable does not exist.", 54)
+            var1 = self.get_var(frame, name)
+            value = var1.get_value()
+            if value == "nil":
+                print("", end='')
+            else:
+                print(value, end='')
+        else:
+            frame, name = self.__control_var(instr.get_n_arg(0))
+            if name.lower() == "nil":
+                print("", end='')
+            else:
+                print(name, end='')
+
     ##
     # <symb>
     def __ins_exit(self, instr):
@@ -528,6 +553,24 @@ class Interpret:
             error("Frame does not exists ", 55)
         self.LF_to_TF()
          
+    ##
+    # 
+    def __ins_div(self, instr):
+        debug("div")
+    ##
+    # 
+    def __ins_int2float(self, instr):
+        debug("int2float")
+    
+    ##
+    # 
+    def __ins_float2int(self, instr):
+        debug("float2int ")
+
+             
+
+             
+
              
 
     ##
@@ -660,7 +703,8 @@ class Variable:
     def __init__(self, name, typ, value):
         self.__name = name
         self.__typ  = typ
-        self.__value = value
+        self.__value = value #nil == nil 
+                             #true, false    
     
     def get_name(self):
         return self.__name
@@ -917,7 +961,7 @@ class Files(Arg_parse):
             a = a.lower()
             if a == "opcode":
                 if ia not in valid_instruction:
-                    error("Not valid instruction", 53)
+                    error("Not valid instruction", 32)
                 opcode_flag = True
                 opcode = ia
                 continue
