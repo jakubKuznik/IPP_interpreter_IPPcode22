@@ -5,6 +5,8 @@ import re
 import xml.etree.ElementTree as ET
 import copy
 
+from numpy import array
+
 
 valid_instruction = [ "move", "int2char", "strlen", "type", "not",
  "defvar", "pops" , "call", "jump", "label", "pushs", "write", 
@@ -446,12 +448,14 @@ class Interpret:
         ## <symb2>
         val2 = self.get_symb_value_from_arg(instr.get_n_arg(2))
         if not (re.match(pattern_int, str(val1))) or not (re.match(pattern_int, str(val2))):
-            error("instruction needs numbers", 53)
+            error("instruction needs numbers", 32)
         if command == "add":
             var1.set_value(int(val1) + int(val2))
         elif command == "sub":
             var1.set_value(int(val1) - int(val2))
         elif command == "idiv":
+            if int(val2) == 0:
+                error("zero div", 57)
             var1.set_value(int(val1) // int(val2))
         elif command == "mul":
             var1.set_value(int(val1) * int(val2))
@@ -768,6 +772,14 @@ class Instruction:
     def append_arg(self, arg):
         self.__args.append(arg)
         
+    def sort_args(self):
+        ar = []
+        for i in range(1,6):
+            for a in self.__args:
+                if int(a.get_order()) == int(i):
+                    ar.append(a)
+        self.__args = ar
+
     
     def get_n_arg(self, n):
         for arg in self.__args:
@@ -805,6 +817,8 @@ class Args:
 
     def set_cont(self, cont):
         self.__content = cont
+    
+
 
     
 ##
@@ -951,15 +965,19 @@ class Files(Arg_parse):
                 error("Bad xml format expect <instruction>", 32)
             inst = self.xml_valid_instr(child)
             inst = Instruction(inst[0], inst[1])
-            arg_order = 1
             for ar in child:        #<arg>
-                if ar.tag.lower()[0:3] != "arg": 
-                    error("Bad xml format expect <arg>",32)  
-                arg = self.xml_valid_arg(ar, arg_order)
+                arg = self.xml_valid_arg(ar)
                 arg = Args(arg[0], arg[1], arg[2], ar.tag.lower())
                 inst.append_arg(arg)
-                arg_order += 1
-        
+            inst.sort_args()
+
+            i = 1
+            for a in inst.get_args():
+                if int(a.get_order()) != int(i):
+                    error("Bad xml format expect <instruction>", 32)
+                i=i+1
+
+
     ##
     # Check if instruction is valid
     # - opcode is valid?
@@ -989,7 +1007,7 @@ class Files(Arg_parse):
                     error("Bad instruction order",32)
                 for i in Instruction.get_instructions():
                     if i.get_order() == ia:
-                        error("Duplicit instruction order",32)
+                        error("Bad instruction order",32)
 
                 self.set_last_instr(ia)
                 order_flag = True
@@ -1005,10 +1023,14 @@ class Files(Arg_parse):
     ##
     # valid argument of instruction 
     # return arg order, type, content 
-    def xml_valid_arg(self, arg, order):
-        pat = re.compile('arg' + str(order))
+    def xml_valid_arg(self, arg):
+        pat = re.compile('arg' + "1")
+        pat2 = re.compile('arg' + "2")
+        pat3 = re.compile('arg' + "3")
         if not pat.match(arg.tag):
-            error("Unvalid arg", 32)
+            if not pat2.match(arg.tag):
+                if not pat3.match(arg.tag):
+                    error("Unvalid arg", 32)
 
         type_flag = False
         type = ""
@@ -1026,7 +1048,7 @@ class Files(Arg_parse):
 
         if type_flag == False:
             error("Missing arg type flag",32)
-
+        order = arg.tag.replace("arg", "")
         return order, type, arg.text
 
 
