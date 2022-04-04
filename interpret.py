@@ -206,7 +206,6 @@ class Interpret:
             frame, name = self.__control_var(arg)
             return name
 
-
     def get_variable_from_arg(self, arg):
         typ = arg.get_type()
         if typ != "var":
@@ -325,7 +324,21 @@ class Interpret:
     # <var> <symb>
     def __ins_type(self, instr):
         self.__control_args(instr, 2)
-        debug("type")
+        var = self.get_variable_from_arg(instr.get_n_arg(0))
+        value = self.get_symb_value_from_arg(instr.get_n_arg(1))
+        value = str(value)
+        if value == "":
+            var.set_value("")
+        elif value == "true" or value == "false":
+            var.set_value("bool")
+        elif value == "nil":
+            var.set_value("nil")
+        elif re.match(pattern_int, value):
+            var.set_value("int")
+        elif re.match(pattern_float, value):
+            var.set_value("float")
+        else:
+            var.set_value("string")
     
     ##
     # <var> <symb>
@@ -363,7 +376,6 @@ class Interpret:
         variable = frame.get_variable_index(frame.find_variable_index(val))
         variable.set_name(set_to)
         
-
     ##
     # <label>
     def __ins_call(self, instr):
@@ -459,7 +471,6 @@ class Interpret:
             var1.set_value(int(val1) // int(val2))
         elif command == "mul":
             var1.set_value(int(val1) * int(val2))
-
 
     ##
     # <var> <symb1> <symb2>
@@ -573,12 +584,6 @@ class Interpret:
     # 
     def __ins_float2int(self, instr):
         debug("float2int ")
-
-             
-
-             
-
-             
 
     ##
     #
@@ -1086,7 +1091,7 @@ def debug(string):
 
 
 pattern_int = '^[-+]?[0-9]+$'
-
+pattern_float = '[+-]?[0-9]+\.[0-9]+'
 
 
 if __name__ == '__main__':
