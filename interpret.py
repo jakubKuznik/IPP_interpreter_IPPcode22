@@ -146,8 +146,7 @@ class Interpret:
     # Remove local frame 
     def remove_LF(self):
         if len(self.__LF) == 0:
-            sys.stderr.write("Error there is no LF\n")
-            exit(32)
+            error("There is no LF", 32)
         self.__LF.pop(self.get_active_LT())
         self.dec_active_LT()
 
@@ -158,8 +157,7 @@ class Interpret:
         try:
             self.__LF[self.get_active_LT()].add_variable(var)
         except:
-            sys.stderr.write("Frame does not exists \n")
-            exit(32)
+            error("Frame does not exists ", 32)
 
     def store_var_to_GF(self, name, typ, value):
         var = Variable(name, typ, value)
@@ -170,8 +168,7 @@ class Interpret:
         try:
             self.__TF.add_variable(var)
         except:
-            sys.stderr.write("Frame does not exists \n")
-            exit(32)
+            error("Frame does not exists ", 32)
             
     
     def store_var(self, frame, name, typ, value):
@@ -264,13 +261,26 @@ class Interpret:
         elif instr.get_name() == "return":
             self.__ins_return(instr)
         else:
-            sys.stderr.write("Unknown instruction\n")
-            exit(51)
+            error("Unknown instruction", 51)
 
     ##
     # <var> <symb>
     def __ins_move(self, instr):
         self.__control_args(instr, 2)
+        typ = instr.get_n_arg(0).get_type()
+        if typ != "var":
+            error("Move needs variable as first argument", 53)
+        typ = instr.get_n_arg(1).get_type()
+        
+        if typ == "var":
+            a, val = self.__control_var(instr.get_n_arg(0))
+        else:
+            val = self.__control_var(instr.get_n_arg(0).get_content())
+        debug(val)
+        
+
+
+        
         debug("move")
     
     ##
@@ -315,15 +325,13 @@ class Interpret:
         try:
             set_to = self.pop()
         except:
-            sys.stderr.write("Error stack is empty\n")
-            exit(56)
+            error("Stack is empty", 56)
 
         ## check if variable exists
         frame, val = self.__control_var(instr.get_n_arg(0)) 
         frame = self.get_FRAME(frame)
         if frame.var_exist(val) == False:
-            sys.stderr.write("Přístup k neexistující proměnné")
-            exit(54)
+            error("Non declared variable access ", 54)
         
         variable = frame.get_variable_index(frame.find_variable_index(val))
         variable.set_name(set_to)
@@ -354,7 +362,7 @@ class Interpret:
         typ = instr.get_n_arg(0).get_type()
         if typ == "var":
             a, val = self.__control_var(instr.get_n_arg(0))
-        else:
+        else: 
             val = self.__control_var(instr.get_n_arg(0).get_content())
         self.push(val)
 
@@ -496,8 +504,7 @@ class Interpret:
     def __ins_popframe(self, instr):
         self.__control_args(instr, 0)
         if self.LT_is_empty():
-            sys.stderr.write("Frame does not exists \n")
-            exit(55)
+            error("Frame does not exists ", 55)
         self.LF_to_TF()
          
              
@@ -522,8 +529,7 @@ class Interpret:
             i = i + v
         var[1] = i
         if var[0].lower() != "lf" and var[0].lower() != "gf" and var[0].lower() != "tf":
-            sys.stderr.write("Unexpected frame\n")
-            exit(32)
+            error("Unexpected frame ", 32)
         return var[0], var[1]
 
     ##
@@ -531,30 +537,25 @@ class Interpret:
     def __control_args(self, instr, number):
         # instr 
         if len(instr.get_args()) != number:
-            sys.stderr.write("Not enought instruction arguments\n")
-            exit(32)
+            error("Not enought instruction arguments", 32)
     ##
     # Check if argument on nth position has expect type 
     def __control_arg_type(self, instr, nth, expect):
         args = instr.get_args()
         arg_type = args[nth].get_type()
         if arg_type.lower() != expect:
-            sys.stderr.write("Unexpected xml argument.\n")
-            exit(32)
+            error("Unexpected xml argument", 32)
     
     def __control_var_exist(self, var, frame):
         if frame.lower() == "gf":
             if self.__GF.var_exist(name) == True:
-                sys.stderr.write("Variable already exists in frame.\n")
-                exit(52)
+                error("Variable already exist in frame", 52)
         elif frame.lower() == "lf":
             if self.__LF[self.get_active_LT()].var_exist(name) == True:
-                sys.stderr.write("Variable already exists in frame.\n")
-                exit(52)
+                error("Variable already exists in frame ",52)
         elif frame.lower() == "tf":
             if self.__TF.var_exist(name) == True:
-                sys.stderr.write("Variable already exists in frame.\n")
-                exit(52)
+                error("Variable already exists in frame ", 52)
             
     ################################################################
     
@@ -680,7 +681,10 @@ class Instruction:
         self.__args.append(arg)    
     
     def get_n_arg(self, n):
-        return self.__args[n]
+        for arg in self.__args:
+            if arg.tag == ("arg" + str(n)):
+                return arg
+        error("Unvalid argument",52)
     
 ##
 # one instrustion argument. 
@@ -690,7 +694,7 @@ class Args:
         self.__order   = order
         self.__typ    = typ
         self.__content = content
-    
+
     def get_order(self):
         return self.__order
     
@@ -741,15 +745,13 @@ class Arg_parse:
     # return file_path, command
     def __parse_arguments(self, args):
         if len(args) > 3:
-            sys.stderr.write("To many arguments.\n")
-            exit(10)
+            error("To many arguments",10)
         source = False
         input = False
         for a in args[1:]:
             if a == "--help" or a == "-h":
                 if len(args) != 2:
-                    sys.stderr.write("Can't combine help with other params.\n")
-                    exit(10)
+                    error("Can't combine help with other params",10)
                 help()
                 exit(0)
             elif a.startswith("--source="):
@@ -764,8 +766,7 @@ class Arg_parse:
                 sys.stderr.write("Unknown \n")
                 exit(10)
         if input == False and source == False:
-            sys.stderr.write("Need --input or --source\n")
-            exit(10)
+            error("Need --input or --source", 10)
         elif input == True and source == False:
             self.set_so_file(sys.stdin)
         elif input == False and source == True:
@@ -808,8 +809,7 @@ class Files(Arg_parse):
         try:
             f = open(file)
         except :
-            sys.stderr.write("File: " + file + " not accessible\n")
-            exit(10)    
+            error("File not accesible", 10)
         f.close()
     ##
     # Call file exist for input files 
@@ -845,18 +845,23 @@ class Files(Arg_parse):
             tree = ET.parse(self.get_so_file())
             return tree.getroot()
         except:
-            sys.stderr.write("Bad xml format\n")
-            exit(32)
+            error("Bad xml format", 31)
 
     ##
     # Valid whole xml and store it  
     def xml_validation(self, root): #<program>
         self.xml_valid_root(root)
+        if root.tag.lower() != "program":
+            error("Bad xml format expect <program>", 32)
         for child in root:          #<instruction>
+            if child.tag.lower() != "instruction":
+                error("Bad xml format expect <instruction>", 32)
             inst = self.xml_valid_instr(child)
             inst = Instruction(inst[0], inst[1])
             arg_order = 1
             for ar in child:        #<arg>
+                if ar.tag.lower()[0:3] != "arg": 
+                    error("Bad xml format expect <arg>",32)  
                 arg = self.xml_valid_arg(ar, arg_order)
                 arg = Args(arg[0], arg[1], arg[2])
                 inst.append_arg(arg)
@@ -878,8 +883,7 @@ class Files(Arg_parse):
             a = a.lower()
             if a == "opcode":
                 if ia not in valid_instruction:
-                    sys.stderr.write("Not valid instruction\n")
-                    exit(32)
+                    error("Not valid instruction", 53)
                 opcode_flag = True
                 opcode = ia
                 continue
@@ -887,21 +891,17 @@ class Files(Arg_parse):
                 try:
                     ia = int(ia)
                 except:
-                    sys.stderr.write("Bad instruction order\n")
-                    exit(32)
+                    error("Bad instruction order",32)
                 if ia <= self.get_last_instr():
-                    sys.stderr.write("Bad instruction order\n")
-                    exit(32)
+                    error("Bad instruction order", 32)
                 self.set_last_instr(ia)
                 order_flag = True
                 ord = int(ia)
                 continue            
             else:
-                sys.stderr.write("Bad instruction flag\n")
-                exit(32)
+                error("Bad instruction flag", 32)
         if order_flag == False or opcode_flag == False:
-            sys.stderr.write("Opcode or order missing\n")
-            exit(32)
+            error("Opcode or order missing", 32)
         return opcode, ord
 
 
@@ -911,8 +911,7 @@ class Files(Arg_parse):
     def xml_valid_arg(self, arg, order):
         pat = re.compile('arg' + str(order))
         if not pat.match(arg.tag):
-            sys.stderr.write("Unvalid arg \n")
-            exit(32)
+            error("Unvalid arg", 32)
 
         type_flag = False
         type = ""
@@ -921,18 +920,15 @@ class Files(Arg_parse):
             a = a.lower()
             if a == "type":
                 if ia not in valid_types:
-                    sys.stderr.write("Invalid arg type \n")
-                    exit(32)
+                    error("Invalid arg type", 32)
                 type_flag = True
                 type = ia
                 continue
             else:
-                sys.stderr.write("Invalid arg attribut \n")
-                exit(32)
+                error("Invalid arg attribute", 32)
 
         if type_flag == False:
-            sys.stderr.write("Missing arg type flag \n")
-            exit(32)
+            error("Missing arg type flag",32)
 
         return order, type, arg.text
 
@@ -941,8 +937,7 @@ class Files(Arg_parse):
     # valid root attributes which is <program>
     def xml_valid_root(self, root):
         if root.tag != "program":
-            sys.stderr.write("Invalid XML root\n")
-            exit(31)
+            error("Invalid XML root", 32)
 
         language_flag = False
         for a in root.attrib:
@@ -951,22 +946,21 @@ class Files(Arg_parse):
             if a == "language":
                 language_flag = True
                 if ra != "ippcode22":
-                    sys.stderr.write("Language flag unsuported\n")
-                    exit(31)
+                    error("Language flag unsuported", 32)
                 continue
             if a == "name":
                 continue
             if a == "description":
                 continue
             else:
-                sys.stderr.write("Unknown <program> flag\n")
-                exit(31)
+                error("Unknown <program> flag", 31)
 
         if language_flag == False:
-            sys.stderr.write("Language flag missing\n")
-            exit(31)
+            error("Language flag missing", 31)
 
-
+def error(string, exit_code):
+    sys.stderr.write(string + "\n")
+    exit(exit_code)
 
 def debug(string):
     sys.stderr.write(string + "\n")
