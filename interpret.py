@@ -1,15 +1,9 @@
-from doctest import debug_src
-from math import exp
+from curses.ascii import isdigit
 from pickle import NONE
 import sys
 import re
-from unicodedata import name
 import xml.etree.ElementTree as ET
-import string
-from matplotlib.cbook import Stack
 import copy
-
-from numpy import argsort
 
 
 valid_instruction = [ "move", "int2char", "strlen", "type", "not",
@@ -52,10 +46,12 @@ def main():
     
     # gets all instructions 
     inter = Interpret()
+    Instruction.sort_instruction()
     inst_l = Instruction.get_instructions() 
     # interpret instruction one by one 
     for instr in inst_l:
         inter.interpret(instr)
+
     
 ##
 # Class for code interpretation 
@@ -195,6 +191,8 @@ class Interpret:
             self.inc_active_LT()
         self.__LF[self.get_active_LT()] = Frame()
 
+    ## 
+    # Gets value from <symb> 
     def get_symb_value_from_arg(self, arg):
         typ = arg.get_type()
         if typ == "var":
@@ -249,13 +247,13 @@ class Interpret:
         elif instr.get_name() == "dprint":
             self.__ins_dprint(instr)
         elif instr.get_name() == "add":
-            self.__ins_add(instr)
+            self.__int_numeric_command(instr, "add")
         elif instr.get_name() == "sub":
-            self.__ins_sub(instr)
+            self.__int_numeric_command(instr, "sub")
         elif instr.get_name() == "mul":
-            self.__ins_mul(instr)
+            self.__int_numeric_command(instr, "mul")
         elif instr.get_name() == "idiv":
-            self.__ins_idiv(instr)
+            self.__int_numeric_command(instr, "idiv")
         elif instr.get_name() == "lt":
             self.__ins_lt(instr)
         elif instr.get_name() == "gt":
@@ -431,57 +429,33 @@ class Interpret:
         debug("dprint")
 
     ##
-    # <var> <symb1> <symb2>
-    def __ins_add(self, instr):
-        result = 0
+    # ADD SUB MUL IDIV
+    def __int_numeric_command(self, instr, command):
+        if instr.get_n_arg(1).get_type() != "var":
+            if instr.get_n_arg(1).get_type() != "int":
+                error("unsuported type ", 53)
+        if instr.get_n_arg(2).get_type() != "var":
+            if instr.get_n_arg(2).get_type() != "int":
+                error("unsuported type ", 53)
+        
         self.__control_args(instr, 3)
-
-        ## <var> 
-        typ = instr.get_n_arg(0).get_type()
-        if typ != "var":
-            error("ADD needs variable as first argument", 53)
-
-        frame, name = self.__control_var(instr.get_n_arg(0))
-        if self.__control_var_exist(name, frame) == False:
-            error("Variable does not exist.", 54)
-        var1 = self.get_var(frame, name)
-
+        ## <var>
+        var1 = self.get_variable_from_arg(instr.get_n_arg(0))
         ## <symb1>
-        typ = instr.get_n_arg(1).get_type()
-        if typ == "var":
-            ## check if variable exist 
-            frame, name = self.__control_var(instr.get_n_arg(1))
-            if self.__control_var_exist(name, frame) == False:
-                error("Varable does not exist.", 54)
-            var2 = self.get_var(frame, name)  
-            value1 = var2.get_value()
-        else:
-            a, value1 = self.__control_var(instr.get_n_arg(1))
-        
+        val1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
         ## <symb2>
+        val2 = self.get_symb_value_from_arg(instr.get_n_arg(2))
+        if not (re.match(pattern_int, str(val1))) or not (re.match(pattern_int, str(val2))):
+            error("instruction needs numbers", 53)
+        if command == "add":
+            var1.set_value(int(val1) + int(val2))
+        elif command == "sub":
+            var1.set_value(int(val1) - int(val2))
+        elif command == "idiv":
+            var1.set_value(int(val1) // int(val2))
+        elif command == "mul":
+            var1.set_value(int(val1) * int(val2))
 
-        
-        
-        value = var1.get_value()
-
-    
-    ##
-    # <var> <symb1> <symb2>
-    def __ins_sub(self, instr):
-        self.__control_args(instr, 3)
-        debug("sub")
-
-    ##
-    # <var> <symb1> <symb2>
-    def __ins_mul(self, instr):
-        self.__control_args(instr, 3)
-        debug("mul")
-    
-    ##
-    # <var> <symb1> <symb2>
-    def __ins_idiv(self, instr):
-        self.__control_args(instr, 3)
-        print("idiv")
 
     ##
     # <var> <symb1> <symb2>
@@ -762,6 +736,17 @@ class Instruction:
         self.__args = []
         Instruction.__inst_list.append(self)
 
+    def sort_instruction():
+        arr = {}
+        for instr in Instruction.get_instructions():
+            index = instr.get_order()
+            arr[index] = instr
+        list = []
+        for key in sorted(arr.keys()):
+            list.append(arr[key])
+        
+        Instruction.__inst_list = list
+
     def get_instructions():
         return Instruction.__inst_list
 
@@ -781,7 +766,8 @@ class Instruction:
         self.__order = orde
 
     def append_arg(self, arg):
-        self.__args.append(arg)    
+        self.__args.append(arg)
+        
     
     def get_n_arg(self, n):
         for arg in self.__args:
@@ -999,8 +985,12 @@ class Files(Arg_parse):
                     ia = int(ia)
                 except:
                     error("Bad instruction order",32)
-                if ia <= self.get_last_instr():
-                    error("Bad instruction order", 32)
+                if ia <= 0:
+                    error("Bad instruction order",32)
+                for i in Instruction.get_instructions():
+                    if i.get_order() == ia:
+                        error("Duplicit instruction order",32)
+
                 self.set_last_instr(ia)
                 order_flag = True
                 ord = int(ia)
@@ -1071,6 +1061,11 @@ def error(string, exit_code):
 
 def debug(string):
     sys.stderr.write(string + "\n")
+
+
+pattern_int = '^[-+]?[0-9]+$'
+
+
 
 if __name__ == '__main__':
     main()
