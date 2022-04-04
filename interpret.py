@@ -195,6 +195,26 @@ class Interpret:
             self.inc_active_LT()
         self.__LF[self.get_active_LT()] = Frame()
 
+    def get_symb_value_from_arg(self, arg):
+        typ = arg.get_type()
+        if typ == "var":
+            frame, name = self.__control_var(arg)
+            if self.__control_var_exist(name, frame) == False:
+                error("Variable does not exist.", 54)
+            return (self.get_var(frame, name)).get_value()
+        else:
+            frame, name = self.__control_var(arg)
+            return name
+
+
+    def get_variable_from_arg(self, arg):
+        typ = arg.get_type()
+        if typ != "var":
+            error("Expect variable.", 53)
+        frame, name = self.__control_var(arg)
+        if self.__control_var_exist(name, frame) == False:
+            error("Variable does not exist.", 54)
+        return self.get_var(frame, name)
 
     ##
     # Functions that call proper __ins_* function
@@ -282,31 +302,11 @@ class Interpret:
     def __ins_move(self, instr):
         self.__control_args(instr, 2)
 
-        ##### FIRST ARGUMENT <VAR>    
-        ## check opcode type 
-        typ = instr.get_n_arg(0).get_type()
-        if typ != "var":
-            error("Move needs variable as first argument", 53)
+        # <var>
+        var1 = self.get_variable_from_arg(instr.get_n_arg(0))
 
-        ## check if variable exists
-        frame, name = self.__control_var(instr.get_n_arg(0))
-        if self.__control_var_exist(name, frame) == False:
-            error("Varable does not exist.", 54)
-
-        var1 = self.get_var(frame, name)
-        ####
-
-        typ = instr.get_n_arg(1).get_type()
-        if typ == "var":
-            ## check if variable exist 
-            frame, name = self.__control_var(instr.get_n_arg(0))
-            if self.__control_var_exist(name, frame) == False:
-                error("Varable does not exist.", 54)
-            var2 = self.get_var(frame, name)  
-            value = var2.get_value()
-        else:
-            a, value = self.__control_var(instr.get_n_arg(1))
-        
+        # <symb>
+        value = self.get_symb_value_from_arg(instr.get_n_arg(1))
         var1.set_value(value)
     
     ##
@@ -433,8 +433,37 @@ class Interpret:
     ##
     # <var> <symb1> <symb2>
     def __ins_add(self, instr):
+        result = 0
         self.__control_args(instr, 3)
-        debug("add")
+
+        ## <var> 
+        typ = instr.get_n_arg(0).get_type()
+        if typ != "var":
+            error("ADD needs variable as first argument", 53)
+
+        frame, name = self.__control_var(instr.get_n_arg(0))
+        if self.__control_var_exist(name, frame) == False:
+            error("Variable does not exist.", 54)
+        var1 = self.get_var(frame, name)
+
+        ## <symb1>
+        typ = instr.get_n_arg(1).get_type()
+        if typ == "var":
+            ## check if variable exist 
+            frame, name = self.__control_var(instr.get_n_arg(1))
+            if self.__control_var_exist(name, frame) == False:
+                error("Varable does not exist.", 54)
+            var2 = self.get_var(frame, name)  
+            value1 = var2.get_value()
+        else:
+            a, value1 = self.__control_var(instr.get_n_arg(1))
+        
+        ## <symb2>
+
+        
+        
+        value = var1.get_value()
+
     
     ##
     # <var> <symb1> <symb2>
