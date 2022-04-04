@@ -178,6 +178,14 @@ class Interpret:
             self.store_var_to_GF(name, typ, value)
         elif frame.lower() == "tf":
             self.store_var_to_TF(name, typ, value)
+
+    def get_var(self, frame, name):
+        if frame.lower() == "lf":
+            return self.__LF[self.get_active_LT()].get_variable(name)
+        elif frame.lower() == "gf":
+            return self.__GF.get_variable(name)
+        elif frame.lower() == "tf":
+            return self.__TF.get_variable(name)
     
     def create_LF(self):
         # first LF hasn't been created yet
@@ -267,21 +275,33 @@ class Interpret:
     # <var> <symb>
     def __ins_move(self, instr):
         self.__control_args(instr, 2)
+
+        ##### FIRST ARGUMENT <VAR>    
+        ## check opcode type 
         typ = instr.get_n_arg(0).get_type()
         if typ != "var":
             error("Move needs variable as first argument", 53)
+
+        ## check if variable exists
+        frame, name = self.__control_var(instr.get_n_arg(0))
+        if self.__control_var_exist(name, frame) == False:
+            error("Varable does not exist.", 54)
+
+        var1 = self.get_var(frame, name)
+        ####
+
         typ = instr.get_n_arg(1).get_type()
-        
         if typ == "var":
-            a, val = self.__control_var(instr.get_n_arg(0))
+            ## check if variable exist 
+            frame, name = self.__control_var(instr.get_n_arg(0))
+            if self.__control_var_exist(name, frame) == False:
+                error("Varable does not exist.", 54)
+            var2 = self.get_var(frame, name)  
+            value = var2.get_value()
         else:
-            val = self.__control_var(instr.get_n_arg(0).get_content())
-        debug(val)
+            a, value = self.__control_var(instr.get_n_arg(1))
         
-
-
-        
-        debug("move")
+        var1.set_value(value)
     
     ##
     # <var> <symb>
@@ -313,7 +333,8 @@ class Interpret:
         self.__control_args(instr, 1)
         self.__control_arg_type(instr, 0, "var")
         frame, var = self.__control_var(instr.get_n_arg(0))
-        self.__control_var_exist(var, frame)
+        if self.__control_var_exist(var, frame) == True:
+            error("Variable already exist in frame", 52)
         self.store_var(frame, var, "" , "")
         
     ##
@@ -525,6 +546,8 @@ class Interpret:
         var = arg.get_content()
         var = var.split("@")
         i = ""
+        if len(var) == 1:
+            return "", var[0]
         for v in var[1:]:
             i = i + v
         var[1] = i
@@ -546,16 +569,18 @@ class Interpret:
         if arg_type.lower() != expect:
             error("Unexpected xml argument", 32)
     
-    def __control_var_exist(self, var, frame):
+    ## returns true if exist 
+    def __control_var_exist(self, name, frame):
         if frame.lower() == "gf":
             if self.__GF.var_exist(name) == True:
-                error("Variable already exist in frame", 52)
+                return True
         elif frame.lower() == "lf":
             if self.__LF[self.get_active_LT()].var_exist(name) == True:
-                error("Variable already exists in frame ",52)
+                return True
         elif frame.lower() == "tf":
             if self.__TF.var_exist(name) == True:
-                error("Variable already exists in frame ", 52)
+                return True
+        return False
             
     ################################################################
     
@@ -615,6 +640,11 @@ class Frame:
             if v.get_name() == name:
                 return i
             i = i + 1
+    
+    def get_variable(self, name):
+        index = self.find_variable_index(name)
+        return self.get_variable_index(index)
+
     ##
     # return true if variable exist in frame
     #       else return false 
@@ -682,7 +712,7 @@ class Instruction:
     
     def get_n_arg(self, n):
         for arg in self.__args:
-            if arg.tag == ("arg" + str(n)):
+            if arg.get_tag() == ("arg" + str(n+1)):
                 return arg
         error("Unvalid argument",52)
     
@@ -690,10 +720,14 @@ class Instruction:
 # one instrustion argument. 
 class Args:
 
-    def __init__(self, order, typ, content):
-        self.__order   = order
-        self.__typ    = typ
-        self.__content = content
+    def __init__(self, order, typ, content, tag):
+        self.__order   = order     # 1,2,3 .... 
+        self.__typ    = typ        # var, string .... 
+        self.__content = content   # whatever 
+        self.__tag     = tag       #<arg1>
+    
+    def get_tag(self):
+        return self.__tag
 
     def get_order(self):
         return self.__order
@@ -863,7 +897,7 @@ class Files(Arg_parse):
                 if ar.tag.lower()[0:3] != "arg": 
                     error("Bad xml format expect <arg>",32)  
                 arg = self.xml_valid_arg(ar, arg_order)
-                arg = Args(arg[0], arg[1], arg[2])
+                arg = Args(arg[0], arg[1], arg[2], ar.tag.lower())
                 inst.append_arg(arg)
                 arg_order += 1
         
