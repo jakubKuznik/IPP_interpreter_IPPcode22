@@ -12,7 +12,7 @@ valid_instruction = [ "move", "int2char", "strlen", "type", "not",
  "defvar", "pops" , "call", "jump", "label", "pushs", "write", 
  "exit", "dprint", "add", "sub", "mul", "idiv", "lt", "gt", "eq",
  "and", "or", "stri2int", "concat", "getchar", "setchar", "jumpifeq",
- "jumpifneq", "read", "createframe", " break", "pushframe", "popframe"
+ "jumpifneq", "read", "createframe", " break", "pushframe", "popframe",
  "return", "div", "int2float", "float2int"]
 
 valid_types = ["int", "bool", "string", "nil", "label", "type", "var", "float"]
@@ -77,7 +77,7 @@ class Interpret:
 
     def get_GF(self):
         return self.__GF
-    
+
     def get_TF(self):
         return self.__TF
     
@@ -131,13 +131,13 @@ class Interpret:
     ##
     # Create local frame 
     def create_LF(self):
-        self.inc_active_LT()
         if len(self.__LF) == 0:
             self.set_active_LT(0)
-            self.__LF[self.get_active_LT()] = copy.copy(self.__TF)
+            self.__LF.append(copy.deepcopy(self.get_TF()))
+            self.__LF[0].__variables = copy.deepcopy(self.get_TF().get_variables())
         else:
             self.inc_active_LT()
-            self.__LF[self.get_active_LT()] = copy.copy(self.__TF)
+            self.__LF.append(copy.deepcopy(self.get_TF()))
         self.delete_TF()
 
     ##
@@ -185,14 +185,6 @@ class Interpret:
         elif frame.lower() == "tf":
             return self.__TF.get_variable(name)
     
-    def create_LF(self):
-        # first LF hasn't been created yet
-        if len(self.__LF) == 0:
-            self.set_active_LT(0)
-        else:
-            self.inc_active_LT()
-        self.__LF.append(Frame())
-
     ## 
     # Gets value from <symb> 
     def get_symb_value_from_arg(self, arg):
@@ -218,7 +210,12 @@ class Interpret:
     ##
     # Functions that call proper __ins_* function
     def interpret(self, instr):
-        self.print_frames()
+        
+        sys.stderr.write("\n")
+        sys.stderr.write("..............")
+        sys.stderr.write(instr.get_name())
+        sys.stderr.write("..............")
+        sys.stderr.write("\n")
         if instr.get_name() == "move":
             self.__ins_move(instr)
         elif instr.get_name() == "int2char":
@@ -295,6 +292,7 @@ class Interpret:
             self.__ins_float2int(instr)
         else:
             error("Unknown instruction", 51)
+        self.print_frames()
 
     ##
     # <var> <symb>
@@ -564,8 +562,12 @@ class Interpret:
     # 
     def __ins_pushframe(self, instr):
         self.__control_args(instr, 0)
+        
+        try:
+            self.get_TF()
+        except:
+            error("Frame does not exist", 55)
         self.create_LF()
-        self.delete_TF()
 
     ##
     # 
@@ -573,7 +575,7 @@ class Interpret:
         self.__control_args(instr, 0)
         if self.LT_is_empty():
             error("Frame does not exists ", 55)
-        self.LF_to_TF()
+        self.TF_to_LF()
     ##
     # 
     def __ins_div(self, instr):
@@ -638,7 +640,7 @@ class Interpret:
                 return True
         elif frame.lower() == "lf":
             try:
-                self.__active_LT[self.get_active_LT()]
+                self.__LF[self.get_active_LT()]
             except:
                 error("Frame does not exist",55) 
             if self.__LF[self.get_active_LT()].var_exist(name) == True:
@@ -657,21 +659,22 @@ class Interpret:
     ##
     # DEBUG FUNCTION 
     def print_frames(self):
-        debug("..GF:")
+        
+        debug("\n..GF:")
         try:
             for a in self.__GF.get_variables():
-                debug("....name:... " + a.get_name(), end=" ")
-                debug("....type:... " + a.get_typ(), end=" ")
-                debug("....value:... " + str(a.get_value()),)
+                debug("      name:... " + str(a.get_name()))
+                debug("      type:... " + str(a.get_typ()))
+                debug("      value:... " + str(a.get_value()))
         except:
             debug("....empty")
 
         debug("..TF:")
         try:
             for a in self.__TF.get_variables():
-                debug("....name:... " + a.get_name(), end=" ")
-                debug("....type:... " + a.get_typ(), end=" ")
-                debug("....value:... " + str(a.get_value()))
+                debug("      name:... " + str(a.get_name()))
+                debug("      type:... " + str(a.get_typ()))
+                debug("      value:... " + str(a.get_value()))
         except:
             debug("....empty")
         
@@ -681,9 +684,9 @@ class Interpret:
             i+=1
             try:
                 for a in frame.get_variables():
-                    debug("....name:... " + a.get_name(),end=" ")
-                    debug("....type:... " + a.get_typ(),end=" ")
-                    debug("....value:..." + str(a.get_value()))
+                    debug("      name:... " + str(a.get_name()))
+                    debug("      type:... " + str(a.get_typ()))
+                    debug("      value:... " + str(a.get_value()))
             except:
                 debug("....empty")
 
