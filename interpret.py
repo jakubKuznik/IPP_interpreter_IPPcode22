@@ -108,7 +108,7 @@ class Interpret:
 
     ##
     # Copy active LF to TF and delete it 
-    def LF_to_TF(self):
+    def TF_to_LF(self):
         self.__TF = copy.copy(self.__LF[self.get_active_LT()])
         self.remove_LF()
 
@@ -187,11 +187,11 @@ class Interpret:
     
     def create_LF(self):
         # first LF hasn't been created yet
-        if self.get_First_LT_created() == False:
+        if len(self.__LF) == 0:
             self.set_active_LT(0)
         else:
             self.inc_active_LT()
-        self.__LF[self.get_active_LT()] = Frame()
+        self.__LF.append(Frame())
 
     ## 
     # Gets value from <symb> 
@@ -548,7 +548,10 @@ class Interpret:
     # remove TF content and create new one 
     def __ins_createframe(self, instr):
         self.__control_args(instr, 0)
-        self.delete_TF()
+        try:
+            self.delete_TF()
+        except:
+            pass
         self.create_TF() 
     
     ##
@@ -562,7 +565,8 @@ class Interpret:
     def __ins_pushframe(self, instr):
         self.__control_args(instr, 0)
         self.create_LF()
-    
+        self.delete_TF()
+
     ##
     # 
     def __ins_popframe(self, instr):
@@ -570,7 +574,6 @@ class Interpret:
         if self.LT_is_empty():
             error("Frame does not exists ", 55)
         self.LF_to_TF()
-         
     ##
     # 
     def __ins_div(self, instr):
@@ -627,12 +630,24 @@ class Interpret:
     ## returns true if exist 
     def __control_var_exist(self, name, frame):
         if frame.lower() == "gf":
+            try:
+                self.get_GF()
+            except:
+                error("Frame does not exist",55) 
             if self.__GF.var_exist(name) == True:
                 return True
         elif frame.lower() == "lf":
+            try:
+                self.__active_LT[self.get_active_LT()]
+            except:
+                error("Frame does not exist",55) 
             if self.__LF[self.get_active_LT()].var_exist(name) == True:
                 return True
         elif frame.lower() == "tf":
+            try:
+                self.get_TF()
+            except:
+                error("Frame does not exist",55) 
             if self.__TF.var_exist(name) == True:
                 return True
         return False
@@ -662,7 +677,7 @@ class Interpret:
         
         i = 0
         for frame in self.__LF:
-            debug("..LF" + i)
+            debug("..LF" + str(i))
             i+=1
             try:
                 for a in frame.get_variables():
