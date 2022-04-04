@@ -69,7 +69,7 @@ class Interpret:
     ##
     # pop from stack
     def pop(self):
-        self.__stack.pop()
+        return self.__stack.pop()
     ##
     # push to stack 
     def push(self, val):
@@ -292,8 +292,6 @@ class Interpret:
             self.__ins_float2int(instr)
         else:
             error("Unknown instruction", 51)
-        self.print_frames()
-
     ##
     # <var> <symb>
     def __ins_move(self, instr):
@@ -326,7 +324,7 @@ class Interpret:
         value = self.get_symb_value_from_arg(instr.get_n_arg(1))
         value = str(value)
         if value == "":
-            var.set_value("")
+            var.set_value("NONETYPE")
         elif value == "true" or value == "false":
             var.set_value("bool")
         elif value == "nil":
@@ -366,13 +364,8 @@ class Interpret:
             error("Stack is empty", 56)
 
         ## check if variable exists
-        frame, val = self.__control_var(instr.get_n_arg(0)) 
-        frame = self.get_FRAME(frame)
-        if frame.var_exist(val) == False:
-            error("Non declared variable access ", 54)
-        
-        variable = frame.get_variable_index(frame.find_variable_index(val))
-        variable.set_name(set_to)
+        var = self.get_variable_from_arg(instr.get_n_arg(0)) 
+        var.set_value(set_to)
         
     ##
     # <label>
@@ -396,11 +389,7 @@ class Interpret:
     # <symb>
     def __ins_pushs(self, instr):
         self.__control_args(instr, 1)
-        typ = instr.get_n_arg(0).get_type()
-        if typ == "var":
-            a, val = self.__control_var(instr.get_n_arg(0))
-        else: 
-            val = self.__control_var(instr.get_n_arg(0).get_content())
+        val = self.get_symb_value_from_arg(instr.get_n_arg(0))
         self.push(val)
 
     ##
@@ -408,31 +397,38 @@ class Interpret:
     # nil is empty string 
     def __ins_write(self, instr):
         self.__control_args(instr, 1)
-        
         typ = instr.get_n_arg(0).get_type()
         if typ == "var":
             ## check if variable exists
-            frame, name = self.__control_var(instr.get_n_arg(0))
-            if self.__control_var_exist(name, frame) == False:
-                error("Variable does not exist.", 54)
-            var1 = self.get_var(frame, name)
-            value = var1.get_value()
-            if value == "nil":
+            var1 = self.get_variable_from_arg(instr.get_n_arg(0))
+            val = str(var1.get_value())
+            if val == "nil":
+                print("", end='')
+            elif val == "":
+                print(val, end=' ')
+            elif val == "NONETYPE":
                 print("", end='')
             else:
-                print(value, end='')
+                print(val, end='')
         else:
-            frame, name = self.__control_var(instr.get_n_arg(0))
-            if name.lower() == "nil":
+            val = self.get_symb_value_from_arg(instr.get_n_arg(0))
+            if val.lower() == "nil":
                 print("", end='')
             else:
-                print(name, end='')
+                print(val, end='')
 
     ##
     # <symb>
     def __ins_exit(self, instr):
         self.__control_args(instr, 1)
-        debug("exit")
+        value = self.get_symb_value_from_arg(instr.get_n_arg(0))
+        try:
+            value = int(value)
+        except:
+            error("Exit value not valid",57)
+        if value < 0 or value > 49:
+            error("Exit value not valid",57)
+        exit(value)
 
     ##
     # <symb>
