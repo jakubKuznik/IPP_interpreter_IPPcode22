@@ -1,7 +1,9 @@
 from curses.ascii import isdigit
+from dis import Instruction
 from pickle import NONE
 import sys
 import re
+from unicodedata import name
 import xml.etree.ElementTree as ET
 import copy
 
@@ -51,11 +53,15 @@ def main():
     inter = Interpret(input_conte)
     Instruction.sort_instruction()
     inst_l = Instruction.get_instructions() 
-    # interpret instruction one by one 
-    for i in range(0, len(inst_l)):
+    # interpret instruction one by one
+    i = 0
+    kill = 0
+    while i  < len(inst_l):
         i = inter.interpret(inst_l[i], i)
-
-
+        i = i + 1
+        kill = kill + 1
+        if kill == 1000:
+            error("kill",100)
     
 ##
 # Class for code interpretation 
@@ -68,10 +74,22 @@ class Interpret:
         self.__stack = [] # use append and pop 
         self.__active_LT : int
         self.__read_file = read_file
+        self.__labels = []
     
+    def get_labels(self):
+        return self.__labels
     
+    def find_label(self, name):
+        for l in self.get_labels():
+            if l.get_name().lower() == name.lower():
+                return l
+        return None
+
     def get_read_file(self):
         return self.__read_file
+
+    def store_label(self, label):
+        self.__labels.append(label)
 
     ##
     # get line from read file 
@@ -215,6 +233,7 @@ class Interpret:
 
     ##
     # Functions that call proper __ins_* function
+    # i == instruction index 
     def interpret(self, instr, i):
         
         #sys.stderr.write("\n")
@@ -239,9 +258,9 @@ class Interpret:
         elif instr.get_name() == "call":
             self.__ins_call(instr)
         elif instr.get_name() == "jump":
-            self.__ins_jump(instr)
+            i = self.__ins_jump(instr)
         elif instr.get_name() == "label":
-            self.__ins_label(instr)
+            self.__ins_label(instr, i)
         elif instr.get_name() == "pushs":
             self.__ins_pushs(instr)
         elif instr.get_name() == "write":
@@ -386,13 +405,36 @@ class Interpret:
     # <label>
     def __ins_jump(self, instr):
         self.__control_args(instr, 1)
-        debug("jump")
+        self.__control_arg_type(instr, 0, "label")
+
+        name = self.get_symb_value_from_arg(instr.get_n_arg(0))
+        label = self.find_label(name)
+        if label == None:
+            inst_l = Instruction.get_instructions()
+            for i in range(0, len(inst_l)):
+                if inst_l[i].get_name().lower() == "label":
+                    self.__control_args(inst_l[i], 1)
+                    self.__control_arg_type(inst_l[i], 0, "label")
+                    name2 = self.get_symb_value_from_arg(inst_l[i].get_n_arg(0))
+                    if name.lower() == name2.lower():
+                        return i-1
+            error("Non existing label ",52)
+        else:
+            return label.get_inst_index() -1
+
+
+        #return label.get_inst_index() - 1
+
 
     #######################################################3
     # <label>
-    def __ins_label(self, instr):
+    def __ins_label(self, instr, i):
         self.__control_args(instr, 1)
-        debug("label")
+        self.__control_arg_type(instr, 0, "label")
+        name = self.get_symb_value_from_arg(instr.get_n_arg(0))
+        
+        label = Label(name, i)
+        self.store_label(label)
     
     ##
     # <symb>
@@ -411,16 +453,16 @@ class Interpret:
             ## check if variable exists
             var1 = self.get_variable_from_arg(instr.get_n_arg(0))
             val = str(var1.get_value())
+            val = replace_non_print(val)
             if val == "nil":
                 print("", end='')
-            elif val == "":
-                print(val, end=' ')
             elif val == "NONETYPE":
                 print("", end='')
             else:
                 print(val, end='')
         else:
             val = self.get_symb_value_from_arg(instr.get_n_arg(0))
+            val = replace_non_print(val)
             if val.lower() == "nil":
                 print("", end='')
             else:
@@ -589,6 +631,7 @@ class Interpret:
     # 
     def __ins_break(self, instr):
         self.__control_args(instr, 0)
+        exit(100)
         debug("break")
     
     ##
@@ -1168,6 +1211,9 @@ def error(string, exit_code):
 def debug(string):
     sys.stderr.write(string + "\n")
 
+def replace_non_print(val):
+    val = val.replace('\\032', " ")
+    return val
 
 pattern_int = '^[-+]?[0-9]+$'
 pattern_float = '[+-]?[0-9]+\.[0-9]+'
