@@ -26,6 +26,7 @@
     define ("OUT", 0);
     define ("IN", 1);
     define ("RC", 2);
+    define ("SRC", 3);
 
     define ("FAIL", 0);
     define ("SUCCESS", 1);
@@ -54,7 +55,7 @@
         $tf->find_test_from_list($set->directory, $set->recursive, $set->match_regex);
     else                         // just from directory
         $tf->find_test_inputs($set->directory, $set->recursive, $set->match_regex);
-   
+  
 
     $test_c = new Test($set);
     $html_generator = new Html_generation();
@@ -215,13 +216,15 @@
         function int_only_test($file_path, $temp_file){
             $this->test_num++;
             
-            $result_rc      = "";
-            $diff_ret       = "";
-            $out            = "";
-            $ref_file_out   = get_file_name($file_path, OUT);
-            $ref_rc = file_get_contents(get_file_name($file_path, RC), true);     
-            $inter_comm     = "php8.1 ".$this->int_path ." <" . $file_path . ">" . $temp_file;           
-
+            $result_rc       = "";
+            $diff_ret        = "";
+            $out             = "";
+            $ref_file_out    = get_file_name($file_path, OUT);
+            $ref_rc = file_get_contents(get_file_name($file_path, RC), true);
+            $file_in     = get_file_name($file_path, IN);
+            $file_src  = get_file_name($file_path, SRC);
+            $inter_comm      = "python3 " . $this->int_path . " --source=" . $file_src . " --input=" . $file_in . ">" . $temp_file . " 2>/dev/null";           
+            
             // Non valid return code 
             if (is_numeric($ref_rc) == false){
                 fwrite (STDERR,"UNVALID Test: " . $this->test_num . " " . $file_path . "\n");
@@ -236,9 +239,11 @@
             /********* ref RETURN CODE 0  ****************/
             else{
                 // store parser output to temp variable 
-                exec($inter_comm, $temp_file, $result_rc);
+                exec($inter_comm, $result_out, $result_rc);
                 exec("diff -q " . $ref_file_out . " " . $temp_file, $out ,$diff_ret);
+                
                 if (($diff_ret != 0) || ($result_rc != $ref_rc)){
+                    exit(10);
                     $this->test_fail($file_path, $ref_rc, $result_rc);
                 }
                 else{
@@ -731,6 +736,8 @@
             return ($dirname . "/" . $base_name . ".in");
         else if ($suff == RC)
             return ($dirname . "/" . $base_name . ".rc");
+        else if ($suff == SRC)
+            return ($dirname . "/" . $base_name . ".src");
     }
     
     
