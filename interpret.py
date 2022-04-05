@@ -52,8 +52,9 @@ def main():
     Instruction.sort_instruction()
     inst_l = Instruction.get_instructions() 
     # interpret instruction one by one 
-    for instr in inst_l:
-        inter.interpret(instr)
+    for i in range(0, len(inst_l)):
+        i = inter.interpret(inst_l[i], i)
+
 
     
 ##
@@ -67,7 +68,8 @@ class Interpret:
         self.__stack = [] # use append and pop 
         self.__active_LT : int
         self.__read_file = read_file
-
+    
+    
     def get_read_file(self):
         return self.__read_file
 
@@ -213,7 +215,7 @@ class Interpret:
 
     ##
     # Functions that call proper __ins_* function
-    def interpret(self, instr):
+    def interpret(self, instr, i):
         
         #sys.stderr.write("\n")
         #sys.stderr.write("..............")
@@ -298,6 +300,7 @@ class Interpret:
             self.__ins_float2int(instr)
         else:
             error("Unknown instruction", 51)
+        return i
     ##
     # <var> <symb>
     def __ins_move(self, instr):
@@ -841,6 +844,26 @@ class Instruction:
             if arg.get_tag() == ("arg" + str(n+1)):
                 return arg
         error("Unvalid argument",52)
+    
+##
+# Label 
+class Label:
+
+    def __init__(self, name, inst_index):
+        self.__name = name
+        self.__inst_index = inst_index
+
+    def get_name(self):
+        return self.__name
+    
+    def set_name(self, name):
+        self.__name = name
+    
+    def set_inst_index(self, index):
+        self.__inst_index = index
+    
+    def get_inst_index(self):
+        return self.__inst_index
     
 ##
 # one instrustion argument. 
