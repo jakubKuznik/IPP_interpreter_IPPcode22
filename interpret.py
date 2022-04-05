@@ -64,13 +64,14 @@ def main():
 class Interpret:
 
     def __init__(self, read_file):
-        self.__GF = Frame()
-        self.__TF : Frame
-        self.__LF = []
-        self.__stack = [] # use append and pop 
-        self.__active_LT : int
-        self.__read_file = read_file
-        self.__labels = []
+        self.__GF           = Frame()
+        self.__TF           : Frame
+        self.__LF           = []
+        self.__stack        = [] # use append and pop 
+        self.__active_LT    : int
+        self.__read_file    = read_file
+        self.__labels       = []
+        self.__instr_stack  = []
     
     def get_labels(self):
         return self.__labels
@@ -86,6 +87,15 @@ class Interpret:
 
     def store_label(self, label):
         self.__labels.append(label)
+
+    ##
+    # pop from instr stack
+    def pop_instr(self):
+        return self.__instr_stack.pop()
+    ##
+    # push to instr stack 
+    def push_instr(self, val):
+        self.__instr_stack.append(val)
 
     ##
     # get line from read file 
@@ -253,7 +263,7 @@ class Interpret:
         elif instr.get_name() == "pops":
             self.__ins_pops(instr)
         elif instr.get_name() == "call":
-            self.__ins_call(instr)
+            i = self.__ins_call(instr,i)
         elif instr.get_name() == "jump":
             i = self.__ins_jump(instr)
         elif instr.get_name() == "label":
@@ -307,7 +317,7 @@ class Interpret:
         elif instr.get_name() == "popframe":
             self.__ins_popframe(instr)
         elif instr.get_name() == "return":
-            self.__ins_return(instr)
+            i = self.__ins_return(instr)
         elif instr.get_name() == "div":
             self.__ins_div(instr)
         elif instr.get_name() == "int2float":
@@ -395,9 +405,10 @@ class Interpret:
         
     #######################################################3
     # <label>
-    def __ins_call(self, instr):
+    def __ins_call(self, instr, i):
         self.__control_args(instr, 1)
-        debug("call")
+        self.push_instr(i)
+        return self.jump(instr)
     
     def jump(self, instr):
         name = self.get_symb_value_from_arg(instr.get_n_arg(0))
@@ -426,7 +437,6 @@ class Interpret:
 
 
         #return label.get_inst_index() - 1
-
 
     ##
     # <label>
@@ -734,7 +744,11 @@ class Interpret:
     #
     def __ins_return(self, instr):
         self.__control_args(instr, 0)
-        debug("return")
+        try:
+            i = self.pop_instr()
+        except:
+            error("Empty instruction stack", 56)
+        return i
     
     
     ############## CONTROL FUNCTIONS (SEMATIC OR SYNTAX)############
