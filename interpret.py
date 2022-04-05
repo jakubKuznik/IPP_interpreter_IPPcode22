@@ -56,7 +56,7 @@ def main():
         i = inter.interpret(inst_l[i], i)
         i = i + 1
         kill = kill + 1
-        if kill == 1000:
+        if kill == 50:
             error("kill",100)
     
 ##
@@ -232,11 +232,12 @@ class Interpret:
     # i == instruction index 
     def interpret(self, instr, i):
         
-        #sys.stderr.write("\n")
-        #sys.stderr.write("..............")
-        #sys.stderr.write(instr.get_name())
-        #sys.stderr.write("..............")
-        #sys.stderr.write("\n")
+        sys.stderr.write("\n")
+        sys.stderr.write("..............")
+        sys.stderr.write(instr.get_name())
+        sys.stderr.write("..............")
+        sys.stderr.write("\n")
+        self.print_frames()
         if instr.get_name() == "move":
             self.__ins_move(instr)
         elif instr.get_name() == "int2char":
@@ -292,9 +293,9 @@ class Interpret:
         elif instr.get_name() == "setchar":
             self.__ins_setchar(instr)
         elif instr.get_name() == "jumpifeq":
-            self.__ins_jumpifeq(instr)
+            i = self.__ins_jumpifeq(instr, i)
         elif instr.get_name() == "jumpifneq":
-            self.__ins_jumpifneq(instr)
+            i = self.__ins_jumpifneq(instr,i)
         elif instr.get_name() == "read":
             self.__ins_read(instr)
         elif instr.get_name() == "createframe":
@@ -339,7 +340,8 @@ class Interpret:
     def __ins_strlen(self, instr):
         self.__control_args(instr, 2)
         debug("strlen")
-        
+
+
     ##
     # <var> <symb>
     def __ins_type(self, instr):
@@ -397,12 +399,7 @@ class Interpret:
         self.__control_args(instr, 1)
         debug("call")
     
-    #######################################################3
-    # <label>
-    def __ins_jump(self, instr):
-        self.__control_args(instr, 1)
-        self.__control_arg_type(instr, 0, "label")
-
+    def jump(self, instr):
         name = self.get_symb_value_from_arg(instr.get_n_arg(0))
         label = self.find_label(name)
         if label == None:
@@ -413,16 +410,25 @@ class Interpret:
                     self.__control_arg_type(inst_l[i], 0, "label")
                     name2 = self.get_symb_value_from_arg(inst_l[i].get_n_arg(0))
                     if name.lower() == name2.lower():
-                        return i-1
+                        return i
             error("Non existing label ",52)
         else:
-            return label.get_inst_index() -1
+            return label.get_inst_index()
+
+
+    ##
+    # <label>
+    def __ins_jump(self, instr):
+        self.__control_args(instr, 1)
+        self.__control_arg_type(instr, 0, "label")
+
+        return self.jump(instr)
 
 
         #return label.get_inst_index() - 1
 
 
-    #######################################################3
+    ##
     # <label>
     def __ins_label(self, instr, i):
         self.__control_args(instr, 1)
@@ -570,18 +576,75 @@ class Interpret:
         self.__control_args(instr, 3)
         debug("setchar")
     
-    #######################################################3
+    ##
     # <label> <symb1> <symb2>
-    def __ins_jumpifeq(self, instr):
+    def __ins_jumpifeq(self, instr, i):
         self.__control_args(instr, 3)
-        debug("jumpifeq")
+        args = instr.get_args()
+        
+        type1 = args[1].get_type()
+        if type1 == "var":
+            var1 = self.get_variable_from_arg(args[1])
+            var1.set_variable_type()  
+            type1 = var1.get_typ()       
+        else:
+            type1 = args[1].get_type()
+        
+        type2 = args[2].get_type()
+        if type2 == "var":
+            var2 = self.get_variable_from_arg(args[2])
+            var2.set_variable_type() 
+            type2 = var2.get_typ()    
+        else:   
+            type2 = args[2].get_type()
 
-    #######################################################3
+        value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
+        value2 = self.get_symb_value_from_arg(instr.get_n_arg(2))
+        
+        if type1 == "nil" or type2 == "nil":
+            return self.jump(instr)
+        elif type1 != type2:
+            error("Jumpifeq Type mismatch", 53)
+
+        if str(value1) == str(value2):
+            return self.jump(instr)
+        return i
+
+
+    ##
     # <label> <symb1> <symb2>
-    def __ins_jumpifneq(self, instr):
+    def __ins_jumpifneq(self, instr, i):
         self.__control_args(instr, 3)
-        debug("jumpifneq")
-    
+        args = instr.get_args()
+        
+        type1 = args[1].get_type()
+        if type1 == "var":
+            var1 = self.get_variable_from_arg(args[1])
+            var1.set_variable_type()  
+            type1 = var1.get_typ()       
+        else:
+            type1 = args[1].get_type()
+        
+        type2 = args[2].get_type()
+        if type2 == "var":
+            var2 = self.get_variable_from_arg(args[2])
+            var2.set_variable_type() 
+            type2 = var2.get_typ()    
+        else:   
+            type2 = args[2].get_type()
+
+        value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
+        value2 = self.get_symb_value_from_arg(instr.get_n_arg(2))
+        
+        if type1 == "nil" or type2 == "nil":
+            return self.jump(instr)
+        elif type1 != type2:
+            error("Jumpifeq Type mismatch", 53)
+
+        if str(value1) != str(value2):
+            return self.jump(instr)
+        return i
+
     ##
     # <var> <type>
     def __ins_read(self, instr):
@@ -827,6 +890,21 @@ class Variable:
     def set_value(self, val):
         self.__value = val
 
+    def set_variable_type(self):
+        value = self.get_value()
+        if value == "":
+            self.set_typ("NONETYPE")
+        elif value == "true" or value == "false":
+            self.set_typ("bool")
+        elif value == "nil":
+            self.set_typ("nil")
+        elif re.match(pattern_int, str(value)):
+            self.set_typ("int")
+        elif re.match(pattern_float, str(value)):
+            self.set_typ("float")
+        else:
+            self.set_typ("string")
+
 
 ##
 # Store one instruction 
@@ -937,7 +1015,7 @@ class Args:
 
     def set_cont(self, cont):
         self.__content = cont
-    
+
 
 
     
