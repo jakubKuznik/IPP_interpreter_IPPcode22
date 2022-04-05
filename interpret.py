@@ -43,11 +43,12 @@ def main():
     ## parse xml using xml library and store instructions 
     root = files.xml_parse()
     files.xml_validation(root)
-    ## store input file 
+    ## store input file ## input_file  
+
     input_conte = files.input_store()
-    
+
     # gets all instructions 
-    inter = Interpret()
+    inter = Interpret(input_conte)
     Instruction.sort_instruction()
     inst_l = Instruction.get_instructions() 
     # interpret instruction one by one 
@@ -59,12 +60,23 @@ def main():
 # Class for code interpretation 
 class Interpret:
 
-    def __init__(self):
+    def __init__(self, read_file):
         self.__GF = Frame()
         self.__TF : Frame
         self.__LF = []
         self.__stack = [] # use append and pop 
         self.__active_LT : int
+        self.__read_file = read_file
+
+    def get_read_file(self):
+        return self.__read_file
+
+    ##
+    # get line from read file 
+    def get_r_line(self):
+        val, self.__read_file = Files.get_first(self.__read_file)
+        val = val.strip()
+        return val
 
     ##
     # pop from stack
@@ -94,13 +106,6 @@ class Interpret:
     def get_active_LT(self):
         return self.__active_LT
         
-        #try:
-        #    return self.__active_LT
-        #except:
-        #    sys.stderr.write("LF has not been created yet\n")
-        #    exit(10)
-
-
     def LT_is_empty(self):
         if len(self.__LF) == 0:
             return True
@@ -167,7 +172,6 @@ class Interpret:
             self.__TF.add_variable(var)
         except:
             error("Frame does not exists ", 32)
-            
     
     def store_var(self, frame, name, typ, value):
         if frame.lower() == "lf":
@@ -211,11 +215,11 @@ class Interpret:
     # Functions that call proper __ins_* function
     def interpret(self, instr):
         
-        sys.stderr.write("\n")
-        sys.stderr.write("..............")
-        sys.stderr.write(instr.get_name())
-        sys.stderr.write("..............")
-        sys.stderr.write("\n")
+        #sys.stderr.write("\n")
+        #sys.stderr.write("..............")
+        #sys.stderr.write(instr.get_name())
+        #sys.stderr.write("..............")
+        #sys.stderr.write("\n")
         if instr.get_name() == "move":
             self.__ins_move(instr)
         elif instr.get_name() == "int2char":
@@ -270,8 +274,10 @@ class Interpret:
             self.__ins_getchar(instr)
         elif instr.get_name() == "setchar":
             self.__ins_setchar(instr)
-        elif instr.get_name() == "jumpifneq":
+        elif instr.get_name() == "jumpifeq":
             self.__ins_jumpifeq(instr)
+        elif instr.get_name() == "jumpifneq":
+            self.__ins_jumpifneq(instr)
         elif instr.get_name() == "read":
             self.__ins_read(instr)
         elif instr.get_name() == "createframe":
@@ -304,13 +310,13 @@ class Interpret:
         value = self.get_symb_value_from_arg(instr.get_n_arg(1))
         var1.set_value(value)
     
-    ##
+    #######################################################3
     # <var> <symb>
     def __ins_int2char(self, instr):
         self.__control_args(instr, 2)
         debug("i2ch")
     
-    ##
+    #######################################################3
     # <var> <symb>
     def __ins_strlen(self, instr):
         self.__control_args(instr, 2)
@@ -336,7 +342,7 @@ class Interpret:
         else:
             var.set_value("string")
     
-    ##
+    #######################################################3
     # <var> <symb>
     def __ins_not(self, instr):
         self.__control_args(instr, 2)
@@ -367,19 +373,19 @@ class Interpret:
         var = self.get_variable_from_arg(instr.get_n_arg(0)) 
         var.set_value(set_to)
         
-    ##
+    #######################################################3
     # <label>
     def __ins_call(self, instr):
         self.__control_args(instr, 1)
         debug("call")
     
-    ##
+    #######################################################3
     # <label>
     def __ins_jump(self, instr):
         self.__control_args(instr, 1)
         debug("jump")
 
-    ##
+    #######################################################3
     # <label>
     def __ins_label(self, instr):
         self.__control_args(instr, 1)
@@ -430,7 +436,7 @@ class Interpret:
             error("Exit value not valid",57)
         exit(value)
 
-    ##
+    #######################################################3
     # <symb>
     def __ins_dprint(self, instr):
         self.__control_args(instr, 1)
@@ -466,67 +472,67 @@ class Interpret:
         elif command == "mul":
             var1.set_value(int(val1) * int(val2))
 
-    ##
+    #######################################################3
     # <var> <symb1> <symb2>
     def __ins_lt(self, instr):
         self.__control_args(instr, 3)
         debug("lt")
     
-    ##
+    #######################################################3
     # <var> <symb1> <symb2>
     def __ins_gt(self, instr):
         self.__control_args(instr, 3)
         debug("gt")
 
-    ##
+    #######################################################3
     # <var> <symb1> <symb2>
     def __ins_eq(self, instr):
         self.__control_args(instr, 3)
         debug("eq")
     
-    ##
+    #######################################################3
     # <var> <symb1> <symb2>
     def __ins_and(self, instr):
         self.__control_args(instr, 3)
         debug("and")
 
-    ##
+    #######################################################3
     # <var> <symb1> <symb2>
     def __ins_or(self, instr):
         self.__control_args(instr, 3)
         debug("or")
     
-    ##
+    #######################################################3
     # <var> <symb1> <symb2>
     def __ins_stri2int(self, instr):
         self.__control_args(instr, 3)
         debug("stri2int")
 
-    ##
+    #######################################################3
     # <var> <symb1> <symb2>
     def __ins_concat(self, instr):
         self.__control_args(instr, 3)
         debug("concat")
     
-    ##
+    #######################################################3
     # <var> <symb1> <symb2>
     def __ins_getchar(self, instr):
         self.__control_args(instr, 3)
         debug("getchar")
 
-    ##
+    #######################################################3
     # <var> <symb1> <symb2>
     def __ins_setchar(self, instr):
         self.__control_args(instr, 3)
         debug("setchar")
     
-    ##
+    #######################################################3
     # <label> <symb1> <symb2>
     def __ins_jumpifeq(self, instr):
         self.__control_args(instr, 3)
         debug("jumpifeq")
 
-    ##
+    #######################################################3
     # <label> <symb1> <symb2>
     def __ins_jumpifneq(self, instr):
         self.__control_args(instr, 3)
@@ -536,7 +542,35 @@ class Interpret:
     # <var> <type>
     def __ins_read(self, instr):
         self.__control_args(instr, 2)
-        debug("read")
+
+        var = self.get_variable_from_arg(instr.get_n_arg(0))
+        typ = self.get_symb_value_from_arg(instr.get_n_arg(1))
+         
+        try:
+            val = self.get_r_line() 
+        except:
+            typ = "nil"
+            val = "nil"
+
+        if typ == "nil":
+            if val != "nil":
+                error("Mismatch type",55)
+        elif typ == "int":
+            if not re.match(pattern_int, val):
+                error("Mismatch type",55)
+            val = val
+        elif typ == "string":
+            val = val
+        elif typ == "bool":
+            if val.lower() == "true":
+                val = "true"
+            else:
+                val = "false"
+        else:
+            error("Mismatch type",55)
+
+        var.set_value(val)
+        var.set_typ(typ)
 
     ##
     # remove TF content and create new one 
@@ -548,7 +582,7 @@ class Interpret:
             pass
         self.create_TF() 
     
-    ##
+    #######################################################3
     # 
     def __ins_break(self, instr):
         self.__control_args(instr, 0)
@@ -572,21 +606,23 @@ class Interpret:
         if self.LT_is_empty():
             error("Frame does not exists ", 55)
         self.TF_to_LF()
-    ##
+    
+    #######################################################3
     # 
     def __ins_div(self, instr):
         debug("div")
-    ##
+    
+    #######################################################3
     # 
     def __ins_int2float(self, instr):
         debug("int2float")
     
-    ##
+    #######################################################3
     # 
     def __ins_float2int(self, instr):
         debug("float2int ")
 
-    ##
+    #######################################################3
     #
     def __ins_return(self, instr):
         self.__control_args(instr, 0)
@@ -926,7 +962,12 @@ class Files(Arg_parse):
     
     def get_last_instr(self):
         return self.__last_instr_order
-    
+
+    def get_first(list):
+        val = list[0]
+        list = list[1:]
+        return val, list
+
     ##
     # check if file exist
     def file_exist(self, file):
@@ -962,6 +1003,7 @@ class Files(Arg_parse):
         for l in Lines:
             array.append(l)
         return array
+
 
     ##
     # Parse xml using xml libr
