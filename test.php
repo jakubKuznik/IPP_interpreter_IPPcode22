@@ -153,10 +153,12 @@
             $result_rc      = "";
             $diff_ret       = "";
             $out            = "";
+            $file_src       = get_file_name($file_path, SRC);
+            $file_in        = get_file_name($file_path, IN);
             $ref_file_out   = get_file_name($file_path, OUT);
             $ref_rc = file_get_contents(get_file_name($file_path, RC), true);     
             $parse_comm    = "php8.1 ".$this->parse_path ." < " . $file_path . " > " . $temp_file; 
-            $inter_comm    = "php8.1 ".$this->int_path ." <" . $temp_file . ">" . $temp_file;          
+            $inter_comm    = "python3 " . $this->int_path . " --source=" . "9999999999.out "  . " --input=" . $file_in . " >" . $temp_file . " 2>/dev/null";           
 
             // Non valid return code 
             if (is_numeric($ref_rc) == false){
@@ -171,20 +173,29 @@
             if ($ref_rc != 0){    
                 exec($parse_comm, $result_out, $result_rc);
                 if ($result_rc == 0){ // parser have 0 return code 
+
+                    exec("cat " . $temp_file . " >9999999999.out");
                     exec($inter_comm, $result_out, $result_rc); //execute interpret.py on xml 
-                    if($result_rc == $ref_rc){
-                        $this->test_succ($file_path);
+                    exec("diff -q " . $ref_file_out . " " . $temp_file, $out ,$diff_ret);
+                    exec("rm " . "9999999999.out");
+                    
+                    if (($diff_ret != 0) || ($result_rc != $ref_rc)){
+                        $this->test_fail($file_path, $ref_rc, $result_rc);
+                        return;
                     }
                     else{
-                        $this->test_fail($file_path, $ref_rc, $result_rc);
+                        $this->test_succ($file_path);
+                        return;
                     }
                 }
                 else{ // parser have negative return code
                     if($result_rc == $ref_rc){
                         $this->test_succ($file_path);
+                        return;
                     }
                     else{
                         $this->test_fail($file_path, $ref_rc, $result_rc);
+                        return;
                     }
                 }
             }
@@ -195,13 +206,19 @@
                     $this->test_fail($file_path, $ref_rc, $result_rc); //parser failed 
                     return;
                 }
+                
+                exec("cat " . $temp_file . " >9999999999.out");
                 exec($inter_comm, $result_out, $result_rc); //execute interpret.py on xml 
                 exec("diff -q " . $ref_file_out . " " . $temp_file, $out ,$diff_ret);
+                exec("rm " . "9999999999.out");
+                
                 if (($diff_ret != 0) || ($result_rc != $ref_rc)){
                     $this->test_fail($file_path, $ref_rc, $result_rc);
+                    return;
                 }
                 else{
                     $this->test_succ($file_path);
+                    return;
                 }
             }
 
@@ -243,7 +260,6 @@
                 exec("diff -q " . $ref_file_out . " " . $temp_file, $out ,$diff_ret);
                 
                 if (($diff_ret != 0) || ($result_rc != $ref_rc)){
-                    exit(10);
                     $this->test_fail($file_path, $ref_rc, $result_rc);
                 }
                 else{
@@ -633,7 +649,6 @@
                         if ($int_only == true){ //cannot combine with --int-only
                             fwrite(STDERR, ERR_COM); exit(10);
                         }
-                        $parse_only = true;
                         $set->parse_path = $help_file_name;
                         break;
                     case "--int-script":
@@ -641,7 +656,6 @@
                             fwrite(STDERR, ERR_COM); exit(10);
                         }
                         $set->int_path = $help_file_name;
-                        $int_only = true;
                         break;
                     case "--jexampath":      
                         if ($int_only == true){ //cannot combine with --int-only
