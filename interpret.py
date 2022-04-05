@@ -1,13 +1,9 @@
-from curses.ascii import isdigit
 from dis import Instruction
 from pickle import NONE
 import sys
 import re
-from unicodedata import name
 import xml.etree.ElementTree as ET
 import copy
-
-from numpy import array
 
 
 valid_instruction = [ "move", "int2char", "strlen", "type", "not",
@@ -432,7 +428,8 @@ class Interpret:
         self.__control_args(instr, 1)
         self.__control_arg_type(instr, 0, "label")
         name = self.get_symb_value_from_arg(instr.get_n_arg(0))
-        
+        if self.find_label(name) != None:
+            error("Duplicit label declaration",52)
         label = Label(name, i)
         self.store_label(label)
     
@@ -456,6 +453,8 @@ class Interpret:
             val = replace_non_print(val)
             if val == "nil":
                 print("", end='')
+            elif val == "":
+                print("", end=' ')
             elif val == "NONETYPE":
                 print("", end='')
             else:
