@@ -81,6 +81,8 @@
     if ($set->noclean == false)
         unlink($temp_file_name);
         
+    
+    exec("rm " . "9999999999.out");
     exit(0);
 
 
@@ -388,6 +390,7 @@
                 //difrent return code 
                 if ($ref_rc != $rc){
                     $this->all_test = $this->all_test . '<div class="test"> <div style="display: flex; justify-content: space-between;"> <p>' . $index  . '.</p> <p style="font-size: medium ;color: red;">FAIL</p>  <p>Test:' .  $name  . '</p></div> <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ROZDÍLNÁ NÁVRATOVÁ HODNOTA:&nbsp;&nbsp;&nbsp;refereční:&nbsp;' . $ref_rc  . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; skutečný: &nbsp;' . $ref_rc  .'</p> </div>';
+                    return;
                 }
                 $this->all_test = $this->all_test . '<div class="test"> <div style="display: flex; justify-content: space-between;"> <p>' . $index  . '.</p> <p style="font-size: medium ;color: red;">FAIL</p>  <p>Test:' .  $name  . '</p></div> <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ROZDÍLNÝ VÝSTUP</p> </div>';
             }
