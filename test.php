@@ -181,12 +181,12 @@
                     exec("diff -q " . $ref_file_out . " " . $temp_file, $out ,$diff_ret);
                     exec("rm " . "9999999999.out");
                     
-                    if (($diff_ret != 0) || ($result_rc != $ref_rc)){
-                        $this->test_fail($file_path, $ref_rc, $result_rc);
+                    if ($result_rc == $ref_rc){
+                        $this->test_succ($file_path);
                         return;
                     }
                     else{
-                        $this->test_succ($file_path);
+                        $this->test_fail($file_path, $ref_rc, $result_rc);
                         return;
                     }
                 }
@@ -389,7 +389,7 @@
             if($state == FAIL){
                 //difrent return code 
                 if ($ref_rc != $rc){
-                    $this->all_test = $this->all_test . '<div class="test"> <div style="display: flex; justify-content: space-between;"> <p>' . $index  . '.</p> <p style="font-size: medium ;color: red;">FAIL</p>  <p>Test:' .  $name  . '</p></div> <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ROZDÍLNÁ NÁVRATOVÁ HODNOTA:&nbsp;&nbsp;&nbsp;refereční:&nbsp;' . $ref_rc  . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; skutečný: &nbsp;' . $ref_rc  .'</p> </div>';
+                    $this->all_test = $this->all_test . '<div class="test"> <div style="display: flex; justify-content: space-between;"> <p>' . $index  . '.</p> <p style="font-size: medium ;color: red;">FAIL</p>  <p>Test:' .  $name  . '</p></div> <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ROZDÍLNÁ NÁVRATOVÁ HODNOTA:&nbsp;&nbsp;&nbsp;refereční:&nbsp;' . $rc  . '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; skutečný: &nbsp;' . $ref_rc  .'</p> </div>';
                     return;
                 }
                 $this->all_test = $this->all_test . '<div class="test"> <div style="display: flex; justify-content: space-between;"> <p>' . $index  . '.</p> <p style="font-size: medium ;color: red;">FAIL</p>  <p>Test:' .  $name  . '</p></div> <p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ROZDÍLNÝ VÝSTUP</p> </div>';
