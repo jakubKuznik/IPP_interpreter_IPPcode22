@@ -563,7 +563,42 @@ class Interpret:
     # <var> <symb1> <symb2>
     def __ins_eq(self, instr):
         self.__control_args(instr, 3)
-        debug("eq")
+        var = self.get_variable_from_arg(instr.get_n_arg(0))
+        args = instr.get_args()
+        
+        type1 = args[1].get_type()
+        if type1 == "var":
+            var1 = self.get_variable_from_arg(args[1])
+            var1.set_variable_type()  
+            type1 = var1.get_typ()       
+        else:
+            type1 = args[1].get_type()
+        
+        type2 = args[2].get_type()
+        if type2 == "var":
+            var2 = self.get_variable_from_arg(args[2])
+            var2.set_variable_type() 
+            type2 = var2.get_typ()    
+        else:   
+            type2 = args[2].get_type()
+
+
+        if type1.lower() != type2.lower():
+            if type1.lower() == "nil" or type2.lower() == "nil":
+                if type1.lower() == type2.lower():
+                    var.set_value("true")
+                else:
+                    var.set_value("true")
+            else:
+                error("mismatch types",53) 
+        
+        value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
+        value2 = self.get_symb_value_from_arg(instr.get_n_arg(2))
+        
+        if value1 == value2:
+            var.set_value("true")
+        else:
+            var.set_value("false")
 
     ##
     # <var> <symb1> <symb2>
