@@ -242,12 +242,12 @@ class Interpret:
     # i == instruction index 
     def interpret(self, instr, i):
         
-        sys.stderr.write("\n")
-        sys.stderr.write("..............")
-        sys.stderr.write(instr.get_name())
-        sys.stderr.write("..............")
-        sys.stderr.write("\n")
-        self.print_frames()
+        #sys.stderr.write("\n")
+        #sys.stderr.write("..............")
+        #sys.stderr.write(instr.get_name())
+        #sys.stderr.write("..............")
+        #sys.stderr.write("\n")
+        #self.print_frames()
         if instr.get_name() == "move":
             self.__ins_move(instr)
         elif instr.get_name() == "int2char":
@@ -291,9 +291,9 @@ class Interpret:
         elif instr.get_name() == "eq":
             self.__ins_eq(instr)
         elif instr.get_name() == "and":
-            self.__ins_and(instr)
+            self.__ins_and_or(instr, "and")
         elif instr.get_name() == "or":
-            self.__ins_or(instr)
+            self.__ins_and_or(instr, "or")
         elif instr.get_name() == "stri2int":
             self.__ins_stri2int(instr)
         elif instr.get_name() == "concat":
@@ -351,7 +351,6 @@ class Interpret:
         self.__control_args(instr, 2)
         debug("strlen")
 
-
     ##
     # <var> <symb>
     def __ins_type(self, instr):
@@ -403,7 +402,7 @@ class Interpret:
         var = self.get_variable_from_arg(instr.get_n_arg(0)) 
         var.set_value(set_to)
         
-    #######################################################3
+    ##
     # <label>
     def __ins_call(self, instr, i):
         self.__control_args(instr, 1)
@@ -425,7 +424,6 @@ class Interpret:
             error("Non existing label ",52)
         else:
             return label.get_inst_index()
-
 
     ##
     # <label>
@@ -549,19 +547,42 @@ class Interpret:
     def __ins_eq(self, instr):
         self.__control_args(instr, 3)
         debug("eq")
-    
-    #######################################################3
-    # <var> <symb1> <symb2>
-    def __ins_and(self, instr):
-        self.__control_args(instr, 3)
-        debug("and")
 
-    #######################################################3
+    ##
     # <var> <symb1> <symb2>
-    def __ins_or(self, instr):
+    def __ins_and_or(self, instr, operation):
         self.__control_args(instr, 3)
-        debug("or")
-    
+        var = self.get_variable_from_arg(instr.get_n_arg(0))
+        args = instr.get_args()
+        
+        type1 = args[1].get_type()
+        if type1 == "var":
+            var1 = self.get_variable_from_arg(args[1])
+            var1.set_variable_type()  
+            type1 = var1.get_typ()       
+        else:
+            type1 = args[1].get_type()
+        
+        type2 = args[2].get_type()
+        if type2 == "var":
+            var2 = self.get_variable_from_arg(args[2])
+            var2.set_variable_type() 
+            type2 = var2.get_typ()    
+        else:   
+            type2 = args[2].get_type()
+
+        if type1.lower() != "bool" or type2.lower() != "bool":
+            error("Bad operands type", 53)
+        
+        value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
+        value2 = self.get_symb_value_from_arg(instr.get_n_arg(2))
+
+        if operation == "and":
+            var.set_value(str(value1 and value2))
+        elif operation == "or":
+            var.set_value(str(value1 and value2))
+            
+
     #######################################################3
     # <var> <symb1> <symb2>
     def __ins_stri2int(self, instr):
@@ -619,7 +640,6 @@ class Interpret:
         if str(value1) == str(value2):
             return self.jump(instr)
         return i
-
 
     ##
     # <label> <symb1> <symb2>
@@ -918,7 +938,6 @@ class Variable:
             self.set_typ("float")
         else:
             self.set_typ("string")
-
 
 ##
 # Store one instruction 
