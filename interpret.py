@@ -55,6 +55,457 @@ def main():
         i = inter.interpret(inst_l[i], i)
         i = i + 1
     
+
+
+##
+# class that represent one data frame used in GF, TF or in LF
+class Frame:
+    
+    def __init__(self):
+        self.__variables = []
+    
+    def add_variable(self, var):
+        self.__variables.append(var)
+
+    def get_variables(self):
+        return self.__variables
+
+    def get_variable_index(self, index):
+        return self.__variables[index]
+
+    def find_variable_index(self, name):
+        i = 0
+        for v in self.__variables:
+            if v.get_name() == name:
+                return i
+            i = i + 1
+    
+    def get_variable(self, name):
+        index = self.find_variable_index(name)
+        return self.get_variable_index(index)
+
+    ##
+    # return true if variable exist in frame
+    #       else return false 
+    def var_exist(self, name):
+        for v in self.__variables:
+            if v.get_name() == name:
+                return True
+        return False
+
+##
+# one variable or constant 
+class Variable:
+    def __init__(self, name, typ, value):
+        self.__name = name
+        self.__typ  = typ
+        self.__value = value #nil == nil 
+                             #true, false    
+    
+    def get_name(self):
+        return self.__name
+    def get_typ(self):
+        return self.__typ
+    def get_value(self):
+        return self.__value
+    
+    def set_name(self, val):
+        self.__name = val
+    def set_typ(self, val):
+        self.__typ = val
+    def set_value(self, val):
+        self.__value = val
+
+    def set_variable_type(self):
+        value = self.get_value()
+        if value == "":
+            self.set_typ("NONETYPE")
+        elif value == "true" or value == "false":
+            self.set_typ("bool")
+        elif value == "nil":
+            self.set_typ("nil")
+        elif re.match(pattern_int, str(value)):
+            self.set_typ("int")
+        elif re.match(pattern_float, str(value)):
+            self.set_typ("float")
+        else:
+            self.set_typ("string")
+
+##
+# Store one instruction 
+# __inst_list class attribute where all instructions are stored 
+class Instruction:
+    __inst_list = []
+
+    def __init__(self, name, order):
+        self.__name  = name
+        self.__order = order
+        self.__args = []
+        Instruction.__inst_list.append(self)
+
+    def sort_instruction():
+        arr = {}
+        for instr in Instruction.get_instructions():
+            index = instr.get_order()
+            arr[index] = instr
+        list = []
+        for key in sorted(arr.keys()):
+            list.append(arr[key])
+        
+        Instruction.__inst_list = list
+
+    def get_instructions():
+        return Instruction.__inst_list
+
+    def get_name(self):
+        return self.__name
+
+    def get_order(self):
+        return self.__order
+    
+    def get_args(self):
+        return self.__args
+    
+    def set_name(self, name):
+        self.__name = name
+    
+    def set_order(self, orde):
+        self.__order = orde
+
+    def append_arg(self, arg):
+        self.__args.append(arg)
+        
+    def sort_args(self):
+        ar = []
+        for i in range(1,6):
+            for a in self.__args:
+                if int(a.get_order()) == int(i):
+                    ar.append(a)
+        self.__args = ar
+
+    
+    def get_n_arg(self, n):
+        for arg in self.__args:
+            if arg.get_tag() == ("arg" + str(n+1)):
+                return arg
+        error("Unvalid argument",52)
+    
+##
+# Label 
+class Label:
+
+    def __init__(self, name, inst_index):
+        self.__name = name
+        self.__inst_index = inst_index
+
+    def get_name(self):
+        return self.__name
+    
+    def set_name(self, name):
+        self.__name = name
+    
+    def set_inst_index(self, index):
+        self.__inst_index = index
+    
+    def get_inst_index(self):
+        return self.__inst_index
+    
+##
+# one instrustion argument. 
+class Args:
+
+    def __init__(self, order, typ, content, tag):
+        self.__order   = order     # 1,2,3 .... 
+        self.__typ    = typ        # var, string .... 
+        self.__content = content   # whatever 
+        self.__tag     = tag       #<arg1>
+    
+    def get_tag(self):
+        return self.__tag
+
+    def get_order(self):
+        return self.__order
+    
+    def get_type(self):
+        return self.__typ
+
+    def get_content(self):
+        return self.__content
+    
+    def set_order(self, orde):
+        self.__order = orde
+    
+    def set_type(self, typ):
+        self.__content = typ
+
+    def set_cont(self, cont):
+        self.__content = cont
+
+
+
+    
+##
+#  Parse arguments and store input and source file 
+class Arg_parse:
+    
+    def __init__(self, parsing, in_f, so_f):
+        if parsing == True:
+            self.__input_file = ""
+            self.__source_file = ""
+            self.__parse_arguments(sys.argv)
+        else:
+            self.__input_file = in_f
+            self.__source_file = so_f
+
+    def get_in_file(self):
+        return self.__input_file    
+
+    def get_so_file(self):
+        return self.__source_file   
+
+    def set_in_file(self, val):
+        self.__input_file = val
+    
+    def set_so_file(self, val):
+        self.__source_file = val
+    
+    ##
+    # Parse arguments that are stored in args
+    # If error or --help exit() program
+    # return file_path, command
+    def __parse_arguments(self, args):
+        if len(args) > 3:
+            error("To many arguments",10)
+        source = False
+        input = False
+        for a in args[1:]:
+            if a == "--help" or a == "-h":
+                if len(args) != 2:
+                    error("Can't combine help with other params",10)
+                help()
+                exit(0)
+            elif a.startswith("--source="):
+                temp = a.split('=')
+                self.set_so_file(self.__string_assemble(temp))
+                source = True
+            elif a.startswith("--input="):
+                temp = a.split('=')
+                self.set_in_file(self.__string_assemble(temp))
+                input = True
+            else:
+                sys.stderr.write("Unknown \n")
+                exit(10)
+        if input == False and source == False:
+            error("Need --input or --source", 10)
+        elif input == True and source == False:
+            self.set_so_file(sys.stdin)
+        elif input == False and source == True:
+            self.set_in_file(sys.stdin)
+
+
+
+    ##
+    # return string from array memebers concatenate with = symbol
+    def __string_assemble(self, array):
+        if len(array) == 2:
+            return array[1]
+        out = array[1]
+        for a in array[2:]:
+            out = out + "=" + a
+        return out
+
+
+##
+# Read from input files validates them etc ...
+# Files names are stored in argpase 
+class Files(Arg_parse):
+
+    def __init__(self, parsing, in_f, so_f):
+        super().__init__(parsing, in_f, so_f)
+        self.__last_instr_order = 0
+
+    ## need last_instr_order to chceck if instruction orders in xml are valid 
+    def set_last_instr(self, val):
+        self.__last_instr_order = val
+    
+    def get_last_instr(self):
+        return self.__last_instr_order
+
+    def get_first(list):
+        val = list[0]
+        list = list[1:]
+        return val, list
+
+    ##
+    # check if file exist
+    def file_exist(self, file):
+        if file == "":
+            return
+        try:
+            f = open(file)
+        except :
+            error("File not accesible", 10)
+        f.close()
+    ##
+    # Call file exist for input files 
+    def files_exists(self):
+        if self.get_in_file() != sys.stdin:
+            self.file_exist(self.get_in_file())
+        if self.get_so_file() != sys.stdin:
+            self.file_exist(self.get_so_file())
+
+    ##
+    # store input file 
+    def input_store(self):
+        if self.get_in_file() != sys.stdin:
+            f = open(self.get_in_file())
+            Lines = f.readlines()
+            array = []
+            for l in Lines:
+                array.append(l)
+            f.close()
+            return array
+
+        Lines = self.get_in_file().readlines()
+        array = []
+        for l in Lines:
+            array.append(l)
+        return array
+
+
+    ##
+    # Parse xml using xml libr
+    # return xml root 
+    def xml_parse(self):
+        try:
+            tree = ET.parse(self.get_so_file())
+            return tree.getroot()
+        except:
+            error("Bad xml format", 31)
+
+    ##
+    # Valid whole xml and store it  
+    def xml_validation(self, root): #<program>
+        self.xml_valid_root(root)
+        if root.tag.lower() != "program":
+            error("Bad xml format expect <program>", 32)
+        for child in root:          #<instruction>
+            if child.tag.lower() != "instruction":
+                error("Bad xml format expect <instruction>", 32)
+            inst = self.xml_valid_instr(child)
+            inst = Instruction(inst[0], inst[1])
+            for ar in child:        #<arg>
+                arg = self.xml_valid_arg(ar)
+                arg = Args(arg[0], arg[1], arg[2], ar.tag.lower())
+                inst.append_arg(arg)
+            inst.sort_args()
+
+            i = 1
+            for a in inst.get_args():
+                if int(a.get_order()) != int(i):
+                    error("Bad xml format expect <instruction>", 32)
+                i=i+1
+
+
+    ##
+    # Check if instruction is valid
+    # - opcode is valid?
+    # - order is ok?
+    # if instruction has args chceck if arg has order and type
+    #   return instruction name, order 
+    def xml_valid_instr(self, inst):
+        opcode_flag = False
+        order_flag = False
+        opcode = ""
+        ord = ""
+        for a in inst.attrib:
+            ia = (inst.attrib[a]).lower()
+            a = a.lower()
+            if a == "opcode":
+                if ia not in valid_instruction:
+                    error("Not valid instruction", 32)
+                opcode_flag = True
+                opcode = ia
+                continue
+            elif a == "order":
+                try:
+                    ia = int(ia)
+                except:
+                    error("Bad instruction order",32)
+                if ia <= 0:
+                    error("Bad instruction order",32)
+                for i in Instruction.get_instructions():
+                    if i.get_order() == ia:
+                        error("Bad instruction order",32)
+
+                self.set_last_instr(ia)
+                order_flag = True
+                ord = int(ia)
+                continue            
+            else:
+                error("Bad instruction flag", 32)
+        if order_flag == False or opcode_flag == False:
+            error("Opcode or order missing", 32)
+        return opcode, ord
+
+
+    ##
+    # valid argument of instruction 
+    # return arg order, type, content 
+    def xml_valid_arg(self, arg):
+        pat = re.compile('arg' + "1")
+        pat2 = re.compile('arg' + "2")
+        pat3 = re.compile('arg' + "3")
+        if not pat.match(arg.tag):
+            if not pat2.match(arg.tag):
+                if not pat3.match(arg.tag):
+                    error("Unvalid arg", 32)
+
+        type_flag = False
+        type = ""
+        for a in arg.attrib:
+            ia = (arg.attrib[a]).lower()
+            a = a.lower()
+            if a == "type":
+                if ia not in valid_types:
+                    error("Invalid arg type", 32)
+                type_flag = True
+                type = ia
+                continue
+            else:
+                error("Invalid arg attribute", 32)
+
+        if type_flag == False:
+            error("Missing arg type flag",32)
+        order = arg.tag.replace("arg", "")
+        return order, type, arg.text
+
+
+    ##
+    # valid root attributes which is <program>
+    def xml_valid_root(self, root):
+        if root.tag != "program":
+            error("Invalid XML root", 32)
+
+        language_flag = False
+        for a in root.attrib:
+            ra = (root.attrib[a]).lower()
+            a = a.lower()
+            if a == "language":
+                language_flag = True
+                if ra != "ippcode22":
+                    error("Language flag unsuported", 32)
+                continue
+            if a == "name":
+                continue
+            if a == "description":
+                continue
+            else:
+                error("Unknown <program> flag", 31)
+
+        if language_flag == False:
+            error("Language flag missing", 31)
+
 ##
 # Class for code interpretation 
 class Interpret:
@@ -1147,457 +1598,6 @@ class Interpret:
                     debug("      value:... " + str(a.get_value()))
             except:
                 debug("....empty")
-
-
-##
-# class that represent one data frame used in GF, TF or in LF
-class Frame:
-    
-    def __init__(self):
-        self.__variables = []
-    
-    def add_variable(self, var):
-        self.__variables.append(var)
-
-    def get_variables(self):
-        return self.__variables
-
-    def get_variable_index(self, index):
-        return self.__variables[index]
-
-    def find_variable_index(self, name):
-        i = 0
-        for v in self.__variables:
-            if v.get_name() == name:
-                return i
-            i = i + 1
-    
-    def get_variable(self, name):
-        index = self.find_variable_index(name)
-        return self.get_variable_index(index)
-
-    ##
-    # return true if variable exist in frame
-    #       else return false 
-    def var_exist(self, name):
-        for v in self.__variables:
-            if v.get_name() == name:
-                return True
-        return False
-
-##
-# one variable or constant 
-class Variable:
-    def __init__(self, name, typ, value):
-        self.__name = name
-        self.__typ  = typ
-        self.__value = value #nil == nil 
-                             #true, false    
-    
-    def get_name(self):
-        return self.__name
-    def get_typ(self):
-        return self.__typ
-    def get_value(self):
-        return self.__value
-    
-    def set_name(self, val):
-        self.__name = val
-    def set_typ(self, val):
-        self.__typ = val
-    def set_value(self, val):
-        self.__value = val
-
-    def set_variable_type(self):
-        value = self.get_value()
-        if value == "":
-            self.set_typ("NONETYPE")
-        elif value == "true" or value == "false":
-            self.set_typ("bool")
-        elif value == "nil":
-            self.set_typ("nil")
-        elif re.match(pattern_int, str(value)):
-            self.set_typ("int")
-        elif re.match(pattern_float, str(value)):
-            self.set_typ("float")
-        else:
-            self.set_typ("string")
-
-##
-# Store one instruction 
-# __inst_list class attribute where all instructions are stored 
-class Instruction:
-    __inst_list = []
-
-    def __init__(self, name, order):
-        self.__name  = name
-        self.__order = order
-        self.__args = []
-        Instruction.__inst_list.append(self)
-
-    def sort_instruction():
-        arr = {}
-        for instr in Instruction.get_instructions():
-            index = instr.get_order()
-            arr[index] = instr
-        list = []
-        for key in sorted(arr.keys()):
-            list.append(arr[key])
-        
-        Instruction.__inst_list = list
-
-    def get_instructions():
-        return Instruction.__inst_list
-
-    def get_name(self):
-        return self.__name
-
-    def get_order(self):
-        return self.__order
-    
-    def get_args(self):
-        return self.__args
-    
-    def set_name(self, name):
-        self.__name = name
-    
-    def set_order(self, orde):
-        self.__order = orde
-
-    def append_arg(self, arg):
-        self.__args.append(arg)
-        
-    def sort_args(self):
-        ar = []
-        for i in range(1,6):
-            for a in self.__args:
-                if int(a.get_order()) == int(i):
-                    ar.append(a)
-        self.__args = ar
-
-    
-    def get_n_arg(self, n):
-        for arg in self.__args:
-            if arg.get_tag() == ("arg" + str(n+1)):
-                return arg
-        error("Unvalid argument",52)
-    
-##
-# Label 
-class Label:
-
-    def __init__(self, name, inst_index):
-        self.__name = name
-        self.__inst_index = inst_index
-
-    def get_name(self):
-        return self.__name
-    
-    def set_name(self, name):
-        self.__name = name
-    
-    def set_inst_index(self, index):
-        self.__inst_index = index
-    
-    def get_inst_index(self):
-        return self.__inst_index
-    
-##
-# one instrustion argument. 
-class Args:
-
-    def __init__(self, order, typ, content, tag):
-        self.__order   = order     # 1,2,3 .... 
-        self.__typ    = typ        # var, string .... 
-        self.__content = content   # whatever 
-        self.__tag     = tag       #<arg1>
-    
-    def get_tag(self):
-        return self.__tag
-
-    def get_order(self):
-        return self.__order
-    
-    def get_type(self):
-        return self.__typ
-
-    def get_content(self):
-        return self.__content
-    
-    def set_order(self, orde):
-        self.__order = orde
-    
-    def set_type(self, typ):
-        self.__content = typ
-
-    def set_cont(self, cont):
-        self.__content = cont
-
-
-
-    
-##
-#  Parse arguments and store input and source file 
-class Arg_parse:
-    
-    def __init__(self, parsing, in_f, so_f):
-        if parsing == True:
-            self.__input_file = ""
-            self.__source_file = ""
-            self.__parse_arguments(sys.argv)
-        else:
-            self.__input_file = in_f
-            self.__source_file = so_f
-
-    def get_in_file(self):
-        return self.__input_file    
-
-    def get_so_file(self):
-        return self.__source_file   
-
-    def set_in_file(self, val):
-        self.__input_file = val
-    
-    def set_so_file(self, val):
-        self.__source_file = val
-    
-    ##
-    # Parse arguments that are stored in args
-    # If error or --help exit() program
-    # return file_path, command
-    def __parse_arguments(self, args):
-        if len(args) > 3:
-            error("To many arguments",10)
-        source = False
-        input = False
-        for a in args[1:]:
-            if a == "--help" or a == "-h":
-                if len(args) != 2:
-                    error("Can't combine help with other params",10)
-                help()
-                exit(0)
-            elif a.startswith("--source="):
-                temp = a.split('=')
-                self.set_so_file(self.__string_assemble(temp))
-                source = True
-            elif a.startswith("--input="):
-                temp = a.split('=')
-                self.set_in_file(self.__string_assemble(temp))
-                input = True
-            else:
-                sys.stderr.write("Unknown \n")
-                exit(10)
-        if input == False and source == False:
-            error("Need --input or --source", 10)
-        elif input == True and source == False:
-            self.set_so_file(sys.stdin)
-        elif input == False and source == True:
-            self.set_in_file(sys.stdin)
-
-
-
-    ##
-    # return string from array memebers concatenate with = symbol
-    def __string_assemble(self, array):
-        if len(array) == 2:
-            return array[1]
-        out = array[1]
-        for a in array[2:]:
-            out = out + "=" + a
-        return out
-
-
-##
-# Read from input files validates them etc ...
-# Files names are stored in argpase 
-class Files(Arg_parse):
-
-    def __init__(self, parsing, in_f, so_f):
-        super().__init__(parsing, in_f, so_f)
-        self.__last_instr_order = 0
-
-    ## need last_instr_order to chceck if instruction orders in xml are valid 
-    def set_last_instr(self, val):
-        self.__last_instr_order = val
-    
-    def get_last_instr(self):
-        return self.__last_instr_order
-
-    def get_first(list):
-        val = list[0]
-        list = list[1:]
-        return val, list
-
-    ##
-    # check if file exist
-    def file_exist(self, file):
-        if file == "":
-            return
-        try:
-            f = open(file)
-        except :
-            error("File not accesible", 10)
-        f.close()
-    ##
-    # Call file exist for input files 
-    def files_exists(self):
-        if self.get_in_file() != sys.stdin:
-            self.file_exist(self.get_in_file())
-        if self.get_so_file() != sys.stdin:
-            self.file_exist(self.get_so_file())
-
-    ##
-    # store input file 
-    def input_store(self):
-        if self.get_in_file() != sys.stdin:
-            f = open(self.get_in_file())
-            Lines = f.readlines()
-            array = []
-            for l in Lines:
-                array.append(l)
-            f.close()
-            return array
-
-        Lines = self.get_in_file().readlines()
-        array = []
-        for l in Lines:
-            array.append(l)
-        return array
-
-
-    ##
-    # Parse xml using xml libr
-    # return xml root 
-    def xml_parse(self):
-        try:
-            tree = ET.parse(self.get_so_file())
-            return tree.getroot()
-        except:
-            error("Bad xml format", 31)
-
-    ##
-    # Valid whole xml and store it  
-    def xml_validation(self, root): #<program>
-        self.xml_valid_root(root)
-        if root.tag.lower() != "program":
-            error("Bad xml format expect <program>", 32)
-        for child in root:          #<instruction>
-            if child.tag.lower() != "instruction":
-                error("Bad xml format expect <instruction>", 32)
-            inst = self.xml_valid_instr(child)
-            inst = Instruction(inst[0], inst[1])
-            for ar in child:        #<arg>
-                arg = self.xml_valid_arg(ar)
-                arg = Args(arg[0], arg[1], arg[2], ar.tag.lower())
-                inst.append_arg(arg)
-            inst.sort_args()
-
-            i = 1
-            for a in inst.get_args():
-                if int(a.get_order()) != int(i):
-                    error("Bad xml format expect <instruction>", 32)
-                i=i+1
-
-
-    ##
-    # Check if instruction is valid
-    # - opcode is valid?
-    # - order is ok?
-    # if instruction has args chceck if arg has order and type
-    #   return instruction name, order 
-    def xml_valid_instr(self, inst):
-        opcode_flag = False
-        order_flag = False
-        opcode = ""
-        ord = ""
-        for a in inst.attrib:
-            ia = (inst.attrib[a]).lower()
-            a = a.lower()
-            if a == "opcode":
-                if ia not in valid_instruction:
-                    error("Not valid instruction", 32)
-                opcode_flag = True
-                opcode = ia
-                continue
-            elif a == "order":
-                try:
-                    ia = int(ia)
-                except:
-                    error("Bad instruction order",32)
-                if ia <= 0:
-                    error("Bad instruction order",32)
-                for i in Instruction.get_instructions():
-                    if i.get_order() == ia:
-                        error("Bad instruction order",32)
-
-                self.set_last_instr(ia)
-                order_flag = True
-                ord = int(ia)
-                continue            
-            else:
-                error("Bad instruction flag", 32)
-        if order_flag == False or opcode_flag == False:
-            error("Opcode or order missing", 32)
-        return opcode, ord
-
-
-    ##
-    # valid argument of instruction 
-    # return arg order, type, content 
-    def xml_valid_arg(self, arg):
-        pat = re.compile('arg' + "1")
-        pat2 = re.compile('arg' + "2")
-        pat3 = re.compile('arg' + "3")
-        if not pat.match(arg.tag):
-            if not pat2.match(arg.tag):
-                if not pat3.match(arg.tag):
-                    error("Unvalid arg", 32)
-
-        type_flag = False
-        type = ""
-        for a in arg.attrib:
-            ia = (arg.attrib[a]).lower()
-            a = a.lower()
-            if a == "type":
-                if ia not in valid_types:
-                    error("Invalid arg type", 32)
-                type_flag = True
-                type = ia
-                continue
-            else:
-                error("Invalid arg attribute", 32)
-
-        if type_flag == False:
-            error("Missing arg type flag",32)
-        order = arg.tag.replace("arg", "")
-        return order, type, arg.text
-
-
-    ##
-    # valid root attributes which is <program>
-    def xml_valid_root(self, root):
-        if root.tag != "program":
-            error("Invalid XML root", 32)
-
-        language_flag = False
-        for a in root.attrib:
-            ra = (root.attrib[a]).lower()
-            a = a.lower()
-            if a == "language":
-                language_flag = True
-                if ra != "ippcode22":
-                    error("Language flag unsuported", 32)
-                continue
-            if a == "name":
-                continue
-            if a == "description":
-                continue
-            else:
-                error("Unknown <program> flag", 31)
-
-        if language_flag == False:
-            error("Language flag missing", 31)
-
 def error(string, exit_code):
     sys.stderr.write(string + "\n")
     exit(exit_code)
