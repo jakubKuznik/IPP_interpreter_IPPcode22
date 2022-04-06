@@ -51,13 +51,9 @@ def main():
     inst_l = Instruction.get_instructions() 
     # interpret instruction one by one
     i = 0
-    kill = 0
     while i  < len(inst_l):
         i = inter.interpret(inst_l[i], i)
         i = i + 1
-        kill = kill + 1
-        if kill == 50:
-            error("kill",100)
     
 ##
 # Class for code interpretation 
@@ -345,12 +341,15 @@ class Interpret:
         self.__control_args(instr, 2)
         var = self.get_variable_from_arg(instr.get_n_arg(0))
         value = self.get_symb_value_from_arg(instr.get_n_arg(1))
-        
+
         char = ''
         try:
-            char = chr(value)
+            char = chr(int(value))
+            if int(value) < 0 or int(value) > 255:
+                error("Invalid int to char",53)
+
         except:
-            error("Invalid int to char",58)
+            error("Invalid int to char",53)
         
         var.set_value(char)
     
@@ -409,9 +408,12 @@ class Interpret:
         value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
         value2 = self.get_symb_value_from_arg(instr.get_n_arg(2))
 
+        if int(value2) < 0:
+            error("Out of index",58)
+
         char = '' 
         try:
-            char = value1[value2]
+            char = value1[int(value2)]
             char = ord(char)
         except:
             error("Out of index",58)
@@ -521,17 +523,20 @@ class Interpret:
         value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
         value2 = self.get_symb_value_from_arg(instr.get_n_arg(2))
 
+        if int(value1) < 0:
+            error("Out of index",58)
+
         a = ''
         try:
             a = value2[0]
         except:
-            error("Mismatch types in stri2int",53)
+            error("Out of index",58)
 
         new_valu = var.get_value()
         try:
-            new_valu[value1] = a
+            new_valu[int(value1)] = a
         except:
-            error("Mismatch types in stri2int",53)
+            error("Out of index",58)
 
         var.set_value(new_valu)
     
@@ -561,7 +566,7 @@ class Interpret:
         elif value == "true" or value == "false":
             var.set_value("bool")
         elif value == "nil":
-            var.set_value("nil")
+            var.set_value("nil.")
         elif re.match(pattern_int, value):
             var.set_value("int")
         elif re.match(pattern_float, value):
@@ -588,10 +593,16 @@ class Interpret:
             error("Bad operands type", 53)
 
         value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
-        if value1.lower() != "true" or value1.lower() != "false":
+
+        if value1.lower() != "true" and value1.lower() != "false":
             error("Bad type", 53)
 
-        var.set_value(str(not value1))
+        if value1.lower() == "false":
+            var.set_value("true")
+        elif value1.lower() == "true":
+            var.set_value("false")
+        else:
+            error("Bad type", 53)
         
     ##
     # <var>
@@ -667,6 +678,14 @@ class Interpret:
     def __ins_pushs(self, instr):
         self.__control_args(instr, 1)
         val = self.get_symb_value_from_arg(instr.get_n_arg(0))
+        typ = instr.get_n_arg(0).get_type()
+        if typ == "var":
+            var1 = self.get_variable_from_arg(instr.get_n_arg(0))
+            val2 = str(var1.get_value())
+            val2 = replace_non_print(val)
+            if val2 == "":
+                error("Variable no defined",56)
+
         self.push(val)
 
     ##
@@ -682,8 +701,10 @@ class Interpret:
             val = replace_non_print(val)
             if val == "nil":
                 print("", end='')
+            elif val == "nil.":
+                print("nil", end='')
             elif val == "":
-                print("", end=' ')
+                error("Variable no defined",56)
             elif val == "NONETYPE":
                 print("", end='')
             else:
@@ -766,9 +787,9 @@ class Interpret:
             type2 = args[2].get_type()
 
         if type1.lower() != type2.lower():
-            error("mismatch types",56)
+            error("mismatch types",53)
         elif type1.lower() == "nil" or type2.lower() == "nil":
-            error("mismatch types",56)
+            error("mismatch types",53)
 
         
         value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
@@ -783,7 +804,11 @@ class Interpret:
                 else:
                     var.set_value("false")
             else:
-                var.set_value(str(value1 < value1))
+                if value1 < value2:
+                    var.set_value("true")
+                else:
+                    var.set_value("false")
+
         elif operation == "gt":  # <symb1> > <symb2>
             if type1.lower() == "bool":
                 if value1.lower() == "true" and value2.lower() == "false":
@@ -791,8 +816,13 @@ class Interpret:
                 else:
                     var.set_value("false")
             else:
-                var.set_value(str(value1 > value1))
+                if value1 > value2:
+                    var.set_value("true")
+                else:
+                    var.set_value("false")
 
+        
+        
 
     ##
     # <var> <symb1> <symb2>
@@ -1577,6 +1607,8 @@ def debug(string):
 
 def replace_non_print(val):
     val = val.replace('\\032', " ")
+    val = val.replace('\\010', "\n")
+    val = val.replace('\\035', "#")
     return val
 
 pattern_int = '^[-+]?[0-9]+$'
