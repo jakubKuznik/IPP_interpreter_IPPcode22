@@ -371,11 +371,29 @@ class Interpret:
         else:
             var.set_value("string")
     
-    #######################################################3
+    ##
     # <var> <symb>
     def __ins_not(self, instr):
         self.__control_args(instr, 2)
-        debug("not")
+        var = self.get_variable_from_arg(instr.get_n_arg(0))
+        args = instr.get_args()
+        
+        type1 = args[1].get_type()
+        if type1 == "var":
+            var1 = self.get_variable_from_arg(args[1])
+            var1.set_variable_type()  
+            type1 = var1.get_typ()       
+        else:
+            type1 = args[1].get_type()
+        
+        if type1.lower() != "bool":
+            error("Bad operands type", 53)
+
+        value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
+        if value1.lower() != "true" or value1.lower() != "false":
+            error("Bad type", 53)
+
+        var.set_value(str(not value1))
         
     ##
     # <var>
@@ -409,6 +427,8 @@ class Interpret:
         self.push_instr(i)
         return self.jump(instr)
     
+    ##
+    # <label>
     def jump(self, instr):
         name = self.get_symb_value_from_arg(instr.get_n_arg(0))
         label = self.find_label(name)
@@ -432,9 +452,6 @@ class Interpret:
         self.__control_arg_type(instr, 0, "label")
 
         return self.jump(instr)
-
-
-        #return label.get_inst_index() - 1
 
     ##
     # <label>
@@ -576,6 +593,12 @@ class Interpret:
         
         value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
         value2 = self.get_symb_value_from_arg(instr.get_n_arg(2))
+
+        if value1.lower() != "true" or value1.lower() != "false":
+            error("Bad type", 53)
+        if value2.lower() != "true" or value2.lower() != "false":
+            error("Bad type", 53)
+
 
         if operation == "and":
             var.set_value(str(value1 and value2))
