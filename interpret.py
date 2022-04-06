@@ -285,9 +285,9 @@ class Interpret:
         elif instr.get_name() == "idiv":
             self.__int_numeric_command(instr, "idiv")
         elif instr.get_name() == "lt":
-            self.__ins_lt(instr)
+            self.__ins_lt_gt(instr, "lt")
         elif instr.get_name() == "gt":
-            self.__ins_gt(instr)
+            self.__ins_lt_gt(instr, "gt")
         elif instr.get_name() == "eq":
             self.__ins_eq(instr)
         elif instr.get_name() == "and":
@@ -339,17 +339,215 @@ class Interpret:
         value = self.get_symb_value_from_arg(instr.get_n_arg(1))
         var1.set_value(value)
     
-    #######################################################3
+    #######################################################
     # <var> <symb>
     def __ins_int2char(self, instr):
         self.__control_args(instr, 2)
-        debug("i2ch")
+        var = self.get_variable_from_arg(instr.get_n_arg(0))
+        value = self.get_symb_value_from_arg(instr.get_n_arg(1))
+        
+        char = ''
+        try:
+            char = chr(value)
+        except:
+            error("Invalid int to char",58)
+        
+        var.set_value(char)
     
-    #######################################################3
+    #######################################################
     # <var> <symb>
     def __ins_strlen(self, instr):
         self.__control_args(instr, 2)
+        
+        var = self.get_variable_from_arg(instr.get_n_arg(0))
+        args = instr.get_args()
+        
+        type1 = args[1].get_type()
+        if type1 == "var":
+            var1 = self.get_variable_from_arg(args[1])
+            var1.set_variable_type()  
+            type1 = var1.get_typ()       
+        else:
+            type1 = args[1].get_type()
+
+        if type1.lower() != "string":
+            error("Mismatch types in stri2int",53)
+
+        value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
+
+        result = len(str(value1))
+        var.set_value(result)
         debug("strlen")
+    
+    #######################################################
+    # <var> <symb1> <symb2>
+    def __ins_stri2int(self, instr):
+        self.__control_args(instr, 3)
+        
+        var = self.get_variable_from_arg(instr.get_n_arg(0))
+        args = instr.get_args()
+        
+        type1 = args[1].get_type()
+        if type1 == "var":
+            var1 = self.get_variable_from_arg(args[1])
+            var1.set_variable_type()  
+            type1 = var1.get_typ()       
+        else:
+            type1 = args[1].get_type()
+        
+        type2 = args[2].get_type()
+        if type2 == "var":
+            var2 = self.get_variable_from_arg(args[2])
+            var2.set_variable_type() 
+            type2 = var2.get_typ()    
+        else:   
+            type2 = args[2].get_type()
+
+        if type1.lower() != "string" or type2.lower() != "int":
+            error("Mismatch types in stri2int",53)
+
+        value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
+        value2 = self.get_symb_value_from_arg(instr.get_n_arg(2))
+
+        char = '' 
+        try:
+            char = value1[value2]
+            char = ord(char)
+        except:
+            error("Out of index",58)
+
+        var.set_value(str(char))
+
+    #######################################################
+    # <var> <symb1> <symb2>
+    def __ins_concat(self, instr):
+        self.__control_args(instr, 3)
+        
+        var = self.get_variable_from_arg(instr.get_n_arg(0))
+        args = instr.get_args()
+        
+        type1 = args[1].get_type()
+        if type1 == "var":
+            var1 = self.get_variable_from_arg(args[1])
+            var1.set_variable_type()  
+            type1 = var1.get_typ()       
+        else:
+            type1 = args[1].get_type()
+        
+        type2 = args[2].get_type()
+        if type2 == "var":
+            var2 = self.get_variable_from_arg(args[2])
+            var2.set_variable_type() 
+            type2 = var2.get_typ()    
+        else:   
+            type2 = args[2].get_type()
+
+        if type1.lower() != "string" or type2.lower() != "string":
+            error("Mismatch types in stri2int",53)
+
+        value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
+        value2 = self.get_symb_value_from_arg(instr.get_n_arg(2))
+
+        result = str(value1) + str(value2)
+        var.set_value(result)
+
+        debug("concat")
+    
+    #######################################################
+    # <var> <symb1> <symb2>
+    def __ins_getchar(self, instr):
+        self.__control_args(instr, 3)
+        
+        var = self.get_variable_from_arg(instr.get_n_arg(0))
+        args = instr.get_args()
+        
+        type1 = args[1].get_type()
+        if type1 == "var":
+            var1 = self.get_variable_from_arg(args[1])
+            var1.set_variable_type()  
+            type1 = var1.get_typ()       
+        else:
+            type1 = args[1].get_type()
+        
+        type2 = args[2].get_type()
+        if type2 == "var":
+            var2 = self.get_variable_from_arg(args[2])
+            var2.set_variable_type() 
+            type2 = var2.get_typ()    
+        else:   
+            type2 = args[2].get_type()
+
+        if type1.lower() != "string" or type2.lower() != "int":
+            error("Mismatch types in stri2int",53)
+
+        value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
+        value2 = self.get_symb_value_from_arg(instr.get_n_arg(2))
+
+        char = '' 
+        try:
+            char = value1[value2]
+        except:
+            error("Out of index",58)
+
+        var.set_value(str(char))
+
+    #######################################################
+    # <var> <symb1> <symb2>
+    def __ins_setchar(self, instr):
+        self.__control_args(instr, 3)
+        
+        var = self.get_variable_from_arg(instr.get_n_arg(0))
+        args = instr.get_args()
+        
+        type1 = args[1].get_type()
+        if type1 == "var":
+            var1 = self.get_variable_from_arg(args[1])
+            var1.set_variable_type()  
+            type1 = var1.get_typ()       
+        else:
+            type1 = args[1].get_type()
+        
+        type2 = args[2].get_type()
+        if type2 == "var":
+            var2 = self.get_variable_from_arg(args[2])
+            var2.set_variable_type() 
+            type2 = var2.get_typ()    
+        else:   
+            type2 = args[2].get_type()
+
+        if type1.lower() != "int" or type2.lower() != "string":
+            error("Mismatch types in stri2int",53)
+
+        value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
+        value2 = self.get_symb_value_from_arg(instr.get_n_arg(2))
+
+        a = ''
+        try:
+            a = value2[0]
+        except:
+            error("Mismatch types in stri2int",53)
+
+        new_valu = var.get_value()
+        try:
+            new_valu[value1] = a
+        except:
+            error("Mismatch types in stri2int",53)
+
+        var.set_value(new_valu)
+    
+    #######################################################
+    # <symb>
+    def __ins_dprint(self, instr):
+        self.__control_args(instr, 1)
+        value1 = self.get_symb_value_from_arg(instr.get_n_arg(0))
+        sys.stderr.write(value1)
+        
+
+    #######################################################
+    # 
+    def __ins_break(self, instr):
+        self.__control_args(instr, 0)
+        self.print_frames()
 
     ##
     # <var> <symb>
@@ -511,11 +709,6 @@ class Interpret:
             error("Exit value not valid",57)
         exit(value)
 
-    #######################################################3
-    # <symb>
-    def __ins_dprint(self, instr):
-        self.__control_args(instr, 1)
-        debug("dprint")
 
     ##
     # ADD SUB MUL IDIV
@@ -546,20 +739,62 @@ class Interpret:
             var1.set_value(int(val1) // int(val2))
         elif command == "mul":
             var1.set_value(int(val1) * int(val2))
-
-    #######################################################3
-    # <var> <symb1> <symb2>
-    def __ins_lt(self, instr):
-        self.__control_args(instr, 3)
-        debug("lt")
     
-    #######################################################3
-    # <var> <symb1> <symb2>
-    def __ins_gt(self, instr):
-        self.__control_args(instr, 3)
-        debug("gt")
 
-    #######################################################3
+    ##
+    # <var> <symb1> <symb2>
+    def __ins_lt_gt(self, instr, operation):
+        self.__control_args(instr, 3)
+        
+        var = self.get_variable_from_arg(instr.get_n_arg(0))
+        args = instr.get_args()
+        
+        type1 = args[1].get_type()
+        if type1 == "var":
+            var1 = self.get_variable_from_arg(args[1])
+            var1.set_variable_type()  
+            type1 = var1.get_typ()       
+        else:
+            type1 = args[1].get_type()
+        
+        type2 = args[2].get_type()
+        if type2 == "var":
+            var2 = self.get_variable_from_arg(args[2])
+            var2.set_variable_type() 
+            type2 = var2.get_typ()    
+        else:   
+            type2 = args[2].get_type()
+
+        if type1.lower() != type2.lower():
+            error("mismatch types",53)
+        elif type1.lower() == "nil" or type2.lower() == "nil":
+            error("mismatch types",53)
+
+        
+        value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
+        value2 = self.get_symb_value_from_arg(instr.get_n_arg(2))
+        
+        # false is smaller then true  
+        if operation == "lt":    # <symb1> < <symb2>
+            
+            if type1.lower() == "bool":
+                if value1.lower() == "fals" and value2.lower() == "true":
+                    var.set_value("true")
+                else:
+                    var.set_value("false")
+            else:
+                var.set_value(str(value1 < value1))
+        elif operation == "gt":  # <symb1> > <symb2>
+            if type1.lower() == "bool":
+                if value1.lower() == "true" and value2.lower() == "false":
+                    var.set_value("true")
+                else:
+                    var.set_value("false")
+            else:
+                var.set_value(str(value1 > value1))
+
+
+    ##
     # <var> <symb1> <symb2>
     def __ins_eq(self, instr):
         self.__control_args(instr, 3)
@@ -641,29 +876,6 @@ class Interpret:
             var.set_value(str(value1 and value2))
             
 
-    #######################################################3
-    # <var> <symb1> <symb2>
-    def __ins_stri2int(self, instr):
-        self.__control_args(instr, 3)
-        debug("stri2int")
-
-    #######################################################3
-    # <var> <symb1> <symb2>
-    def __ins_concat(self, instr):
-        self.__control_args(instr, 3)
-        debug("concat")
-    
-    #######################################################3
-    # <var> <symb1> <symb2>
-    def __ins_getchar(self, instr):
-        self.__control_args(instr, 3)
-        debug("getchar")
-
-    #######################################################3
-    # <var> <symb1> <symb2>
-    def __ins_setchar(self, instr):
-        self.__control_args(instr, 3)
-        debug("setchar")
     
     ##
     # <label> <symb1> <symb2>
@@ -777,12 +989,6 @@ class Interpret:
             pass
         self.create_TF() 
     
-    #######################################################3
-    # 
-    def __ins_break(self, instr):
-        self.__control_args(instr, 0)
-        exit(100)
-        debug("break")
     
     ##
     # 
@@ -803,22 +1009,7 @@ class Interpret:
             error("Frame does not exists ", 55)
         self.TF_to_LF()
     
-    #######################################################3
-    # 
-    def __ins_div(self, instr):
-        debug("div")
-    
-    #######################################################3
-    # 
-    def __ins_int2float(self, instr):
-        debug("int2float")
-    
-    #######################################################3
-    # 
-    def __ins_float2int(self, instr):
-        debug("float2int ")
-
-    #######################################################3
+    ##
     #
     def __ins_return(self, instr):
         self.__control_args(instr, 0)
