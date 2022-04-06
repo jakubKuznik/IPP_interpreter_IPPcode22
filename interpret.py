@@ -728,7 +728,7 @@ class Interpret:
         ## <symb2>
         val2 = self.get_symb_value_from_arg(instr.get_n_arg(2))
         if not (re.match(pattern_int, str(val1))) or not (re.match(pattern_int, str(val2))):
-            error("instruction needs numbers", 32)
+            error("instruction needs numbers", 56)
         if command == "add":
             var1.set_value(int(val1) + int(val2))
         elif command == "sub":
@@ -766,9 +766,9 @@ class Interpret:
             type2 = args[2].get_type()
 
         if type1.lower() != type2.lower():
-            error("mismatch types",53)
+            error("mismatch types",56)
         elif type1.lower() == "nil" or type2.lower() == "nil":
-            error("mismatch types",53)
+            error("mismatch types",56)
 
         
         value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
@@ -864,17 +864,22 @@ class Interpret:
         value1 = self.get_symb_value_from_arg(instr.get_n_arg(1))
         value2 = self.get_symb_value_from_arg(instr.get_n_arg(2))
 
-        if value1.lower() != "true" or value1.lower() != "false":
+        if value1.lower() != "true" and value1.lower() != "false":
             error("Bad type", 53)
-        if value2.lower() != "true" or value2.lower() != "false":
+        if value2.lower() != "true" and value2.lower() != "false":
             error("Bad type", 53)
 
 
         if operation == "and":
-            var.set_value(str(value1 and value2))
+            if value1 == "true" and value2 == "true":
+                var.set_value(str("true"))
+            else:
+                var.set_value(str("false"))
         elif operation == "or":
-            var.set_value(str(value1 and value2))
-            
+            if value1 == "false" and value2 == "false":
+                var.set_value(str("false"))
+            else:
+                var.set_value(str("true"))
 
     
     ##
