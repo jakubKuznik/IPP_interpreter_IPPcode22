@@ -82,7 +82,6 @@
         unlink($temp_file_name);
         
     
-    exec("rm " . "9999999999.out");
     exit(0);
 
 
