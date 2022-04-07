@@ -167,9 +167,6 @@
                 return;
             }
             
-            // vygeneruju xml pomoci parse pokud, parser hodi error porovnám ho pokud nehodí error 
-            // interpretuju kod 
-            
             /********* ref RETURN CODE NOT 0 ****************/
             if ($ref_rc != 0){    
                 exec($parse_comm, $result_out, $result_rc);
@@ -383,7 +380,6 @@
             echo '</td> </tr> </tbody></table> </div></div>';
         }
 
-        // TODO PROSTE TO UKLADEJ DO TOHO STRINGU A NA KONCI HO PRINTNI PRINTI 
         function store_test($state, $index, $name, $ref_rc, $rc){
             if($state == FAIL){
                 //difrent return code 
