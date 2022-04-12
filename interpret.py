@@ -5,7 +5,6 @@ import re
 import xml.etree.ElementTree as ET
 import copy
 
-
 valid_instruction = [ "move", "int2char", "strlen", "type", "not",
  "defvar", "pops" , "call", "jump", "label", "pushs", "write", 
  "exit", "dprint", "add", "sub", "mul", "idiv", "lt", "gt", "eq",
@@ -14,7 +13,6 @@ valid_instruction = [ "move", "int2char", "strlen", "type", "not",
  "return", "div", "int2float", "float2int"]
 
 valid_types = ["int", "bool", "string", "nil", "label", "type", "var", "float"]
-
 
 #
 # Prints help message
@@ -55,8 +53,6 @@ def main():
         i = inter.interpret(inst_l[i], i)
         i = i + 1
     
-
-
 ##
 # class that represent one data frame used in GF, TF or in LF
 class Frame:
@@ -70,6 +66,10 @@ class Frame:
     def get_variables(self):
         return self.__variables
 
+    def get_variable(self, name):
+        index = self.find_variable_index(name)
+        return self.get_variable_index(index)
+   
     def get_variable_index(self, index):
         return self.__variables[index]
 
@@ -79,11 +79,6 @@ class Frame:
             if v.get_name() == name:
                 return i
             i = i + 1
-    
-    def get_variable(self, name):
-        index = self.find_variable_index(name)
-        return self.get_variable_index(index)
-
     ##
     # return true if variable exist in frame
     #       else return false 
@@ -101,18 +96,21 @@ class Variable:
         self.__typ  = typ
         self.__value = value #nil == nil 
                              #true, false    
-    
     def get_name(self):
         return self.__name
+
     def get_typ(self):
         return self.__typ
+
     def get_value(self):
         return self.__value
     
     def set_name(self, val):
         self.__name = val
+
     def set_typ(self, val):
         self.__typ = val
+
     def set_value(self, val):
         self.__value = val
 
@@ -156,22 +154,22 @@ class Instruction:
 
     def get_instructions():
         return Instruction.__inst_list
-
+  
     def get_name(self):
         return self.__name
-
-    def get_order(self):
-        return self.__order
-    
+   
     def get_args(self):
         return self.__args
     
+    def get_order(self):
+        return self.__order
+
     def set_name(self, name):
         self.__name = name
     
     def set_order(self, orde):
         self.__order = orde
-
+    
     def append_arg(self, arg):
         self.__args.append(arg)
         
@@ -182,7 +180,6 @@ class Instruction:
                 if int(a.get_order()) == int(i):
                     ar.append(a)
         self.__args = ar
-
     
     def get_n_arg(self, n):
         for arg in self.__args:
@@ -201,14 +198,15 @@ class Label:
     def get_name(self):
         return self.__name
     
+    def get_inst_index(self):
+        return self.__inst_index
+    
     def set_name(self, name):
         self.__name = name
     
     def set_inst_index(self, index):
         self.__inst_index = index
     
-    def get_inst_index(self):
-        return self.__inst_index
     
 ##
 # one instrustion argument. 
@@ -241,9 +239,6 @@ class Args:
     def set_cont(self, cont):
         self.__content = cont
 
-
-
-    
 ##
 #  Parse arguments and store input and source file 
 class Arg_parse:
@@ -274,35 +269,36 @@ class Arg_parse:
     # If error or --help exit() program
     # return file_path, command
     def __parse_arguments(self, args):
+        
         if len(args) > 3:
             error("To many arguments",10)
+        
         source = False
-        input = False
+        input  = False
         for a in args[1:]:
-            if a == "--help" or a == "-h":
+            if a == "--help" or a == "-h":      # if help
                 if len(args) != 2:
                     error("Can't combine help with other params",10)
                 help()
                 exit(0)
-            elif a.startswith("--source="):
+            elif a.startswith("--source="):     # --source argument 
                 temp = a.split('=')
                 self.set_so_file(self.__string_assemble(temp))
                 source = True
-            elif a.startswith("--input="):
+            elif a.startswith("--input="):      # --input arg
                 temp = a.split('=')
                 self.set_in_file(self.__string_assemble(temp))
                 input = True
-            else:
+            else:                               # Unknown argument 
                 sys.stderr.write("Unknown \n")
                 exit(10)
-        if input == False and source == False:
+        
+        if input == False and source == False:  # there is no --input or source 
             error("Need --input or --source", 10)
-        elif input == True and source == False:
+        elif input == True and source == False: 
             self.set_so_file(sys.stdin)
         elif input == False and source == True:
             self.set_in_file(sys.stdin)
-
-
 
     ##
     # return string from array memebers concatenate with = symbol
@@ -313,7 +309,6 @@ class Arg_parse:
         for a in array[2:]:
             out = out + "=" + a
         return out
-
 
 ##
 # Read from input files validates them etc ...
@@ -346,6 +341,7 @@ class Files(Arg_parse):
         except :
             error("File not accesible", 10)
         f.close()
+
     ##
     # Call file exist for input files 
     def files_exists(self):
@@ -353,7 +349,6 @@ class Files(Arg_parse):
             self.file_exist(self.get_in_file())
         if self.get_so_file() != sys.stdin:
             self.file_exist(self.get_so_file())
-
     ##
     # store input file 
     def input_store(self):
@@ -372,7 +367,6 @@ class Files(Arg_parse):
             array.append(l)
         return array
 
-
     ##
     # Parse xml using xml libr
     # return xml root 
@@ -382,16 +376,18 @@ class Files(Arg_parse):
             return tree.getroot()
         except:
             error("Bad xml format", 31)
-
+    
     ##
     # Valid whole xml and store it  
     def xml_validation(self, root): #<program>
         self.xml_valid_root(root)
         if root.tag.lower() != "program":
             error("Bad xml format expect <program>", 32)
+        
         for child in root:          #<instruction>
             if child.tag.lower() != "instruction":
                 error("Bad xml format expect <instruction>", 32)
+            
             inst = self.xml_valid_instr(child)
             inst = Instruction(inst[0], inst[1])
             for ar in child:        #<arg>
@@ -406,7 +402,6 @@ class Files(Arg_parse):
                     error("Bad xml format expect <instruction>", 32)
                 i=i+1
 
-
     ##
     # Check if instruction is valid
     # - opcode is valid?
@@ -415,19 +410,21 @@ class Files(Arg_parse):
     #   return instruction name, order 
     def xml_valid_instr(self, inst):
         opcode_flag = False
-        order_flag = False
-        opcode = ""
-        ord = ""
-        for a in inst.attrib:
+        order_flag  = False
+        opcode      = ""
+        ord         = ""
+
+        # get throught all instruction attributes (flags)
+        for a in inst.attrib: 
             ia = (inst.attrib[a]).lower()
-            a = a.lower()
-            if a == "opcode":
+            a  = a.lower()
+            if a == "opcode":  # opcode  
                 if ia not in valid_instruction:
                     error("Not valid instruction", 32)
-                opcode_flag = True
-                opcode = ia
+                opcode_flag = True ## flag is ok
+                opcode      = ia   ## order set 
                 continue
-            elif a == "order":
+            elif a == "order": # order
                 try:
                     ia = int(ia)
                 except:
@@ -439,30 +436,32 @@ class Files(Arg_parse):
                         error("Bad instruction order",32)
 
                 self.set_last_instr(ia)
-                order_flag = True
-                ord = int(ia)
+                order_flag = True ## flag is ok
+                ord = int(ia)     ## order set 
                 continue            
-            else:
+            else:  ## unknown instruction flag
                 error("Bad instruction flag", 32)
         if order_flag == False or opcode_flag == False:
             error("Opcode or order missing", 32)
         return opcode, ord
 
-
     ##
     # valid argument of instruction 
     # return arg order, type, content 
     def xml_valid_arg(self, arg):
-        pat = re.compile('arg' + "1")
+
+        pat  = re.compile('arg' + "1") 
         pat2 = re.compile('arg' + "2")
         pat3 = re.compile('arg' + "3")
+
         if not pat.match(arg.tag):
             if not pat2.match(arg.tag):
                 if not pat3.match(arg.tag):
                     error("Unvalid arg", 32)
 
         type_flag = False
-        type = ""
+        type = "" 
+        ## get throught argument 
         for a in arg.attrib:
             ia = (arg.attrib[a]).lower()
             a = a.lower()
@@ -474,7 +473,7 @@ class Files(Arg_parse):
                 continue
             else:
                 error("Invalid arg attribute", 32)
-
+        
         if type_flag == False:
             error("Missing arg type flag",32)
         order = arg.tag.replace("arg", "")
@@ -519,31 +518,8 @@ class Interpret:
         self.__read_file    = read_file
         self.__labels       = []
         self.__instr_stack  = []
+
     
-    def get_labels(self):
-        return self.__labels
-    
-    def find_label(self, name):
-        for l in self.get_labels():
-            if l.get_name().lower() == name.lower():
-                return l
-        return None
-
-    def get_read_file(self):
-        return self.__read_file
-
-    def store_label(self, label):
-        self.__labels.append(label)
-
-    ##
-    # pop from instr stack
-    def pop_instr(self):
-        return self.__instr_stack.pop()
-    ##
-    # push to instr stack 
-    def push_instr(self, val):
-        self.__instr_stack.append(val)
-
     ##
     # get line from read file 
     def get_r_line(self):
@@ -551,21 +527,25 @@ class Interpret:
         val = val.strip()
         return val
 
-    ##
-    # pop from stack
-    def pop(self):
-        return self.__stack.pop()
-    ##
-    # push to stack 
-    def push(self, val):
-        self.__stack.append(val)
-
+    def store_label(self, label):
+        self.__labels.append(label)
+    
+    def get_labels(self):
+        return self.__labels
+    
+    def get_read_file(self):
+        return self.__read_file
+    
     def get_GF(self):
         return self.__GF
 
     def get_TF(self):
         return self.__TF
     
+    def get_active_LT(self):
+        return self.__active_LT
+    
+    ## get frame based on frame name 
     def get_FRAME(self, frame):
         if frame.lower() == "gf":
             return self.get_GF()
@@ -576,8 +556,29 @@ class Interpret:
         else:
             return NONE
 
-    def get_active_LT(self):
-        return self.__active_LT
+    ##
+    # pop from instr stack
+    def pop_instr(self):
+        return self.__instr_stack.pop()
+    ##
+    # push to instr stack 
+    def push_instr(self, val):
+        self.__instr_stack.append(val)
+
+    # find if label exist  
+    def find_label(self, name):
+        for l in self.get_labels():
+            if l.get_name().lower() == name.lower():
+                return l
+        return None
+    ##
+    # pop from stack
+    def pop(self):
+        return self.__stack.pop()
+    ##
+    # push to stack 
+    def push(self, val):
+        self.__stack.append(val)
         
     def LT_is_empty(self):
         if len(self.__LF) == 0:
@@ -627,7 +628,7 @@ class Interpret:
         self.dec_active_LT()
 
     ##
-    # store variable to active LF 
+    # store variable to active LF if exist, else error 
     def store_var_to_LF(self, name, typ, value):
         var = Variable(name, typ, value)
         try:
@@ -635,10 +636,14 @@ class Interpret:
         except:
             error("Frame does not exists ", 32)
 
+    ##
+    # store variable to GF
     def store_var_to_GF(self, name, typ, value):
         var = Variable(name, typ, value)
         self.__GF.add_variable(var)
 
+    ##
+    # Store variable to TF if exist, else error 
     def store_var_to_TF(self, name, typ, value):
         var = Variable(name, typ, value)
         try:
@@ -646,6 +651,8 @@ class Interpret:
         except:
             error("Frame does not exists ", 32)
     
+    ##
+    # Store var to given frame 
     def store_var(self, frame, name, typ, value):
         if frame.lower() == "lf":
             self.store_var_to_LF(name, typ, value)
@@ -654,6 +661,8 @@ class Interpret:
         elif frame.lower() == "tf":
             self.store_var_to_TF(name, typ, value)
 
+    ##
+    # get var from given frame 
     def get_var(self, frame, name):
         if frame.lower() == "lf":
             return self.__LF[self.get_active_LT()].get_variable(name)
@@ -675,6 +684,8 @@ class Interpret:
             frame, name = self.__control_var(arg)
             return name
 
+    ##
+    # gets variable from Argument data type 
     def get_variable_from_arg(self, arg):
         typ = arg.get_type()
         if typ != "var":
@@ -689,12 +700,6 @@ class Interpret:
     # i == instruction index 
     def interpret(self, instr, i):
         
-        #sys.stderr.write("\n")
-        #sys.stderr.write("..............")
-        #sys.stderr.write(instr.get_name())
-        #sys.stderr.write("..............")
-        #sys.stderr.write("\n")
-        #self.print_frames()
         if instr.get_name() == "move":
             self.__ins_move(instr)
         elif instr.get_name() == "int2char":
@@ -774,7 +779,8 @@ class Interpret:
         else:
             error("Unknown instruction", 51)
         return i
-    ##
+    
+    ### move
     # <var> <symb>
     def __ins_move(self, instr):
         self.__control_args(instr, 2)
@@ -786,25 +792,53 @@ class Interpret:
         value = self.get_symb_value_from_arg(instr.get_n_arg(1))
         var1.set_value(value)
     
-    #######################################################
+    ### int2char
     # <var> <symb>
     def __ins_int2char(self, instr):
         self.__control_args(instr, 2)
-        var = self.get_variable_from_arg(instr.get_n_arg(0))
+        var   = self.get_variable_from_arg(instr.get_n_arg(0))
         value = self.get_symb_value_from_arg(instr.get_n_arg(1))
-
-        char = ''
+        
+        char  = ''
         try:
             char = chr(int(value))
             if int(value) < 0 or int(value) > 255:
                 error("Invalid int to char",53)
-
         except:
             error("Invalid int to char",53)
         
         var.set_value(char)
     
-    #######################################################
+    ### pushframe 
+    # 
+    def __ins_pushframe(self, instr):
+        self.__control_args(instr, 0)
+        
+        try:
+            self.get_TF()
+        except:
+            error("Frame does not exist", 55)
+        self.create_LF()
+
+    ## popframe
+    # 
+    def __ins_popframe(self, instr):
+        self.__control_args(instr, 0)
+        if self.LT_is_empty():
+            error("Frame does not exists ", 55)
+        self.TF_to_LF()
+    
+    ## return 
+    #
+    def __ins_return(self, instr):
+        self.__control_args(instr, 0)
+        try:
+            i = self.pop_instr()
+        except:
+            error("Empty instruction stack", 56)
+        return i
+
+    ### strlen
     # <var> <symb>
     def __ins_strlen(self, instr):
         self.__control_args(instr, 2)
@@ -813,7 +847,7 @@ class Interpret:
         args = instr.get_args()
         
         type1 = args[1].get_type()
-        if type1 == "var":
+        if type1 == "var": 
             var1 = self.get_variable_from_arg(args[1])
             var1.set_variable_type()  
             type1 = var1.get_typ()       
@@ -829,14 +863,14 @@ class Interpret:
         var.set_value(result)
         debug("strlen")
     
-    #######################################################
+    ### stri2int
     # <var> <symb1> <symb2>
     def __ins_stri2int(self, instr):
         self.__control_args(instr, 3)
-        
         var = self.get_variable_from_arg(instr.get_n_arg(0))
         args = instr.get_args()
         
+        ## check if argument have good types 
         type1 = args[1].get_type()
         if type1 == "var":
             var1 = self.get_variable_from_arg(args[1])
@@ -861,7 +895,7 @@ class Interpret:
 
         if int(value2) < 0:
             error("Out of index",58)
-
+        
         char = '' 
         try:
             char = value1[int(value2)]
@@ -871,7 +905,7 @@ class Interpret:
 
         var.set_value(str(char))
 
-    #######################################################
+    ### concat 
     # <var> <symb1> <symb2>
     def __ins_concat(self, instr):
         self.__control_args(instr, 3)
@@ -906,7 +940,7 @@ class Interpret:
 
         debug("concat")
     
-    #######################################################
+    ### getchar
     # <var> <symb1> <symb2>
     def __ins_getchar(self, instr):
         self.__control_args(instr, 3)
@@ -944,7 +978,7 @@ class Interpret:
 
         var.set_value(str(char))
 
-    #######################################################
+    ### setchar 
     # <var> <symb1> <symb2>
     def __ins_setchar(self, instr):
         self.__control_args(instr, 3)
@@ -991,7 +1025,7 @@ class Interpret:
 
         var.set_value(new_valu)
     
-    #######################################################
+    ### dprint
     # <symb>
     def __ins_dprint(self, instr):
         self.__control_args(instr, 1)
@@ -999,13 +1033,13 @@ class Interpret:
         sys.stderr.write(value1)
         
 
-    #######################################################
+    ### break
     # 
     def __ins_break(self, instr):
         self.__control_args(instr, 0)
         self.print_frames()
 
-    ##
+    ### type
     # <var> <symb>
     def __ins_type(self, instr):
         self.__control_args(instr, 2)
@@ -1025,7 +1059,7 @@ class Interpret:
         else:
             var.set_value("string")
     
-    ##
+    ### not
     # <var> <symb>
     def __ins_not(self, instr):
         self.__control_args(instr, 2)
@@ -1055,7 +1089,7 @@ class Interpret:
         else:
             error("Bad type", 53)
         
-    ##
+    ### defvar
     # <var>
     def __ins_defvar(self, instr):
         self.__control_args(instr, 1)
@@ -1065,7 +1099,7 @@ class Interpret:
             error("Variable already exist in frame", 52)
         self.store_var(frame, var, "" , "")
         
-    ##
+    ### pops
     # <var>
     def __ins_pops(self, instr):
         self.__control_args(instr, 1)
@@ -1080,19 +1114,20 @@ class Interpret:
         var = self.get_variable_from_arg(instr.get_n_arg(0)) 
         var.set_value(set_to)
         
-    ##
+    ### call
     # <label>
     def __ins_call(self, instr, i):
         self.__control_args(instr, 1)
         self.push_instr(i)
         return self.jump(instr)
     
-    ##
+    ### generalize function for multiple jumps instruction
     # <label>
     def jump(self, instr):
         name = self.get_symb_value_from_arg(instr.get_n_arg(0))
         label = self.find_label(name)
-        if label == None:
+        
+        if label == None: ## u have to find if label is in instruction that will occur later
             inst_l = Instruction.get_instructions()
             for i in range(0, len(inst_l)):
                 if inst_l[i].get_name().lower() == "label":
@@ -1105,7 +1140,7 @@ class Interpret:
         else:
             return label.get_inst_index()
 
-    ##
+    ### jump
     # <label>
     def __ins_jump(self, instr):
         self.__control_args(instr, 1)
@@ -1113,7 +1148,7 @@ class Interpret:
 
         return self.jump(instr)
 
-    ##
+    ### label
     # <label>
     def __ins_label(self, instr, i):
         self.__control_args(instr, 1)
@@ -1124,7 +1159,7 @@ class Interpret:
         label = Label(name, i)
         self.store_label(label)
     
-    ##
+    ### pushs
     # <symb>
     def __ins_pushs(self, instr):
         self.__control_args(instr, 1)
@@ -1139,7 +1174,7 @@ class Interpret:
 
         self.push(val)
 
-    ##
+    ### write 
     # <symb>
     # nil is empty string 
     def __ins_write(self, instr):
@@ -1168,7 +1203,7 @@ class Interpret:
             else:
                 print(val, end='')
 
-    ##
+    ### exit
     # <symb>
     def __ins_exit(self, instr):
         self.__control_args(instr, 1)
@@ -1182,7 +1217,7 @@ class Interpret:
         exit(value)
 
 
-    ##
+    ### generalization function for add sub mul idiv 
     # ADD SUB MUL IDIV
     def __int_numeric_command(self, instr, command):
         if instr.get_n_arg(1).get_type() != "var":
@@ -1213,7 +1248,7 @@ class Interpret:
             var1.set_value(int(val1) * int(val2))
     
 
-    ##
+    ### generalization function for lt or gt
     # <var> <symb1> <symb2>
     def __ins_lt_gt(self, instr, operation):
         self.__control_args(instr, 3)
@@ -1272,10 +1307,7 @@ class Interpret:
                 else:
                     var.set_value("false")
 
-        
-        
-
-    ##
+    ### eq
     # <var> <symb1> <symb2>
     def __ins_eq(self, instr):
         self.__control_args(instr, 3)
@@ -1316,7 +1348,7 @@ class Interpret:
         else:
             var.set_value("false")
 
-    ##
+    ### and, or
     # <var> <symb1> <symb2>
     def __ins_and_or(self, instr, operation):
         self.__control_args(instr, 3)
@@ -1363,7 +1395,7 @@ class Interpret:
                 var.set_value(str("true"))
 
     
-    ##
+    ### jumpifeq
     # <label> <symb1> <symb2>
     def __ins_jumpifeq(self, instr, i):
         self.__control_args(instr, 3)
@@ -1397,7 +1429,7 @@ class Interpret:
             return self.jump(instr)
         return i
 
-    ##
+    ### jumpifneq
     # <label> <symb1> <symb2>
     def __ins_jumpifneq(self, instr, i):
         self.__control_args(instr, 3)
@@ -1431,7 +1463,7 @@ class Interpret:
             return self.jump(instr)
         return i
 
-    ##
+    ### read 
     # <var> <type>
     def __ins_read(self, instr):
         self.__control_args(instr, 2)
@@ -1465,7 +1497,7 @@ class Interpret:
         var.set_value(val)
         var.set_typ(typ)
 
-    ##
+    ### create frame 
     # remove TF content and create new one 
     def __ins_createframe(self, instr):
         self.__control_args(instr, 0)
@@ -1474,36 +1506,6 @@ class Interpret:
         except:
             pass
         self.create_TF() 
-    
-    
-    ##
-    # 
-    def __ins_pushframe(self, instr):
-        self.__control_args(instr, 0)
-        
-        try:
-            self.get_TF()
-        except:
-            error("Frame does not exist", 55)
-        self.create_LF()
-
-    ##
-    # 
-    def __ins_popframe(self, instr):
-        self.__control_args(instr, 0)
-        if self.LT_is_empty():
-            error("Frame does not exists ", 55)
-        self.TF_to_LF()
-    
-    ##
-    #
-    def __ins_return(self, instr):
-        self.__control_args(instr, 0)
-        try:
-            i = self.pop_instr()
-        except:
-            error("Empty instruction stack", 56)
-        return i
     
     
     ############## CONTROL FUNCTIONS (SEMATIC OR SYNTAX)############
@@ -1562,9 +1564,6 @@ class Interpret:
             if self.__TF.var_exist(name) == True:
                 return True
         return False
-            
-    ################################################################
-    
     ##
     # DEBUG FUNCTION 
     def print_frames(self):
@@ -1598,6 +1597,8 @@ class Interpret:
                     debug("      value:... " + str(a.get_value()))
             except:
                 debug("....empty")
+
+
 def error(string, exit_code):
     sys.stderr.write(string + "\n")
     exit(exit_code)

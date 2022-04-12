@@ -1,20 +1,19 @@
 <?php
     ini_set('display_errors', 'stderr'); //Erross on stderr 
 
-
     /************** MACROS **************************/
     define("HELP_MESS", " Test script for parser.php and interpret.py
-        --help               // Display help cannot be combinated with anything 
-        --parse-only         // olnly parser.php test. can't combine with --int-only, --int-script 
-        --int-only           // only interpret.py
-        --recursive          // Not only given folder but recursive folder to 
-        --noclean            // doesnt remove temp. files
-        --directory=path     // Folder where we are looking for tests 
-        --parse-script=file  // parse.php      - if not given actual folder  
-        --int-script=file    // interpret.py   - if not given actual folder 
-        --jexampath=path      // path to jexamxml.jar (A7Soft)
-        --match=regexp       // Only files that match regex of PCRE sytax 
-        --testlist=file      // explicit folders definition or files\n"); 
+                --help               // Display help cannot be combinated with anything 
+                --parse-only         // olnly parser.php test. can't combine with --int-only, --int-script 
+                --int-only           // only interpret.py
+                --recursive          // Not only given folder but recursive folder to 
+                --noclean            // doesnt remove temp. files
+                --directory=path     // Folder where we are looking for tests 
+                --parse-script=file  // parse.php      - if not given actual folder  
+                --int-script=file    // interpret.py   - if not given actual folder 
+                --jexampath=path      // path to jexamxml.jar (A7Soft)
+                --match=regexp       // Only files that match regex of PCRE sytax 
+                --testlist=file      // explicit folders definition or files\n"); 
 
     define ("ERR_HELP", "Cannot combine with other arguments\n");
     define ("ERR_COM", "Cannot combine --parse-only and --int-only\n");
@@ -55,7 +54,6 @@
         $tf->find_test_from_list($set->directory, $set->recursive, $set->match_regex);
     else                         // just from directory
         $tf->find_test_inputs($set->directory, $set->recursive, $set->match_regex);
-  
 
     $test_c = new Test($set);
     $html_generator = new Html_generation();
@@ -84,14 +82,11 @@
     
     exit(0);
 
-
     /**
      * Class for parse.php test 
      */
     class Test {
         
-        //todo read tests  test.in
-    
         // constructor will set it from Settings class 
         private $parse_path  = "";       // path to parser script 
         private $jexam_path  = "";
@@ -157,9 +152,9 @@
             $file_src       = get_file_name($file_path, SRC);
             $file_in        = get_file_name($file_path, IN);
             $ref_file_out   = get_file_name($file_path, OUT);
-            $ref_rc = file_get_contents(get_file_name($file_path, RC), true);     
-            $parse_comm    = "php8.1 ".$this->parse_path ." < " . $file_path . " > " . $temp_file; 
-            $inter_comm    = "python3 " . $this->int_path . " --source=" . "9999999999.out "  . " --input=" . $file_in . " >" . $temp_file . " 2>/dev/null";           
+            $ref_rc         = file_get_contents(get_file_name($file_path, RC), true);     
+            $parse_comm     = "php8.1 ".$this->parse_path ." < " . $file_path . " > " . $temp_file; 
+            $inter_comm     = "python3 " . $this->int_path . " --source=" . "9999999999.out "  . " --input=" . $file_in . " >" . $temp_file . " 2>/dev/null";           
 
             // Non valid return code 
             if (is_numeric($ref_rc) == false){
@@ -219,7 +214,6 @@
                     return;
                 }
             }
-
         }
 
         /**
@@ -235,9 +229,9 @@
             $diff_ret        = "";
             $out             = "";
             $ref_file_out    = get_file_name($file_path, OUT);
-            $ref_rc = file_get_contents(get_file_name($file_path, RC), true);
-            $file_in     = get_file_name($file_path, IN);
-            $file_src  = get_file_name($file_path, SRC);
+            $ref_rc          = file_get_contents(get_file_name($file_path, RC), true);
+            $file_in         = get_file_name($file_path, IN);
+            $file_src        = get_file_name($file_path, SRC);
             $inter_comm      = "python3 " . $this->int_path . " --source=" . $file_src . " --input=" . $file_in . ">" . $temp_file . " 2>/dev/null";           
             
             // Non valid return code 
@@ -245,12 +239,10 @@
                 fwrite (STDERR,"UNVALID Test: " . $this->test_num . " " . $file_path . "\n");
                 return;
             }
-
             /********* ref RETURN CODE NOT 0 ****************/
             if ($ref_rc != 0){
                 $this->zero_rc_testcase($inter_comm, $ref_rc, $file_path);
             }
-
             /********* ref RETURN CODE 0  ****************/
             else{
                 // store parser output to temp variable 
@@ -279,10 +271,10 @@
             $result_rc      = "";
             $out            = "";
             $ref_file_out   = get_file_name($file_path, OUT);
-            $ref_rc = file_get_contents(get_file_name($file_path, RC), true);
+            $ref_rc         = file_get_contents(get_file_name($file_path, RC), true);
             $script_stderr  = "";
-            $jar_com = "java -jar " . $this->jexam_path . " " . $ref_file_out  . " " . $temp_file;
-            $parse_com = "php8.1 ".$this->parse_path ." < " . $file_path . " > " . $temp_file; 
+            $jar_com        = "java -jar " . $this->jexam_path . " " . $ref_file_out  . " " . $temp_file;
+            $parse_com      = "php8.1 ".$this->parse_path ." < " . $file_path . " > " . $temp_file; 
             
             // Non valid return code 
             if (is_numeric($ref_rc) == false){
@@ -365,8 +357,6 @@
             echo "<li>Regex match: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'";
             echo $set->match_regex;
             echo "'</li>";
-            
-                    
             echo "</ul></div>";
         }
 
@@ -399,16 +389,14 @@
             echo $this->all_test;
             echo $this->end;
         }
-
     }
-
 
     /**
      * Script settings. 
      */
     class Settings {
         public $parser_only = false;              // parser tests 
-        public $inter_only = false;              // interpreter 
+        public $inter_only  = false;              // interpreter 
         public $recursive   = false;             // recursive folder                  
         public $noclean     = false;             // dont delete temp files 
         public $test_list   = false;
@@ -416,8 +404,7 @@
         public $int_path    = "interpret.py";    // Path to interpreter script 
         public $jexam_path  = "/pub/courses/ipp/jexamxml/jexamxml.jar";
         public $match_regex = "/.*/";            // match regex files 
-        public $directory = ".";                 // for --directory= or --testlist=
-        
+        public $directory   = ".";                 // for --directory= or --testlist=
      
         /**
          * Check if $match_regex is valid PCRE regex
@@ -486,18 +473,15 @@
      * Finds out all test files and store them  
      */ 
     class Test_files {
-        public $tests_files = array();     // array of files and folders that we will test 
-        private $src = '/.src/';           // src files 
-        private $hiden_f = "/\/\./";       // hidden file         
-
+        public $tests_files = array();      // array of files and folders that we will test 
+        private $src        = '/.src/';     // src files 
+        private $hiden_f    = "/\/\./";     // hidden file         
 
         /**
          * Generate missing .out .rc .in files
-         * 
          * @var file_path
          * 
          * if cannot create file exit(41);
-         *  
          */
         function gene_missing($file_path){
             // todo valid 
@@ -526,7 +510,6 @@
                 fwrite($a, "0");
                 fclose($a);
             }
-
         }
 
         /**
@@ -560,7 +543,6 @@
             fclose($f);
         }
 
-
         /**
          * Function finds test inputs and store it to $test_files array
          * looking for .src 
@@ -571,7 +553,6 @@
          * 
          */
         function find_test_inputs($directory, bool $recursive, $match_regex){
-            
             $files = scandir($directory);
             //print_r($files);
             foreach ($files as $f){
@@ -596,7 +577,6 @@
         }
     }
 
-
     /**
      * Function parse arguments.
      * 
@@ -612,12 +592,9 @@
      * --match=regexp       // Only files that match regex of PCRE sytax 
      * --testlist=file      // explicit folders definition or files 
      *                      // -can't combine with --directory
-     * 
-     * 
      * @var argc
      * @var argv
      * @return void 
-     * 
      *  */    
     function parse_args(int $argc, array $argv, Settings $set){ 
         
@@ -625,11 +602,9 @@
         $parse_only = false;
         $directory  = false; // cannot 
         $testlist   = false;
-
      
         // two switch one for arguments with '='
         foreach ($argv as $arg){
-            
             /********** FOR ARGUMENTS WITH '=' SYMBOL ***********/
             if (str_contains($arg, "=")){
                 $arg = explode("=", $arg);
@@ -659,7 +634,7 @@
                         if ($int_only == true){ //cannot combine with --int-only
                             fwrite(STDERR, ERR_COM); exit(10);
                         }
-                        $parse_only = true;
+                        fwrite(STDERR, ERR_COM); exit(10);
                         $set->jexam_path = $help_file_name; 
                         break;
                     case "--match":
@@ -680,7 +655,7 @@
             /********** WITHOUT '=' *******************/
             switch ($arg){
                 case "--help":
-                    if ($argc != 2){ // cannot combine help with other params  
+                    if ($argc != 2){            // cannot combine help with other params  
                         fwrite(STDERR, ERR_HELP); exit(10);
                     }
                     echo (HELP_MESS); break;
@@ -752,7 +727,6 @@
             return ($dirname . "/" . $base_name . ".src");
     }
     
-    
     /**
      * Create temp file for outputs
      */
@@ -762,5 +736,4 @@
         $myfile = fopen($temp_file_name, "w");
         return $myfile;
     }
-
 ?>
