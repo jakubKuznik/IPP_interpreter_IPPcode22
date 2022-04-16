@@ -55,6 +55,7 @@ def main():
     
 ##
 # class that represent one data frame used in GF, TF or in LF
+# Class works just like data structure, it does nothing but manipulate data. 
 class Frame:
     
     def __init__(self):
@@ -90,6 +91,7 @@ class Frame:
 
 ##
 # one variable or constant 
+# Class works just like data structure, it does nothing but manipulate data. 
 class Variable:
     def __init__(self, name, typ, value):
         self.__name = name
@@ -132,6 +134,7 @@ class Variable:
 ##
 # Store one instruction 
 # __inst_list class attribute where all instructions are stored 
+# Class works just like data structure, it does nothing but manipulate data. 
 class Instruction:
     __inst_list = []
 
@@ -189,6 +192,7 @@ class Instruction:
     
 ##
 # Label 
+# Class works just like data structure, it does nothing but manipulate data. 
 class Label:
 
     def __init__(self, name, inst_index):
@@ -210,6 +214,7 @@ class Label:
     
 ##
 # one instrustion argument. 
+# Class works just like data structure, it does nothing but manipulate data. 
 class Args:
 
     def __init__(self, order, typ, content, tag):
@@ -241,6 +246,7 @@ class Args:
 
 ##
 #  Parse arguments and store input and source file 
+# Class works just like data structure, it does nothing but manipulate data. 
 class Arg_parse:
     
     def __init__(self, parsing, in_f, so_f):
@@ -313,6 +319,7 @@ class Arg_parse:
 ##
 # Read from input files validates them etc ...
 # Files names are stored in argpase 
+# Singelton class that manage files  
 class Files(Arg_parse):
 
     def __init__(self, parsing, in_f, so_f):
@@ -506,7 +513,8 @@ class Files(Arg_parse):
             error("Language flag missing", 31)
 
 ##
-# Class for code interpretation 
+# Class for code interpretation
+# Singelton class - that do whole interpretation 
 class Interpret:
 
     def __init__(self, read_file):
