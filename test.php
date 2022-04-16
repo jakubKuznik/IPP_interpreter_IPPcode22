@@ -658,7 +658,7 @@
                     if ($argc != 2){            // cannot combine help with other params  
                         fwrite(STDERR, ERR_HELP); exit(10);
                     }
-                    echo (HELP_MESS); break;
+                    echo (HELP_MESS); exit(0);
                 case "--parse-only":
                     if ($int_only == true){
                         fwrite(STDERR, ERR_COM); exit(10);
